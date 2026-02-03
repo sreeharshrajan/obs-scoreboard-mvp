@@ -4,10 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { GamepadDirectional, ArrowRight, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { GamepadDirectional, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { User } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -24,7 +26,7 @@ export default function SignIn() {
     resolver: zodResolver(authSchema),
   });
 
-  const createSession = async (user: any) => {
+  const createSession = async (user: User) => {
     const idToken = await user.getIdToken();
     const res = await fetch("/api/auth/login", {
       method: "POST",
@@ -45,18 +47,22 @@ export default function SignIn() {
       } else {
         setServerError("Could not sign you in. Please try again.");
       }
-    } catch (err: any) {
-      switch (err.code) {
-        case "auth/user-not-found":
-        case "auth/wrong-password":
-        case "auth/invalid-credential":
-          setServerError("Incorrect email or password.");
-          break;
-        case "auth/too-many-requests":
-          setServerError("Too many failed attempts. Please try again later.");
-          break;
-        default:
-          setServerError("Something went wrong. Please check your connection.");
+    } catch (err: unknown) {
+      if (err instanceof FirebaseError) {
+        switch (err.code) {
+          case "auth/user-not-found":
+          case "auth/wrong-password":
+          case "auth/invalid-credential":
+            setServerError("Incorrect email or password.");
+            break;
+          case "auth/too-many-requests":
+            setServerError("Too many failed attempts. Please try again later.");
+            break;
+          default:
+            setServerError("Authentication failed. Please try again.");
+        }
+      } else {
+        setServerError("Something went wrong. Please check your connection.");
       }
     }
   };
@@ -124,7 +130,7 @@ export default function SignIn() {
 
         <footer className="mt-10 text-center">
           <p className="text-sm text-slate-500">
-            Don't have an account? <Link href="/signup" className="text-[#FF5A09] font-semibold hover:underline underline-offset-4">Create one</Link>
+            Don&apos;t have an account? <Link href="/signup" className="text-[#FF5A09] font-semibold hover:underline underline-offset-4">Create one</Link>
           </p>
         </footer>
       </div>

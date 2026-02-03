@@ -1,4 +1,4 @@
-// src/stores/authStore.ts
+// stores/authStore.ts
 import { create } from "zustand";
 import { User } from "firebase/auth";
 

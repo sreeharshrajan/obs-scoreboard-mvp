@@ -60,7 +60,7 @@ export default function TournamentListing() {
                     <h1 className="text-4xl font-instrument font-medium tracking-tight">Your <span className="italic font-light text-[#FF5A09]">Tournaments.</span></h1>
                 </div>
 
-                <Link href="/dashboard/tournaments/new" className="h-11 px-6 rounded-xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/5">
+                <Link href="tournaments/new" className="h-11 px-6 rounded-xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/5">
                     <Plus size={14} /> Create New
                 </Link>
             </header>
@@ -107,7 +107,7 @@ function TournamentCard({ tournament }: { tournament: any }) {
     };
 
     return (
-        <Link href={`/tournaments/${tournament.id}`} className="group p-6 rounded-[2rem] bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all duration-500 flex flex-col justify-between h-56 relative overflow-hidden">
+        <Link href={`/dashboard/tournaments/${tournament.id}`} className="group p-6 rounded-[2rem] bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all duration-500 flex flex-col justify-between h-56 relative overflow-hidden">
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
                     <div className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider ${statusColors[tournament.status] || statusColors.Upcoming}`}>

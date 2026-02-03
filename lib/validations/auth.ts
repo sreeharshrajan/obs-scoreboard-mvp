@@ -1,4 +1,4 @@
-// src/lib/validations/auth.ts
+// lib/validations/auth.ts
 import { z } from "zod";
 
 export const SignUpSchema = z.object({
