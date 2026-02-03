@@ -2,6 +2,7 @@
 import { GamepadDirectional, LogOut, User, Activity, Menu } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { auth } from "@/lib/firebase/client";
+import Link from "next/link";
 
 const DashboardHeader = () => {
     const { user } = useAuthStore();
@@ -10,7 +11,7 @@ const DashboardHeader = () => {
         <header className="h-16 md:h-20 px-4 md:px-8 border-b border-slate-100 dark:border-white/5 backdrop-blur-xl bg-white/80 dark:bg-[#1A1A1A]/80 flex items-center justify-between sticky top-0 z-50">
 
             {/* Left: Branding */}
-            <div className="flex items-center gap-3 md:gap-4 group cursor-pointer">
+            <Link href='/dashboard' className="flex items-center gap-3 md:gap-4 group cursor-pointer">
                 <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl border border-[#FF5A09]/20 flex items-center justify-center bg-white dark:bg-[#252525] shadow-sm transition-all duration-300 group-hover:rotate-6 group-hover:shadow-[#FF5A09]/10 group-hover:shadow-lg">
                     <GamepadDirectional size={18} className="text-[#FF5A09] md:w-5 md:h-5" />
                 </div>
@@ -25,7 +26,7 @@ const DashboardHeader = () => {
                         </span>
                     </div>
                 </div>
-            </div>
+            </Link>
 
             {/* Right: Actions & Profile */}
             <div className="flex items-center gap-2 md:gap-6">

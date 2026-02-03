@@ -64,13 +64,13 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 overflow-y-auto sm:overflow-visible pr-1 sm:pr-0 max-h-[40vh] sm:max-h-none">
         {isAdmin ? (
           <>
-            <StatsCard title="Total Users" value={metrics?.totalUsers} icon={<Users size={18} />} color="blue" />
+            <StatsCard title="Total Users" value={metrics?.totalUsers} icon={<Users size={18} />} color="blue" link="/dashboard/tournaments" />
             <StatsCard title="Global Tourneys" value={metrics?.activeTournaments} icon={<Trophy size={18} />} color="orange" />
             <StatsCard title="Total Matches" value={metrics?.totalMatches} icon={<GamepadDirectional size={18} />} color="dark" isPrimary />
           </>
         ) : (
           <>
-            <StatsCard title="My Tournaments" value={metrics?.userTournaments} icon={<Trophy size={18} />} color="orange" />
+            <StatsCard title="My Tournaments" value={metrics?.userTournaments} icon={<Trophy size={18} />} color="orange" link="/dashboard/tournaments"/>
             <StatsCard title="Live Matches" value={metrics?.liveMatches} icon={<GamepadDirectional size={18} />} color="blue" />
             <StatsCard title="Completed" value={metrics?.completedMatches} icon={<LayoutDashboard size={18} />} color="dark" />
           </>

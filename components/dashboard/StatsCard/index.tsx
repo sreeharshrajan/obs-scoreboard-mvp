@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 interface StatsCardProps {
     title: string;
@@ -6,9 +7,10 @@ interface StatsCardProps {
     icon: React.ReactNode;
     color: "blue" | "orange" | "dark";
     isPrimary?: boolean;
+    link?: string;
 }
 
-export function StatsCard({ title, value, icon, color, isPrimary }: StatsCardProps) {
+export function StatsCard({ title, value, icon, color, isPrimary, link }: StatsCardProps) {
     const colorClasses = {
         blue: "bg-blue-500/10 text-blue-500",
         orange: "bg-[#FF5A09]/10 text-[#FF5A09]",
@@ -16,11 +18,8 @@ export function StatsCard({ title, value, icon, color, isPrimary }: StatsCardPro
     };
 
     return (
-        <div className={`
-            /* Responsive Padding and Radius */
-            p-4 sm:p-5 md:p-6 
-            rounded-[1.5rem] sm:rounded-[2rem] 
-            border transition-all duration-500 group relative flex flex-col justify-between overflow-hidden 
+        <Link href={link ?? "#"} className={`
+            p-4 sm:p-5 md:p-6 rounded-[1.5rem] sm:rounded-[2rem] border transition-all duration-500 group relative flex flex-col justify-between overflow-hidden 
             ${isPrimary
                 ? 'bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] border-transparent shadow-xl shadow-black/5'
                 : 'bg-white dark:bg-[#2A2A2A]/40 border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30'
@@ -60,6 +59,6 @@ export function StatsCard({ title, value, icon, color, isPrimary }: StatsCardPro
             {isPrimary && (
                 <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-[#FF5A09]/10 blur-2xl rounded-full pointer-events-none" />
             )}
-        </div>
+        </Link>
     );
 }
