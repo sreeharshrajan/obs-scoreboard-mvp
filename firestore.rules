@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to check for Admin role in Custom Claims
+    function isAdmin() {
+      return request.auth != null && request.auth.token.role == "admin";
+    }
+
+    match /tournaments/{tournamentId} {
+      // READ: Allow if Admin OR if the user is the owner
+      // Use 'get' for resource check because list queries require indexes
+      allow read: if request.auth != null && (
+        isAdmin() || 
+        resource.data.ownerId == request.auth.uid
+      );
+
+      // CREATE: Allow if authenticated, but force their UID as ownerId
+      allow create: if request.auth != null && 
+        request.resource.data.ownerId == request.auth.uid;
+
+      // UPDATE/DELETE: Allow if Admin OR if current owner
+      allow update, delete: if request.auth != null && (
+        isAdmin() || 
+        resource.data.ownerId == request.auth.uid
+      );
+    }
+    
+    // Example for the users collection mentioned in your API
+    match /users/{userId} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow write: if isAdmin();
+    }
+  }
+}
