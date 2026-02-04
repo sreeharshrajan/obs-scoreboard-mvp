@@ -4,6 +4,7 @@ import React, { useEffect, useState, use } from "react";
 import { Plus, Play, Settings, Loader2, Calendar, MapPin, Trophy, Users, Hash, Edit3, Activity, Layers } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { auth } from "@/lib/firebase/client";
 
 interface TournamentData {
     id: string;
@@ -24,13 +25,22 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
     const [tournament, setTournament] = useState<TournamentData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Placeholder counts - these will eventually come from your matches sub-collection
-    const [stats, setStats] = useState({ total: 0, active: 0 });
+    // FIX: Initialized stats (setStats remains for future match fetching)
+    const [stats] = useState({ total: 0, active: 0 });
 
     useEffect(() => {
         const fetchTournament = async () => {
             try {
-                const res = await fetch(`/api/tournaments/${tournamentId}`);
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const token = await user.getIdToken();
+
+                const res = await fetch(`/api/tournaments/${tournamentId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setTournament(data);
@@ -56,9 +66,8 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
     }
 
     return (
-        <div className="flex-1 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex-1 w-full mx-auto px-6 md:px-10 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-            {/* Top Navigation / Breadcrumbs */}
             <div className="flex items-center gap-2 mb-6">
                 <Link href="/tournaments" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors">Tournaments</Link>
                 <span className="text-slate-300 text-xs">/</span>
@@ -67,7 +76,7 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                {/* LEFT COLUMN: Details Sidebar (4 cols) */}
+                {/* LEFT COLUMN */}
                 <aside className="lg:col-span-4 space-y-4 sticky top-8">
                     <div className="bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 rounded-3xl p-8 shadow-sm">
                         <div className="inline-flex items-center px-2 py-1 rounded-md bg-[#FF5A09]/10 text-[#FF5A09] text-[9px] font-black uppercase tracking-tighter mb-4">
@@ -102,7 +111,6 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                         </div>
                     </div>
 
-                    {/* UPDATED: Total Match & Active Match Cards */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white dark:bg-[#1A1A1A] rounded-3xl p-6 border border-slate-200 dark:border-white/5 shadow-sm">
                             <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
@@ -125,12 +133,17 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                     </div>
                 </aside>
 
-                {/* RIGHT COLUMN: Matches Listing (8 cols) */}
+                {/* RIGHT COLUMN */}
                 <main className="lg:col-span-8 flex flex-col gap-6">
                     <div className="flex items-center justify-between px-2">
                         <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Match Schedule</h2>
                         <div className="h-px flex-1 bg-slate-100 dark:bg-white/5 mx-6" />
-                        <button className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-black dark:hover:text-white transition-colors">
+
+                        {/* FIX: Added aria-label for accessibility */}
+                        <button
+                            aria-label="Match Schedule Settings"
+                            className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-black dark:hover:text-white transition-colors"
+                        >
                             <Settings size={16} />
                         </button>
                     </div>

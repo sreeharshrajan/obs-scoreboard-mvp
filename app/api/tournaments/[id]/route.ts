@@ -8,20 +8,16 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> },
 ) {
     try {
-        // 1. Await params first
         const { id } = await params;
 
-        // 2. Auth check - Wrap in try/catch if verifyRequest throws
+        // 1. Auth check - Catch block changed to omit unused variable
         try {
             await verifyRequest(req);
-        } catch (authError) {
-            console.error("Auth failed:", authError);
-            // If you want to allow public viewing, don't return here. 
-            // If it MUST be private, uncomment the next 4 lines:
-            // return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        } catch {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // 3. Fetch tournament
+        // 2. Fetch tournament
         const doc = await adminDb.collection("tournaments").doc(id).get();
 
         if (!doc.exists) {
@@ -34,15 +30,17 @@ export async function GET(
         const tournament = doc.data() || {};
         const ownerId = tournament.ownerId;
 
-        // 4. Helper to serialize Firestore Timestamps safely
-        const formatDate = (val: any) => {
+        // 3. Helper to serialize Timestamps (Replaced 'any' with 'unknown')
+        const formatDate = (val: unknown): string | null => {
             if (!val) return null;
-            if (typeof val.toDate === 'function') return val.toDate().toISOString();
-            return val;
+            if (val && typeof val === 'object' && 'toDate' in val && typeof (val as { toDate: () => Date }).toDate === 'function') {
+                return (val as { toDate: () => Date }).toDate().toISOString();
+            }
+            return typeof val === 'string' ? val : null;
         };
 
         let ownerData = null;
-        if (ownerId) {
+        if (ownerId && typeof ownerId === 'string') {
             try {
                 const user = await getAuth().getUser(ownerId);
                 ownerData = {
@@ -56,7 +54,6 @@ export async function GET(
             }
         }
 
-        // 5. Explicitly return a clean object (prevents serialization crashes)
         return NextResponse.json({
             id: doc.id,
             name: tournament.name || "Unnamed Tournament",
@@ -69,10 +66,13 @@ export async function GET(
             owner: ownerData,
         });
 
-    } catch (globalError: any) {
+    } catch (globalError: unknown) {
+        // Handle global error without 'any'
+        const message = globalError instanceof Error ? globalError.message : "Internal Server Error";
         console.error("Global API Error:", globalError);
+
         return NextResponse.json(
-            { error: "Internal Server Error", details: globalError.message },
+            { error: "Internal Server Error", details: message },
             { status: 500 }
         );
     }
