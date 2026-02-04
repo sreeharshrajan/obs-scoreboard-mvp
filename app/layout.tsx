@@ -4,6 +4,7 @@ import { AuthProvider } from '@/lib/providers/AuthProvider';
 import QueryProvider from '@/lib/providers/QueryProvider';
 import { Geist, Instrument_Sans } from "next/font/google";
 import "./globals.css";
+import ThemeProvider from '@/lib/providers/ThemeProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,12 +25,14 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className={`${geistSans.variable} ${instrumentSans.variable} font-sans antialiased bg-white dark:bg-[#1A1A1A]`}>
-        <QueryProvider>
-          <AuthProvider>{children}</AuthProvider>
-          <Toaster position="top-center" richColors />
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>{children}</AuthProvider>
+            <Toaster position="top-center" richColors />
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

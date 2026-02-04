@@ -1,7 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 
 const DashboardFooter = () => (
-    <footer className="h-auto md:h-14 py-4 md:py-0 px-6 md:px-10 border-t border-slate-100 dark:border-white/5 flex flex-col-reverse md:flex-row items-center justify-between bg-white dark:bg-[#1A1A1A] gap-4">
+    <footer className="h-auto md:h-14 py-4 md:py-0 px-4 md:px-8 border-t border-slate-100 dark:border-white/5 flex flex-col-reverse md:flex-row items-center justify-between bg-white dark:bg-[#1A1A1A] gap-4">
 
         {/* Left: Branding & Version */}
         <div className="flex items-center gap-4">

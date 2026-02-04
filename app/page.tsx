@@ -1,5 +1,6 @@
 import { GamepadDirectional, Radio, Layout, Zap, Trophy, ArrowUpRight, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+import ThemeToggle from '@/components/shared/ThemeToggle';
 
 export default function Home() {
   return (
@@ -19,15 +20,17 @@ export default function Home() {
             Score<span className="text-[#FF5A09]">Streamer</span>
           </span>
         </div>
-        <Link
-          href="/signin"
-          className="h-9 px-5 rounded-full flex items-center justify-center
+        <div className="flex items-center gap-2">
+          <Link
+            href="/signin"
+            className="h-9 px-5 rounded-full flex items-center justify-center
     text-[10px] font-bold uppercase tracking-widest transition-all
     border border-slate-200 dark:border-white/10
     hover:border-[#FF5A09] hover:text-[#FF5A09]
     active:scale-95">
-          Sign In
-        </Link>
+            Sign In
+          </Link>
+          <ThemeToggle /></div>
       </nav>
 
       {/* Hero Section */}

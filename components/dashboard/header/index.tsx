@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { GamepadDirectional, LogOut, User, Menu, X, Trophy, Users } from "lucide-react";
+import ThemeToggle from '@/components/shared/ThemeToggle';
 import { useAuthStore } from "@/lib/stores/authStore";
 import { auth } from "@/lib/firebase/client";
 import { resolveRoles } from "@/lib/auth/roles";
@@ -84,6 +85,7 @@ const DashboardHeader = () => {
                             {isAdmin && <span className="text-[8px] font-bold text-[#FF5A09] uppercase mt-1">Admin</span>}
                         </div>
                     </Link>
+                    <ThemeToggle />
 
                     <button
                         type="button"
