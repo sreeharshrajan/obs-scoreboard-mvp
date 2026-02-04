@@ -5,7 +5,7 @@ export interface PlayerState {
     score: number;
 }
 
-export type MatchStatus = 'scheduled' | 'live' | 'completed';
+export type MatchStatus = 'scheduled' | 'live' | 'completed' | 'break';
 
 export interface MatchState {
     sport: 'badminton';

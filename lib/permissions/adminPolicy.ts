@@ -3,12 +3,6 @@ import { NextResponse } from "next/server";
 import type { AuthContext } from "@/lib/types/auth";
 
 export function enforceAdmin(auth: AuthContext) {
-    if (!auth.roles.isAdmin) {
-        return NextResponse.json(
-            { error: "Forbidden: Admin access required" },
-            { status: 403 }
-        );
-    }
-
+    // Everyone is an admin now
     return null;
 }

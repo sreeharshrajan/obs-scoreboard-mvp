@@ -17,6 +17,7 @@ interface UserData {
     email: string;
     photoURL: string;
     role: string;
+    streamerLogo?: string;
 }
 
 export default function EditUser({ params }: { params: Promise<{ id: string }> }) {
@@ -26,8 +27,11 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
     const [userData, setUserData] = useState<UserData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [photoURL, setPhotoURL] = useState("");
+    const [streamerLogo, setStreamerLogo] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const logoInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -56,6 +60,7 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                 const data = await res.json();
                 setUserData(data);
                 setPhotoURL(data.photoURL || "");
+                setStreamerLogo(data.streamerLogo || "");
             } catch (err) {
                 console.error(err);
                 setError("Failed to load user data");
@@ -89,7 +94,8 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                 const updates = {
                     displayName: formData.get("displayName") as string,
                     photoURL: formData.get("photoURL") as string,
-                    role: formData.get("role") as string,
+                    streamerLogo: formData.get("streamerLogo") as string,
+                    // role: formData.get("role") as string, // Role removed
                 };
 
                 try {
@@ -104,6 +110,7 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
             className="h-full flex flex-col"
         >
             <input type="hidden" name="photoURL" value={photoURL} />
+            <input type="hidden" name="streamerLogo" value={streamerLogo} />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
                 {/* LEFT COLUMN: Profile Sidebar */}
@@ -232,23 +239,100 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                                     className="text-slate-500 bg-slate-100/50 dark:bg-white/5 cursor-not-allowed border-transparent"
                                 />
 
-                                <div className="pt-2">
-                                    <Select
-                                        label="Role Permission"
-                                        id="role"
-                                        name="role"
-                                        defaultValue={userData.role || "User"}
-                                        options={[
-                                            { label: "User", value: "User" },
-                                            { label: "Moderator", value: "Moderator" },
-                                            { label: "Admin", value: "Admin" },
-                                        ]}
-                                        className="bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5"
-                                    />
-                                    <p className="text-[10px] text-slate-400 mt-2 ml-1">
-                                        * Admin roles grant full access to tournament management.
-                                    </p>
+                                <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Streamer Logo</label>
+                                    <div className="flex items-start gap-6">
+                                        <div
+                                            className="relative w-32 h-32 rounded-xl bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center cursor-pointer hover:border-slate-400 dark:hover:border-white/20 transition-colors overflow-hidden group"
+                                            onClick={() => logoInputRef.current?.click()}
+                                        >
+                                            {streamerLogo ? (
+                                                <>
+                                                    <Image
+                                                        src={streamerLogo}
+                                                        alt="Streamer Logo"
+                                                        fill
+                                                        className="object-contain p-2"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Upload size={20} className="text-white" />
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="text-center p-4">
+                                                    <Upload size={20} className="mx-auto text-slate-400 mb-2" />
+                                                    <span className="text-[10px] text-slate-400 block">Upload Logo</span>
+                                                </div>
+                                            )}
+
+                                            {isUploadingLogo && (
+                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                                                    <Loader2 className="animate-spin text-white" size={20} />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex-1 space-y-2">
+                                            <h4 className="text-sm font-medium text-slate-900 dark:text-white">Branding Assets</h4>
+                                            <p className="text-xs text-slate-500 max-w-xs">
+                                                Upload your streamer logo. This will be used in overlays and scoreboards associated with your account.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => logoInputRef.current?.click()}
+                                                disabled={isUploadingLogo}
+                                                className="mt-2 px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 transition-colors"
+                                            >
+                                                {isUploadingLogo ? "Uploading..." : "Select Image"}
+                                            </button>
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            ref={logoInputRef}
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                if (!e.target.files?.[0]) return;
+                                                const file = e.target.files[0];
+                                                setIsUploadingLogo(true);
+                                                try {
+                                                    const user = auth.currentUser;
+                                                    const token = await user?.getIdToken();
+                                                    const sigRes = await fetch('/api/upload', {
+                                                        method: 'POST',
+                                                        headers: { Authorization: `Bearer ${token}` }
+                                                    });
+                                                    if (!sigRes.ok) throw new Error("Failed to get upload signature");
+                                                    const { signature, timestamp, cloudName, apiKey } = await sigRes.json();
+
+                                                    const formData = new FormData();
+                                                    formData.append('file', file);
+                                                    formData.append('api_key', apiKey);
+                                                    formData.append('timestamp', timestamp);
+                                                    formData.append('signature', signature);
+                                                    formData.append('folder', 'obs-scoreboard-logos');
+
+                                                    const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                                                        method: 'POST',
+                                                        body: formData
+                                                    });
+
+                                                    if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
+                                                    const uploadData = await uploadRes.json();
+
+                                                    setStreamerLogo(uploadData.secure_url);
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert("Logo upload failed");
+                                                } finally {
+                                                    setIsUploadingLogo(false);
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                 </div>
+
                             </div>
 
                             <div className="pt-8 flex items-center gap-4">

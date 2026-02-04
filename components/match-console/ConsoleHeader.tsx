@@ -111,7 +111,7 @@ export default function ConsoleHeader({ matchId, tournamentId, tournamentName, m
                                 >
                                     <div className="flex items-center gap-3">
                                         <Monitor size={16} className={match.isSponsorsOverlayActive ? "text-[#FF5A09]" : "text-slate-400"} />
-                                        <span className={clsx("text-sm font-medium", match.isSponsorsOverlayActive ? "text-slate-900 dark:text-white" : "text-slate-500")}>Sponsors Overlay</span>
+                                        <span className={clsx("text-sm font-medium", match.isSponsorsOverlayActive ? "text-slate-900 dark:text-white" : "text-slate-500")}>Sponsor Cards</span>
                                     </div>
                                     <div className={clsx("w-8 h-4 rounded-full p-0.5 transition-colors", match.isSponsorsOverlayActive ? "bg-[#FF5A09]" : "bg-slate-200 dark:bg-white/10")}>
                                         <div className={clsx("w-3 h-3 bg-white rounded-full shadow-sm transition-transform", match.isSponsorsOverlayActive ? "translate-x-4" : "translate-x-0")} />

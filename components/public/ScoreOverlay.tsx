@@ -70,7 +70,8 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
 
     // Sponsors Logic
     useEffect(() => {
-        if (!tournamentId || !match?.isSponsorsOverlayActive) return;
+        const shouldFetch = match?.isSponsorsOverlayActive || match?.status === 'break';
+        if (!tournamentId || !shouldFetch) return;
 
         const q = query(collection(db, "tournaments", tournamentId, "sponsors")); // Consider filtering by status here if possible or client side
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -82,18 +83,19 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         });
 
         return () => unsubscribe();
-    }, [tournamentId, match?.isSponsorsOverlayActive]);
+    }, [tournamentId, match?.isSponsorsOverlayActive, match?.status]);
 
     // Carousel Timer
     useEffect(() => {
-        if (!match?.isSponsorsOverlayActive || sponsors.length === 0) return;
+        const shouldRun = match?.isSponsorsOverlayActive || match?.status === 'break';
+        if (!shouldRun || sponsors.length === 0) return;
 
         const interval = setInterval(() => {
             setCurrentSponsorIndex(prev => (prev + 1) % sponsors.length);
         }, 8000); // 8 seconds per slide
 
         return () => clearInterval(interval);
-    }, [match?.isSponsorsOverlayActive, sponsors.length]);
+    }, [match?.isSponsorsOverlayActive, match?.status, sponsors.length]);
 
 
     const formatTime = (seconds: number) => {
@@ -106,37 +108,8 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     if (loading || error || !match) return null; // Keep OBS clean on error/loading
 
     // Render Sponsors Overlay
-    if (match.isSponsorsOverlayActive && sponsors.length > 0) {
-        return (
-            <div className="fixed inset-0 bg-black flex items-center justify-center animate-in fade-in duration-700">
-                <div
-                    className="relative w-full h-full max-h-screen aspect-video"
-                    style={{ transform: `scale(${match.overlayScale || 1})`, transformOrigin: 'center' }}
-                >
-                    {sponsors.map((sponsor, index) => (
-                        <div
-                            key={sponsor.id}
-                            className={clsx(
-                                "absolute inset-0 transition-opacity duration-1000 flex items-center justify-center",
-                                index === currentSponsorIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-                            )}
-                        >
-                            <img
-                                src={sponsor.advertUrl}
-                                alt={sponsor.name}
-                                className="w-full h-full object-contain"
-                            />
-                        </div>
-                    ))}
-
-                    {/* Optional: Add a "Tournament Sponsors" badge or similar if needed */}
-                    <div className="absolute bottom-8 right-8 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 z-20">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-white/50">Tournament Sponsors</span>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // Render Sponsor Cards Logic
+    const showSponsors = (match.isSponsorsOverlayActive || match.status === 'break') && sponsors.length > 0;
 
     // Handle Badminton Schema
     const p1Name = match.player1?.name2
@@ -159,8 +132,13 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         >
             {/* TOP LEFT: Scoreboard (Badminton Style) */}
             <div className="absolute top-8 left-8 flex items-stretch bg-black/90 text-white rounded-xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-left-4">
-                <div className={clsx("flex flex-col items-center justify-center px-3", isLive ? 'bg-[#FF5A09]' : 'bg-slate-800')}>
-                    {isLive ? <Activity size={16} className="text-white" /> : <span className="text-[8px] font-bold uppercase">{match.status || 'OFF'}</span>}
+                <div className={clsx("flex flex-col items-center justify-center px-2 min-w-[80px]", isLive ? 'bg-[#FF5A09]' : 'bg-slate-900')}>
+                    {match.showTournamentLogo !== false && match.tournamentLogo ? (
+                        <img src={match.tournamentLogo} alt="Logo" className="w-12 h-12 object-contain mb-1" />
+                    ) : (
+                        isLive ? <Activity size={24} className="text-white" /> : <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{match.status || 'OFF'}</span>
+                    )}
+                    {(match.status === 'break') && <span className="text-[8px] font-bold uppercase text-white animate-pulse mt-1">BREAK</span>}
                 </div>
 
                 <div className="flex flex-col divide-y divide-white/10">
@@ -196,9 +174,6 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
 
             {/* TOP RIGHT: Logos */}
             <div className="absolute top-8 right-8 flex items-center gap-4">
-                {match.showTournamentLogo !== false && match.tournamentLogo && (
-                    <img src={match.tournamentLogo} alt="Tournament Logo" className="h-16 w-auto object-contain drop-shadow-md" />
-                )}
                 {match.showStreamerLogo !== false && match.streamerLogo && (
                     <img src={match.streamerLogo} alt="Streamer Logo" className="h-16 w-auto object-contain drop-shadow-md" />
                 )}

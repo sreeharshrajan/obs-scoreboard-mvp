@@ -5,6 +5,7 @@ import clsx from 'clsx';
 interface QuickActionsProps {
     onSwap: () => void;
     onEndMatch: () => void;
+
     isCompleted: boolean;
 }
 

@@ -5,23 +5,18 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuth } from "firebase-admin/auth";
 
-export async function updateUser(token: string, id: string, data: { displayName?: string; photoURL?: string; email?: string; role?: string }) {
+export async function updateUser(token: string, id: string, data: { displayName?: string; photoURL?: string; email?: string; role?: string; streamerLogo?: string }) {
 
     // 1. Verify Token
     const decodedToken = await getAuth().verifyIdToken(token);
     const requestorId = decodedToken.uid;
-    const { isAdmin } = await import("@/lib/auth/roles").then(m => m.resolveRoles(decodedToken.email || null));
+    // Roles are now always admin, so we can skip complex checks or just rely on the new policy
 
-    // 2. Authorization Check (Must be Admin OR formatting their own profile)
-    if (requestorId !== id && !isAdmin) {
-        throw new Error("Unauthorized: You can only edit your own profile.");
-    }
-
-    // Prevent non-admins from changing their role
-    if (data.role && !isAdmin && data.role !== "User") { // Simplification: Non-admins can't change role at all ideally, or we blindly trust input? 
-        // Safer: If not admin, remove 'role' from data before updating
-        delete data.role;
-    }
+    // 2. Authorization Check (Everyone is admin, but let's keep basic sanity check if needed, 
+    // though the requirement is to remove permissions entirely. 
+    // If "Everyone is admin", then anyone can edit anyone? 
+    // "remove Role Permissions entirely" -> effectively yes, or at least self-edit is always allowed.
+    // Let's assume broad access is fine as per "remove Role Permissions entirely".)
 
     // Update Firestore
     console.log(`[updateUser] Updating user ${id} with data:`, data);

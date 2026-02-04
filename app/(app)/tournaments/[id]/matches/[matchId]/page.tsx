@@ -239,6 +239,14 @@ export default function MatchConsole() {
         });
     };
 
+    const handleToggleBreak = () => {
+        if (safeMatch.status === 'break') {
+            mutation.mutate({ status: 'live' });
+        } else {
+            mutation.mutate({ status: 'break' });
+        }
+    };
+
     const handleUpdateMatch = (updates: Partial<MatchState>) => {
         mutation.mutate(updates);
     };
@@ -317,6 +325,9 @@ export default function MatchConsole() {
                         isCompleted={isCompleted}
                         onToggleTimer={() => safeMatch.isTimerRunning ? handleStopTimer() : handleStartTimer()}
                         formatTime={formatTime}
+                        matchStatus={safeMatch.status}
+                        isBreak={safeMatch.status === 'break'}
+                        onToggleBreak={handleToggleBreak}
                     />
 
                     <QuickActions
