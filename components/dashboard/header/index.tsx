@@ -55,8 +55,11 @@ const DashboardHeader = () => {
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-4">
                     {/* Profile Chip */}
-                    <div className="hidden sm:flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                        <div className="w-6 h-6 rounded-full overflow-hidden bg-[#FF5A09]/10 flex items-center justify-center">
+                    <Link
+                        href={`/users/${user?.uid}/edit`}
+                        className="hidden sm:flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                    >
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-[#FF5A09]/10 flex items-center justify-center relative">
                             {user?.photoURL ? (
                                 <Image
                                     src={user.photoURL}
@@ -80,7 +83,7 @@ const DashboardHeader = () => {
                             </span>
                             {isAdmin && <span className="text-[8px] font-bold text-[#FF5A09] uppercase mt-1">Admin</span>}
                         </div>
-                    </div>
+                    </Link>
 
                     <button
                         type="button"

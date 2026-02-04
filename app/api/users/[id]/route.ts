@@ -13,11 +13,14 @@ export async function GET(
     try {
         const auth = await verifyRequest(req);
 
-        // Ensure requestor is admin (or potentially the user themselves, but enforceAdmin locks to admin for now)
+        // Ensure requestor is admin OR the user themselves
         const adminError = enforceAdmin(auth);
-        if (adminError) return adminError;
-
         const { id } = await params;
+
+        // If not admin and not requesting own data, block
+        if (adminError && auth.uid !== id) {
+            return adminError; // Return the 403 from enforceAdmin
+        }
         if (!id) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
 
         const user = await getAuth().getUser(id);
