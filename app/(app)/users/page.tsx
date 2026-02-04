@@ -89,7 +89,7 @@ export default function UserListing() {
     return (
         <AdminGuard>
             <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col py-6 space-y-8 animate-in fade-in duration-500 relative">
-                
+
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="space-y-1">
                         <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FF5A09] mb-1">Directory</div>
@@ -135,8 +135,8 @@ export default function UserListing() {
                 </div>
 
                 {selectedUser && (
-                    <UserModal 
-                        user={selectedUser} 
+                    <UserModal
+                        user={selectedUser}
                         isCurrentUser={selectedUser.id === currentUid}
                         onClose={() => setSelectedUser(null)}
                         onDelete={() => handleDeleteUser(selectedUser.id)} // Pass handler
@@ -155,7 +155,7 @@ function UserCard({ user, isYou, onClick }: { user: User; isYou: boolean; onClic
     };
 
     return (
-        <div 
+        <div
             onClick={onClick}
             className="group cursor-pointer p-6 rounded-4xl bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all duration-500 flex flex-col justify-between h-56 relative overflow-hidden"
         >
@@ -208,14 +208,14 @@ function UserCard({ user, isYou, onClick }: { user: User; isYou: boolean; onClic
 }
 
 // Update Modal to accept onDelete and show delete button
-function UserModal({ 
-    user, 
-    isCurrentUser, 
-    onClose, 
-    onDelete 
-}: { 
-    user: User; 
-    isCurrentUser: boolean; 
+function UserModal({
+    user,
+    isCurrentUser,
+    onClose,
+    onDelete
+}: {
+    user: User;
+    isCurrentUser: boolean;
     onClose: () => void;
     onDelete: () => void;
 }) {
@@ -230,11 +230,11 @@ function UserModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="absolute inset-0" onClick={onClose} />
-            
+
             <div className="relative w-full max-w-lg h-[96vh] mr-4 bg-white dark:bg-[#1A1A1A] rounded-4xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col animate-in slide-in-from-right duration-500">
-                
-                <button 
-                    onClick={onClose} 
+
+                <button
+                    onClick={onClose}
                     aria-label="Close modal"
                     className="absolute top-8 right-8 p-2 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-[#FF5A09]/10 hover:text-[#FF5A09] transition-all z-20"
                 >
@@ -257,7 +257,7 @@ function UserModal({
                                 <CheckCircle2 size={16} />
                             </div>
                         </div>
-                        
+
                         <div>
                             <div className="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest bg-[#FF5A09]/10 text-[#FF5A09] mb-3">
                                 {user.role || "Platform User"}
@@ -275,12 +275,15 @@ function UserModal({
 
                     {!isCurrentUser && (
                         <div className="pt-8 flex flex-col gap-3">
-                            <button className="h-14 w-full rounded-2xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-[0.2em] hover:scale-[1.01] active:scale-[0.99] transition-all">
+                            <Link
+                                href={`/users/${user.id}/edit`}
+                                className="h-14 w-full rounded-2xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-[0.2em] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center"
+                            >
                                 Edit User Account
-                            </button>
-                            
+                            </Link>
+
                             {/* DELETE BUTTON */}
-                            <button 
+                            <button
                                 onClick={handleConfirmDelete}
                                 disabled={isDeleting}
                                 className="h-14 w-full rounded-2xl border border-red-500/20 text-red-500 bg-red-500/5 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
