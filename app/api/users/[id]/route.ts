@@ -3,6 +3,7 @@ import { getAuth } from "firebase-admin/auth";
 import { NextResponse } from "next/server";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
 import { enforceAdmin } from "@/lib/permissions/adminPolicy";
+import { adminDb } from "@/lib/firebase/admin";
 
 // GET: Fetch single user by ID
 export async function GET(

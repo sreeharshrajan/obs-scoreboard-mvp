@@ -2,10 +2,11 @@
 
 import { use, useState, useEffect } from "react";
 import { updateUser } from "@/lib/actions/user-actions";
-import { ChevronLeft, Save, Loader2, UserCircle, Upload, AlertCircle } from "lucide-react";
+import { ChevronLeft, Save, Loader2, UserCircle, Upload, AlertCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/firebase/client";
+import { useRef } from "react";
 
 interface UserData {
     id: string;
@@ -21,6 +22,9 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
     const [fetching, setFetching] = useState(true);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [photoURL, setPhotoURL] = useState("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -54,6 +58,7 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                 if (!res.ok) throw new Error("Failed to fetch user");
                 const data = await res.json();
                 setUserData(data);
+                setPhotoURL(data.photoURL || "");
             } catch (err) {
                 console.error(err);
                 setError("Failed to load user data");
@@ -113,35 +118,92 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                 {/* Image Preview & Input */}
                 <div className="flex flex-col items-center gap-6">
                     <div className="relative group">
-                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-100 dark:border-white/10 shadow-xl relative">
-                            {userData.photoURL ? (
+                        <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-slate-100 dark:border-white/10 shadow-xl relative bg-white dark:bg-neutral-800">
+                            {photoURL ? (
                                 <Image
-                                    src={userData.photoURL}
+                                    src={photoURL}
                                     alt="Profile"
                                     fill
                                     className="object-cover"
-                                // Fallback handling would be ideal here in a real app
                                 />
                             ) : (
-                                <div className="w-full h-full bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+                                <div className="w-full h-full flex items-center justify-center">
                                     <UserCircle size={64} className="text-slate-300" />
                                 </div>
                             )}
+
+                            {/* Overlay for upload */}
+                            <div
+                                className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <Upload className="text-white mb-2" size={24} />
+                                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Change</span>
+                            </div>
                         </div>
+                        {isUploading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full z-20">
+                                <Loader2 className="text-white animate-spin" />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="w-full space-y-2">
-                        <label htmlFor="photoURL" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block text-center">
-                            Profile Image URL
-                        </label>
-                        <input
-                            id="photoURL"
-                            name="photoURL"
-                            defaultValue={userData.photoURL || ""}
-                            placeholder="https://..."
-                            className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 outline-none focus:border-[#FF5A09] transition-colors text-sm text-center"
-                        />
-                        <p className="text-[10px] text-slate-400 text-center">Paste a direct link to an image (JPG, PNG, GIF)</p>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={async (e) => {
+                            if (!e.target.files?.[0]) return;
+                            const file = e.target.files[0];
+                            setIsUploading(true);
+                            try {
+                                // 1. Get Signature
+                                const user = auth.currentUser;
+                                const token = await user?.getIdToken();
+                                const sigRes = await fetch('/api/upload', {
+                                    method: 'POST',
+                                    headers: { Authorization: `Bearer ${token}` }
+                                });
+                                if (!sigRes.ok) throw new Error("Failed to get upload signature");
+                                const { signature, timestamp, cloudName, apiKey } = await sigRes.json();
+
+                                // 2. Upload to Cloudinary
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                formData.append('api_key', apiKey);
+                                formData.append('timestamp', timestamp);
+                                formData.append('signature', signature);
+                                formData.append('folder', 'obs-scoreboard-users');
+
+                                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                                    method: 'POST',
+                                    body: formData
+                                });
+
+                                if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
+                                const uploadData = await uploadRes.json();
+
+                                setPhotoURL(uploadData.secure_url);
+                            } catch (err) {
+                                console.error(err);
+                                alert("Upload failed");
+                            } finally {
+                                setIsUploading(false);
+                            }
+                        }}
+                    />
+
+                    {/* Hidden input to submit the final URL to the server action */}
+                    <input type="hidden" name="photoURL" value={photoURL} />
+
+                    <div className="space-y-2 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A09] cursor-pointer hover:underline" onClick={() => fileInputRef.current?.click()}>
+                            Upload New Photo
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                            Supports JPG, PNG, WEBP
+                        </p>
                     </div>
                 </div>
 

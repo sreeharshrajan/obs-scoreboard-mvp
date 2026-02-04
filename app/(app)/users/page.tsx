@@ -37,7 +37,7 @@ export default function UserListing() {
             if (res.ok) {
                 const data = await res.json();
                 // Fix date parsing from JSON
-                const parsedData = data.map((u: any) => ({
+                const parsedData = data.map((u: User) => ({
                     ...u,
                     createdAt: u.createdAt ? { toDate: () => new Date(u.createdAt) } : null
                 }));

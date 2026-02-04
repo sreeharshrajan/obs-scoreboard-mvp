@@ -8,10 +8,12 @@ import { getAuth } from "firebase-admin/auth";
 export async function updateUser(id: string, data: { displayName?: string; photoURL?: string; email?: string; role?: string }) {
 
     // Update Firestore
-    await adminDb.collection("users").doc(id).update({
+    console.log(`[updateUser] Updating user ${id} with data:`, data);
+    await adminDb.collection("users").doc(id).set({
         ...data,
         updatedAt: new Date(),
-    });
+    }, { merge: true });
+    console.log(`[updateUser] User ${id} updated successfully in Firestore.`);
 
     // Update Firebase Auth (if name/image changed)
     try {
