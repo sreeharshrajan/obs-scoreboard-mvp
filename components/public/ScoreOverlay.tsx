@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Activity } from "lucide-react";
+import { Activity, Clock } from "lucide-react";
 import { db } from "@/lib/firebase/client";
-import { collectionGroup, query, where, onSnapshot } from "firebase/firestore";
+import { collectionGroup, query, onSnapshot } from "firebase/firestore";
+import clsx from 'clsx';
+import { MatchState } from "@/types/match";
 
 export default function ScoreOverlay({ matchId }: { matchId: string }) {
-    const [match, setMatch] = useState<any>(null);
+    const [match, setMatch] = useState<MatchState | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [elapsedDisplay, setElapsedDisplay] = useState<number>(0);
 
     useEffect(() => {
         // collectionGroup allows finding the matchId across any tournament path
@@ -17,7 +20,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const matchDoc = snapshot.docs.find(d => d.id === matchId);
             if (matchDoc) {
-                setMatch(matchDoc.data());
+                setMatch(matchDoc.data() as MatchState);
                 setError(null);
             } else {
                 setError("Match not found");
@@ -32,27 +35,81 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         return () => unsubscribe();
     }, [matchId]);
 
+    // Timer Logic
+    useEffect(() => {
+        if (!match) return;
+
+        if (!match.isTimerRunning) {
+            const val = match.timerElapsed || 0;
+            setElapsedDisplay(prev => (prev !== val ? val : prev));
+            return;
+        }
+
+        const calculateTime = () => {
+            const now = Date.now();
+            const startTime = match.timerStartTime ?? now;
+            return (match.timerElapsed || 0) + (now - startTime) / 1000;
+        };
+
+        setElapsedDisplay(calculateTime());
+        const timerInterval = setInterval(() => {
+            setElapsedDisplay(calculateTime());
+        }, 100);
+
+        return () => clearInterval(timerInterval);
+    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match]);
+
+    const formatTime = (seconds: number) => {
+        const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
+        const m = Math.floor(safeSeconds / 60);
+        const s = Math.floor(safeSeconds % 60);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
     if (loading || error || !match) return null; // Keep OBS clean on error/loading
 
-    const isLive = match.status === "live" || match.status === "in_progress";
+    // Handle Badminton Schema
+    const p1Name = match.player1?.name || "Player 1";
+    const p2Name = match.player2?.name || "Player 2";
+    const p1Score = match.player1?.score || 0;
+    const p2Score = match.player2?.score || 0;
+    const p1Serving = match.player1?.isServing ?? false;
+    const p2Serving = match.player2?.isServing ?? false;
+
+    const isLive = match.status === "live" || match.isTimerRunning;
 
     return (
         <div className="fixed inset-0 p-8 pointer-events-none font-instrument">
             {/* TOP LEFT: Scoreboard (Badminton Style) */}
             <div className="absolute top-8 left-8 flex items-stretch bg-black/90 text-white rounded-xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-left-4">
-                <div className={`flex flex-col items-center justify-center px-3 ${isLive ? 'bg-[#FF5A09]' : 'bg-slate-800'}`}>
-                    {isLive ? <Activity size={16} className="text-white" /> : <span className="text-[8px] font-bold uppercase">{match.status}</span>}
+                <div className={clsx("flex flex-col items-center justify-center px-3", isLive ? 'bg-[#FF5A09]' : 'bg-slate-800')}>
+                    {isLive ? <Activity size={16} className="text-white" /> : <span className="text-[8px] font-bold uppercase">{match.status || 'OFF'}</span>}
                 </div>
 
                 <div className="flex flex-col divide-y divide-white/10">
-                    <div className="flex items-center justify-between min-w-[240px] px-4 py-2 gap-4">
-                        <span className="text-sm font-bold uppercase tracking-tight">{match.team1}</span>
-                        <span className="text-2xl font-black tabular-nums text-[#FF5A09]">{match.score1 || 0}</span>
+                    {/* Player 1 */}
+                    <div className="flex items-center justify-between min-w-[260px] px-4 py-2 gap-4 relative overflow-hidden">
+                        <div className="flex items-center gap-2">
+                            {p1Serving && <div className="w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse shadow-[0_0_8px_#FF5A09]" />}
+                            <span className={clsx("text-sm font-bold uppercase tracking-tight", p1Serving ? "text-white" : "text-white/70")}>{p1Name}</span>
+                        </div>
+                        <span className="text-2xl font-black tabular-nums text-[#FF5A09]">{p1Score}</span>
                     </div>
-                    <div className="flex items-center justify-between min-w-[240px] px-4 py-2 gap-4">
-                        <span className="text-sm font-bold uppercase tracking-tight">{match.team2}</span>
-                        <span className="text-2xl font-black tabular-nums text-[#FF5A09]">{match.score2 || 0}</span>
+
+                    {/* Player 2 */}
+                    <div className="flex items-center justify-between min-w-[260px] px-4 py-2 gap-4 relative overflow-hidden">
+                        <div className="flex items-center gap-2">
+                            {p2Serving && <div className="w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse shadow-[0_0_8px_#FF5A09]" />}
+                            <span className={clsx("text-sm font-bold uppercase tracking-tight", p2Serving ? "text-white" : "text-white/70")}>{p2Name}</span>
+                        </div>
+                        <span className="text-2xl font-black tabular-nums text-[#FF5A09]">{p2Score}</span>
                     </div>
+                </div>
+
+                {/* Timer Section (New) */}
+                <div className="flex flex-col items-center justify-center px-4 bg-white/5 border-l border-white/10 min-w-[80px]">
+                    <Clock size={12} className="text-white/40 mb-1" />
+                    <span className="text-lg font-mono font-bold tracking-tight">{formatTime(elapsedDisplay)}</span>
                 </div>
             </div>
 
@@ -64,11 +121,13 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
             </div>
 
             {/* BOTTOM RIGHT: Extra Info Popup */}
-            {match.lastRally && (
+            {(match.category || match.tournamentName) && (
                 <div className="absolute bottom-12 right-12 animate-in slide-in-from-right-8 duration-500">
                     <div className="bg-white text-black px-4 py-2 rounded-lg shadow-2xl flex items-center gap-3 border-b-4 border-[#FF5A09]">
-                        <div className="w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse" />
-                        <span className="text-[11px] font-black uppercase tracking-wider">Rally: {match.lastRally} Shots</span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{match.tournamentName || "Tournament"}</span>
+                            <span className="text-sm font-black uppercase tracking-tight">{match.category || match.court || "Match"}</span>
+                        </div>
                     </div>
                 </div>
             )}

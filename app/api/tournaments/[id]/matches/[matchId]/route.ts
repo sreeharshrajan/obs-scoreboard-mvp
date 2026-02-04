@@ -1,17 +1,17 @@
-
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
+import { FieldValue } from "firebase-admin/firestore";
 
 /**
- * GET: Fetch a single match by ID
+ * GET: Fetch a single match by ID from a specific tournament
  */
 export async function GET(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string; matchId: string }> } // id is tournamentId
 ) {
     try {
-        const { id } = await params;
+        const { id: tournamentId, matchId } = await params;
 
         try {
             await verifyRequest(req);
@@ -21,8 +21,9 @@ export async function GET(
 
         const doc = await adminDb
             .collection("tournaments")
-            .doc(id)
+            .doc(tournamentId)
             .collection("matches")
+            .doc(matchId)
             .get();
 
         if (!doc.exists) {
@@ -37,14 +38,14 @@ export async function GET(
 }
 
 /**
- * PATCH: Update match details (scores, status, court, etc.)
+ * PATCH: Update match details
  */
 export async function PATCH(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string; matchId: string }> }
 ) {
     try {
-        const { id } = await params;
+        const { id: tournamentId, matchId } = await params;
         const body = await req.json();
 
         try {
@@ -53,15 +54,18 @@ export async function PATCH(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const matchRef = adminDb.collection("matches").doc(id);
+        const matchRef = adminDb
+            .collection("tournaments")
+            .doc(tournamentId)
+            .collection("matches")
+            .doc(matchId);
+
         const doc = await matchRef.get();
 
         if (!doc.exists) {
             return NextResponse.json({ error: "Match not found" }, { status: 404 });
         }
 
-        // Just update the body, assuming the frontend sends the correct structure.
-        // We preserve existing data and merge.
         await matchRef.set({
             ...body,
             updatedAt: new Date().toISOString(),
@@ -79,10 +83,10 @@ export async function PATCH(
  */
 export async function DELETE(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string; matchId: string }> }
 ) {
     try {
-        const { id } = await params;
+        const { id: tournamentId, matchId } = await params;
 
         try {
             await verifyRequest(req);
@@ -90,7 +94,12 @@ export async function DELETE(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        await adminDb.collection("matches").doc(id).delete();
+        await adminDb
+            .collection("tournaments")
+            .doc(tournamentId)
+            .collection("matches")
+            .doc(matchId)
+            .delete();
 
         return NextResponse.json({ success: true, message: "Match deleted" });
     } catch (error: unknown) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from '@/lib/providers/AuthProvider';
+import QueryProvider from '@/lib/providers/QueryProvider';
 import { Geist, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -24,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${instrumentSans.variable} font-sans antialiased bg-white dark:bg-[#1A1A1A]`}>
-        <AuthProvider>{children}</AuthProvider>
+        <QueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

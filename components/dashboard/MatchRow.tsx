@@ -16,8 +16,8 @@ import { auth } from "@/lib/firebase/client";
 interface Match {
     id: string;
     status: string;
-    team1: string;
-    team2: string;
+    player1: { name: string };
+    player2: { name: string };
     court: string;
     startTime?: string;
 }
@@ -114,7 +114,7 @@ function MatchRow({ match, tournamentId, onMutation }: MatchRowProps) {
             <td className="px-8 py-5">
                 <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                        {match.team1} <span className="text-slate-400 font-medium px-1">vs</span> {match.team2}
+                        {match.player1?.name || 'P1'} <span className="text-slate-400 font-medium px-1">vs</span> {match.player2?.name || 'P2'}
                     </span>
                     {match.startTime && <span className="text-[9px] text-slate-400 uppercase tracking-wide">{match.startTime}</span>}
                 </div>

@@ -21,8 +21,8 @@ interface TournamentData {
 interface Match {
     id: string;
     status: string;
-    team1: string;
-    team2: string;
+    player1: { name: string };
+    player2: { name: string };
     court: string;
     startTime?: string;
 }
