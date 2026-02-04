@@ -160,7 +160,7 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="bg-slate-50 dark:bg-white/5 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/5 space-y-8 text-left">
+                <div className="bg-white dark:bg-[#1A1A1A] p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm space-y-8 text-left">
 
                     {/* Time & Basic Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

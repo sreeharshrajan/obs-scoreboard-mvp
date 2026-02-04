@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Activity, Clock } from "lucide-react";
 import { db } from "@/lib/firebase/client";
-import { collectionGroup, query, onSnapshot } from "firebase/firestore";
+import { collectionGroup, query, onSnapshot, collection } from "firebase/firestore";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
 
@@ -13,6 +13,11 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const [error, setError] = useState<string | null>(null);
     const [elapsedDisplay, setElapsedDisplay] = useState<number>(0);
 
+    // Sponsors State
+    const [sponsors, setSponsors] = useState<{ id: string, advertUrl: string, name: string }[]>([]);
+    const [currentSponsorIndex, setCurrentSponsorIndex] = useState(0);
+    const [tournamentId, setTournamentId] = useState<string | null>(null);
+
     useEffect(() => {
         // collectionGroup allows finding the matchId across any tournament path
         const q = query(collectionGroup(db, "matches"));
@@ -21,6 +26,10 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
             const matchDoc = snapshot.docs.find(d => d.id === matchId);
             if (matchDoc) {
                 setMatch(matchDoc.data() as MatchState);
+                // Extract tournamentId from reference path: tournaments/{id}/matches/{matchId}
+                if (matchDoc.ref.parent.parent) {
+                    setTournamentId(matchDoc.ref.parent.parent.id);
+                }
                 setError(null);
             } else {
                 setError("Match not found");
@@ -59,6 +68,34 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         return () => clearInterval(timerInterval);
     }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match]);
 
+    // Sponsors Logic
+    useEffect(() => {
+        if (!tournamentId || !match?.isSponsorsOverlayActive) return;
+
+        const q = query(collection(db, "tournaments", tournamentId, "sponsors")); // Consider filtering by status here if possible or client side
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const activeSponsors = snapshot.docs
+                .map(d => ({ id: d.id, ...d.data() } as any))
+                .filter(s => s.status === true)
+                .sort((a, b) => (a.priority || 99) - (b.priority || 99)); // Basic sort
+            setSponsors(activeSponsors);
+        });
+
+        return () => unsubscribe();
+    }, [tournamentId, match?.isSponsorsOverlayActive]);
+
+    // Carousel Timer
+    useEffect(() => {
+        if (!match?.isSponsorsOverlayActive || sponsors.length === 0) return;
+
+        const interval = setInterval(() => {
+            setCurrentSponsorIndex(prev => (prev + 1) % sponsors.length);
+        }, 8000); // 8 seconds per slide
+
+        return () => clearInterval(interval);
+    }, [match?.isSponsorsOverlayActive, sponsors.length]);
+
+
     const formatTime = (seconds: number) => {
         const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
         const m = Math.floor(safeSeconds / 60);
@@ -67,6 +104,39 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     };
 
     if (loading || error || !match) return null; // Keep OBS clean on error/loading
+
+    // Render Sponsors Overlay
+    if (match.isSponsorsOverlayActive && sponsors.length > 0) {
+        return (
+            <div className="fixed inset-0 bg-black flex items-center justify-center animate-in fade-in duration-700">
+                <div
+                    className="relative w-full h-full max-h-screen aspect-video"
+                    style={{ transform: `scale(${match.overlayScale || 1})`, transformOrigin: 'center' }}
+                >
+                    {sponsors.map((sponsor, index) => (
+                        <div
+                            key={sponsor.id}
+                            className={clsx(
+                                "absolute inset-0 transition-opacity duration-1000 flex items-center justify-center",
+                                index === currentSponsorIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                            )}
+                        >
+                            <img
+                                src={sponsor.advertUrl}
+                                alt={sponsor.name}
+                                className="w-full h-full object-contain"
+                            />
+                        </div>
+                    ))}
+
+                    {/* Optional: Add a "Tournament Sponsors" badge or similar if needed */}
+                    <div className="absolute bottom-8 right-8 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 z-20">
+                        <span className="text-[10px] uppercase font-black tracking-widest text-white/50">Tournament Sponsors</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Handle Badminton Schema
     const p1Name = match.player1?.name2
@@ -83,7 +153,10 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const isLive = match.status === "live" || match.isTimerRunning;
 
     return (
-        <div className="fixed inset-0 p-8 pointer-events-none font-instrument">
+        <div
+            className="fixed inset-0 p-8 pointer-events-none font-instrument transition-opacity duration-500"
+            style={{ transform: `scale(${match.overlayScale || 1})`, transformOrigin: 'center' }}
+        >
             {/* TOP LEFT: Scoreboard (Badminton Style) */}
             <div className="absolute top-8 left-8 flex items-stretch bg-black/90 text-white rounded-xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-left-4">
                 <div className={clsx("flex flex-col items-center justify-center px-3", isLive ? 'bg-[#FF5A09]' : 'bg-slate-800')}>
@@ -123,16 +196,16 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
 
             {/* TOP RIGHT: Logos */}
             <div className="absolute top-8 right-8 flex items-center gap-4">
-                {match.tournamentLogo && (
+                {match.showTournamentLogo !== false && match.tournamentLogo && (
                     <img src={match.tournamentLogo} alt="Tournament Logo" className="h-16 w-auto object-contain drop-shadow-md" />
                 )}
-                {match.streamerLogo && (
+                {match.showStreamerLogo !== false && match.streamerLogo && (
                     <img src={match.streamerLogo} alt="Streamer Logo" className="h-16 w-auto object-contain drop-shadow-md" />
                 )}
             </div>
 
             {/* BOTTOM RIGHT: Extra Info Popup */}
-            {(match.matchCategory || match.category || match.tournamentName) && (
+            {match.showMatchInfo !== false && (match.matchCategory || match.category || match.tournamentName) && (
                 <div className="absolute bottom-12 right-12 animate-in slide-in-from-right-8 duration-500">
                     <div className="bg-black/90 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10 backdrop-blur-md">
                         <div className="flex flex-col gap-0.5 text-right">

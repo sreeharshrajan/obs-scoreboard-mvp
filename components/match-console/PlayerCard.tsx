@@ -1,5 +1,5 @@
 
-import { RotateCcw, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import clsx from 'clsx';
 import { PlayerState, MatchState } from '@/types/match';
 
@@ -60,7 +60,7 @@ export default function PlayerCard({
                 {!isCompleted && (
                     <div className="flex gap-4">
                         <button onClick={() => onScoreChange(-1)} className="w-12 h-12 rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:bg-white dark:hover:bg-white/5 transition-all">
-                            <RotateCcw size={18} />
+                            <Minus size={24} />
                         </button>
                         <button onClick={() => onScoreChange(1)} className="w-20 h-20 rounded-[2rem] bg-[#FF5A09] text-white shadow-xl shadow-[#FF5A09]/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
                             <Plus size={32} />

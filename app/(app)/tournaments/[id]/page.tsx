@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useEffect, useState, use, useCallback } from "react";
-import { Plus, Play, Settings, Calendar, MapPin, Trophy, Users, Hash, Edit3, Activity, Layers, LayoutGrid, List } from "lucide-react";
+import { Plus, Play, Settings, Calendar, MapPin, Trophy, Users, Hash, Edit3, Activity, Layers, LayoutGrid, List, ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/client";
 import MatchRow from "@/components/dashboard/MatchRow";
 import MatchCard from "@/components/dashboard/MatchCard"; // New component
+import SponsorsTab from "@/components/dashboard/SponsorsTab"; // New component
 import DashboardLoader from "@/components/dashboard/loader";
+import { Match } from "@/types/match";
 
 interface TournamentData {
     id: string;
@@ -22,14 +24,7 @@ interface TournamentData {
     owner: { displayName: string } | null;
 }
 
-interface Match {
-    id: string;
-    status: string;
-    player1: { name: string };
-    player2: { name: string };
-    court: string;
-    startTime?: string;
-}
+
 
 export default function TournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
@@ -40,7 +35,7 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
     const [matches, setMatches] = useState<Match[]>([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ total: 0, active: 0 });
-    const [activeTab, setActiveTab] = useState<"matches" | "overview">("matches");
+    const [activeTab, setActiveTab] = useState<"matches" | "overview" | "sponsors">("matches");
 
     const fetchData = useCallback(async () => {
         try {
@@ -123,6 +118,15 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                     >
                         Overview
                     </button>
+                    <button
+                        onClick={() => setActiveTab("sponsors")}
+                        className={`flex-1 py-3 text-[11px] uppercase font-bold tracking-widest border-b-2 transition-colors ${activeTab === "sponsors"
+                            ? "border-[#FF5A09] text-[#FF5A09]"
+                            : "border-transparent text-slate-400"
+                            }`}
+                    >
+                        Sponsors
+                    </button>
                 </div>
             </div>
 
@@ -161,6 +165,23 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                                     className="flex items-center justify-center gap-2 h-12 rounded-2xl bg-[#FF5A09] text-white text-[10px] font-bold uppercase tracking-widest hover:shadow-lg hover:shadow-[#FF5A09]/30 transition-all"
                                 >
                                     <Plus size={14} /> Add Match
+                                </button>
+                            </div>
+
+                            <div className="hidden lg:flex flex-col gap-2 mt-6">
+                                <button
+                                    onClick={() => setActiveTab("matches")}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeTab === 'matches' ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white font-bold' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                                >
+                                    <List size={16} />
+                                    <span className="text-xs uppercase tracking-widest">Matches</span>
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("sponsors")}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeTab === 'sponsors' ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white font-bold' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                                >
+                                    <ImageIcon size={16} />
+                                    <span className="text-xs uppercase tracking-widest">Sponsors</span>
                                 </button>
                             </div>
                         </div>
@@ -254,6 +275,11 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                             )}
                         </div>
                     </main>
+
+                    {/* SPONSORS TAB CONTENT */}
+                    <div className={`lg:col-span-8 ${activeTab === 'sponsors' ? 'block' : 'hidden'}`}>
+                        <SponsorsTab tournamentId={tournamentId} />
+                    </div>
                 </div>
             </div>
 

@@ -47,7 +47,7 @@ const updateMatch = async ({ tournamentId, matchId, data, token }: { tournamentI
 
 // --- Main Component ---
 
-export default function LiveMatchConsole() {
+export default function MatchConsole() {
     const params = useParams();
     const tournamentId = params.id as string;
     const matchId = params.matchId as string;
@@ -239,6 +239,10 @@ export default function LiveMatchConsole() {
         });
     };
 
+    const handleUpdateMatch = (updates: Partial<MatchState>) => {
+        mutation.mutate(updates);
+    };
+
     const swapSides = () => {
         if (!match) return;
         mutation.mutate({
@@ -288,6 +292,7 @@ export default function LiveMatchConsole() {
                 onToggleFullscreen={toggleFullscreen}
                 tournamentId={tournamentId}
                 matchId={matchId}
+                onUpdateMatch={handleUpdateMatch}
             />
 
             {/* Main Scoreboard Interface */}
@@ -317,8 +322,6 @@ export default function LiveMatchConsole() {
                     <QuickActions
                         onSwap={swapSides}
                         onEndMatch={handleEndMatch}
-                        overlayScale={safeMatch.overlayScale || 1}
-                        onScaleChange={(val) => mutation.mutate({ overlayScale: val })}
                         isCompleted={isCompleted}
                     />
                 </div>

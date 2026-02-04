@@ -14,6 +14,10 @@ export interface MatchState {
     isTimerRunning: boolean;
     timerStartTime: number | null;
     timerElapsed: number;
+    isSponsorsOverlayActive?: boolean;
+    showTournamentLogo?: boolean;
+    showStreamerLogo?: boolean;
+    showMatchInfo?: boolean;
 
     // New Fields
     matchTime?: string;
