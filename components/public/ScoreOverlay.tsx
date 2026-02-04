@@ -123,10 +123,10 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
             {/* BOTTOM RIGHT: Extra Info Popup */}
             {(match.category || match.tournamentName) && (
                 <div className="absolute bottom-12 right-12 animate-in slide-in-from-right-8 duration-500">
-                    <div className="bg-white text-black px-4 py-2 rounded-lg shadow-2xl flex items-center gap-3 border-b-4 border-[#FF5A09]">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{match.tournamentName || "Tournament"}</span>
-                            <span className="text-sm font-black uppercase tracking-tight">{match.category || match.court || "Match"}</span>
+                    <div className="bg-black/90 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-white/10 backdrop-blur-md">
+                        <div className="flex flex-col gap-0.5 text-right">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A09]">{match.tournamentName || "Tournament"}</span>
+                            <span className="text-sm font-black uppercase tracking-tight text-white">{match.category || match.court || "Match"}</span>
                         </div>
                     </div>
                 </div>
