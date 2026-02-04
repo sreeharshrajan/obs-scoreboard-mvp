@@ -69,8 +69,12 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     if (loading || error || !match) return null; // Keep OBS clean on error/loading
 
     // Handle Badminton Schema
-    const p1Name = match.player1?.name || "Player 1";
-    const p2Name = match.player2?.name || "Player 2";
+    const p1Name = match.player1?.name2
+        ? `${match.player1.name} / ${match.player1.name2}`
+        : match.player1?.name || "Player 1";
+    const p2Name = match.player2?.name2
+        ? `${match.player2.name} / ${match.player2.name2}`
+        : match.player2?.name || "Player 2";
     const p1Score = match.player1?.score || 0;
     const p2Score = match.player2?.score || 0;
     const p1Serving = match.player1?.isServing ?? false;
@@ -88,28 +92,32 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
 
                 <div className="flex flex-col divide-y divide-white/10">
                     {/* Player 1 */}
-                    <div className="flex items-center justify-between min-w-[260px] px-4 py-2 gap-4 relative overflow-hidden">
+                    <div className="flex items-center justify-between min-w-[300px] px-4 py-2 gap-4 relative overflow-hidden">
                         <div className="flex items-center gap-2">
                             {p1Serving && <div className="w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse shadow-[0_0_8px_#FF5A09]" />}
-                            <span className={clsx("text-sm font-bold uppercase tracking-tight", p1Serving ? "text-white" : "text-white/70")}>{p1Name}</span>
+                            <div className="flex flex-col">
+                                <span className={clsx("text-sm font-black uppercase tracking-tight", p1Serving ? "text-white" : "text-white/70")}>{p1Name}</span>
+                            </div>
                         </div>
-                        <span className="text-2xl font-black tabular-nums text-[#FF5A09]">{p1Score}</span>
+                        <span className="text-3xl font-black tabular-nums text-[#FF5A09]">{p1Score}</span>
                     </div>
 
                     {/* Player 2 */}
-                    <div className="flex items-center justify-between min-w-[260px] px-4 py-2 gap-4 relative overflow-hidden">
+                    <div className="flex items-center justify-between min-w-[300px] px-4 py-2 gap-4 relative overflow-hidden">
                         <div className="flex items-center gap-2">
                             {p2Serving && <div className="w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse shadow-[0_0_8px_#FF5A09]" />}
-                            <span className={clsx("text-sm font-bold uppercase tracking-tight", p2Serving ? "text-white" : "text-white/70")}>{p2Name}</span>
+                            <div className="flex flex-col">
+                                <span className={clsx("text-sm font-black uppercase tracking-tight", p2Serving ? "text-white" : "text-white/70")}>{p2Name}</span>
+                            </div>
                         </div>
-                        <span className="text-2xl font-black tabular-nums text-[#FF5A09]">{p2Score}</span>
+                        <span className="text-3xl font-black tabular-nums text-[#FF5A09]">{p2Score}</span>
                     </div>
                 </div>
 
                 {/* Timer Section (New) */}
-                <div className="flex flex-col items-center justify-center px-4 bg-white/5 border-l border-white/10 min-w-[80px]">
+                <div className="flex flex-col items-center justify-center px-4 bg-white/5 border-l border-white/10 min-w-[90px]">
                     <Clock size={12} className="text-white/40 mb-1" />
-                    <span className="text-lg font-mono font-bold tracking-tight">{formatTime(elapsedDisplay)}</span>
+                    <span className="text-xl font-mono font-bold tracking-tight">{formatTime(elapsedDisplay)}</span>
                 </div>
             </div>
 
@@ -121,12 +129,21 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
             </div>
 
             {/* BOTTOM RIGHT: Extra Info Popup */}
-            {(match.category || match.tournamentName) && (
+            {(match.matchCategory || match.category || match.tournamentName) && (
                 <div className="absolute bottom-12 right-12 animate-in slide-in-from-right-8 duration-500">
-                    <div className="bg-black/90 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-white/10 backdrop-blur-md">
+                    <div className="bg-black/90 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10 backdrop-blur-md">
                         <div className="flex flex-col gap-0.5 text-right">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A09]">{match.tournamentName || "Tournament"}</span>
-                            <span className="text-sm font-black uppercase tracking-tight text-white">{match.category || match.court || "Match"}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A09] mb-1">{match.tournamentName || "Tournament"}</span>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-black uppercase tracking-tight text-white">{match.matchCategory || match.category || "Match"}</span>
+                                <div className="flex items-center justify-end gap-2 text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">
+                                    {match.roundType && <span>{match.roundType}</span>}
+                                    {match.roundType && match.ageGroup && <span>•</span>}
+                                    {match.ageGroup && <span>{match.ageGroup}</span>}
+                                    {(match.roundType || match.ageGroup) && match.court && <span>•</span>}
+                                    {match.court && <span>{match.court}</span>}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

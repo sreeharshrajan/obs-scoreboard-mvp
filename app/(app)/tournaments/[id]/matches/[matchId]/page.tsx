@@ -278,7 +278,15 @@ export default function AdminPanel() {
     const handleStartTimer = () => {
         mutation.mutate({
             isTimerRunning: true,
-            timerStartTime: Date.now()
+            timerStartTime: Date.now(),
+            status: 'live' // Automatically set to live when timer starts
+        });
+    };
+
+    const handleEndMatch = () => {
+        if (safeMatch.isTimerRunning) handleStopTimer();
+        mutation.mutate({
+            status: 'completed'
         });
     };
 
@@ -299,7 +307,8 @@ export default function AdminPanel() {
             isTimerRunning: false,
             timerElapsed: 0,
             timerStartTime: null,
-            serverNumber: 1
+            serverNumber: 1,
+            status: 'scheduled'
         });
     };
 
@@ -317,23 +326,44 @@ export default function AdminPanel() {
     };
 
     return (
-        <div className="w-full h-[80vh] bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 flex items-center justify-center p-4">
+        <div className="w-full h-full bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 flex items-center justify-center p-4">
 
             {/* Inner Dashboard Container */}
             <div className="w-full max-w-7xl h-full bg-slate-950/50 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden flex flex-col backdrop-blur-sm">
 
                 {/* Header with Clock & Tournament Info */}
-                <div className="shrink-0 h-16 flex items-center justify-between px-6 border-b border-slate-800/50 bg-slate-900/20">
-                    <div className="flex flex-col justify-center gap-0.5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            {tournament?.name || safeMatch.tournamentName || "Tournament"}
-                        </span>
-                        <span className="text-sm font-bold text-slate-200 tracking-tight">
-                            {safeMatch.category || "Match Category"} <span className="text-slate-700 mx-1">|</span> <span className="text-slate-400 font-medium">{safeMatch.scoringType || "Standard"}</span>
-                        </span>
+                <div className="shrink-0 min-h-[4rem] flex flex-wrap items-center justify-between px-6 py-2 border-b border-slate-800/50 bg-slate-900/20 gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col justify-center gap-0.5">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                {tournament?.name || safeMatch.tournamentName || "Tournament"}
+                            </span>
+                            <span className="text-sm font-bold text-slate-200 tracking-tight">
+                                {safeMatch.matchCategory || safeMatch.category || "Match Category"} <span className="text-slate-700 mx-1">|</span> <span className="text-slate-400 font-medium">{safeMatch.roundType || "Match Round"}</span>
+                            </span>
+                        </div>
+                        {safeMatch.matchTime && (
+                            <div className="hidden sm:flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded text-[10px] font-bold text-blue-400 uppercase tracking-wider">
+                                <Clock size={10} /> {safeMatch.matchTime}
+                            </div>
+                        )}
+                        {safeMatch.ageGroup && (
+                            <div className="hidden sm:flex items-center gap-2 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                {safeMatch.ageGroup}
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <div className={clsx(
+                            "px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest flex items-center gap-2",
+                            safeMatch.status === 'live' ? "bg-red-500/10 border-red-500/30 text-red-500" :
+                                safeMatch.status === 'completed' ? "bg-green-500/10 border-green-500/30 text-green-500" :
+                                    "bg-slate-800 border-slate-700 text-slate-400"
+                        )}>
+                            {safeMatch.status === 'live' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                            {safeMatch.status || 'Scheduled'}
+                        </div>
                         <button
                             onClick={toggleFullscreen}
                             className="p-2 rounded-lg bg-slate-900/50 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -350,10 +380,10 @@ export default function AdminPanel() {
                 {/* Background Grid Decoration */}
                 <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
 
-                <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
+                <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0 overflow-y-auto">
 
                     {/* === LEFT COLUMN: Player 1 === */}
-                    <div className="lg:col-span-4 flex flex-col h-full bg-slate-900/40 rounded-3xl border border-slate-800/60 relative overflow-hidden group hover:border-slate-700/60 transition-colors">
+                    <div className="lg:col-span-4 flex flex-col h-full min-h-[400px] bg-slate-900/40 rounded-3xl border border-slate-800/60 relative overflow-hidden group hover:border-slate-700/60 transition-colors">
                         <div className={clsx(
                             "absolute inset-0 border-2 rounded-3xl transition-all duration-300 pointer-events-none z-10",
                             safeMatch.player1.isServing ? "border-blue-500/50 shadow-[inset_0_0_20px_rgba(59,130,246,0.1)]" : "border-transparent"
@@ -361,18 +391,30 @@ export default function AdminPanel() {
 
                         <div className="flex-1 p-6 flex flex-col z-0 relative justify-between">
                             <div className="flex items-start justify-between">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Home</label>
-                                    <LiveInput
-                                        value={safeMatch.player1.name}
-                                        onCommit={(val) => mutation.mutate({ player1: { ...safeMatch.player1, name: val } })}
-                                        className="bg-transparent border-b border-dashed border-slate-700 hover:border-slate-500 focus:border-blue-500 py-1 text-xl font-bold text-white focus:outline-none transition-all placeholder:text-slate-700 w-full min-w-[150px]"
-                                        placeholder="PLAYER 1"
-                                    />
+                                <div className="w-full">
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                                        Team 1
+                                    </label>
+                                    <div className="flex flex-col gap-1">
+                                        <LiveInput
+                                            value={safeMatch.player1.name}
+                                            onCommit={(val) => mutation.mutate({ player1: { ...safeMatch.player1, name: val } })}
+                                            className="bg-transparent border-b border-dashed border-slate-700 hover:border-slate-500 focus:border-blue-500 py-1 text-xl font-bold text-white focus:outline-none transition-all placeholder:text-slate-700 w-full"
+                                            placeholder="PLAYER 1"
+                                        />
+                                        {(safeMatch.matchType === "Doubles" || safeMatch.matchType === "Mixed Doubles" || safeMatch.player1.name2) && (
+                                            <LiveInput
+                                                value={safeMatch.player1.name2 || ""}
+                                                onCommit={(val) => mutation.mutate({ player1: { ...safeMatch.player1, name2: val } })}
+                                                className="bg-transparent border-b border-dashed border-slate-700 hover:border-slate-500 focus:border-blue-500 py-1 text-xl font-bold text-white focus:outline-none transition-all placeholder:text-slate-700 w-full"
+                                                placeholder="PLAYER 2"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex flex-col items-center justify-center gap-6">
+                            <div className="flex flex-col items-center justify-center gap-6 my-8">
                                 <div className="text-9xl leading-none font-mono font-black tracking-tighter text-white tabular-nums drop-shadow-2xl select-none">
                                     {safeMatch.player1.score}
                                 </div>
@@ -418,7 +460,7 @@ export default function AdminPanel() {
                             <div className="flex flex-col items-center gap-4 z-10 w-full">
                                 <div className="flex items-center gap-2 text-slate-500">
                                     <Clock size={12} />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">Timer</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Match Timer</span>
                                 </div>
 
                                 <div className={clsx(
@@ -428,22 +470,47 @@ export default function AdminPanel() {
                                     {formatTime(elapsedDisplay)}
                                 </div>
 
-                                <button
-                                    onClick={() => safeMatch.isTimerRunning ? handleStopTimer() : handleStartTimer()}
-                                    className={clsx(
-                                        "h-10 w-32 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg",
-                                        safeMatch.isTimerRunning
-                                            ? "bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20"
-                                            : "bg-green-500 hover:bg-green-400 text-white border border-green-400 shadow-green-500/20"
-                                    )}
-                                >
-                                    {safeMatch.isTimerRunning ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-                                    {safeMatch.isTimerRunning ? "Stop" : "Start"}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => safeMatch.isTimerRunning ? handleStopTimer() : handleStartTimer()}
+                                        className={clsx(
+                                            "h-10 w-32 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg",
+                                            safeMatch.isTimerRunning
+                                                ? "bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20"
+                                                : "bg-green-500 hover:bg-green-400 text-white border border-green-400 shadow-green-500/20"
+                                        )}
+                                    >
+                                        {safeMatch.isTimerRunning ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+                                        {safeMatch.isTimerRunning ? "Stop" : "Start"}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-
+                        {/* MATCH INFO */}
+                        <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-4 grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Court</span>
+                                <span className="text-xs font-bold text-slate-200">{safeMatch.court || 'TBD'}</span>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Scoring</span>
+                                <span className="text-xs font-bold text-slate-200">{safeMatch.scoringType || '21x3'}</span>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Match Type</span>
+                                <span className="text-xs font-bold text-slate-200">{safeMatch.matchType || 'Singles'}</span>
+                            </div>
+                            <div className="space-y-1">
+                                <button
+                                    onClick={handleEndMatch}
+                                    disabled={safeMatch.status === 'completed'}
+                                    className="w-full h-8 rounded-lg bg-[#FF5A09] text-white text-[9px] font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+                                >
+                                    End Match
+                                </button>
+                            </div>
+                        </div>
 
                         {/* CONTROLS (Swap / Reset / Scale) */}
                         <div className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-3 flex flex-col gap-3">
@@ -452,13 +519,13 @@ export default function AdminPanel() {
                                     onClick={swapSides}
                                     className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all text-[10px] font-bold uppercase tracking-wide"
                                 >
-                                    <ArrowRightLeft size={12} /> Swap
+                                    <ArrowRightLeft size={12} /> Swap sides
                                 </button>
                                 <button
                                     onClick={resetMatch}
                                     className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all text-[10px] font-bold uppercase tracking-wide"
                                 >
-                                    <RotateCcw size={12} /> Reset
+                                    <RotateCcw size={12} /> Reset Match
                                 </button>
                             </div>
 
@@ -478,16 +545,16 @@ export default function AdminPanel() {
 
                             <div className="flex items-center justify-between px-2 text-[9px] font-mono text-slate-500 uppercase">
                                 <span className={clsx("flex items-center gap-1", mutation.isPending ? "text-yellow-500" : "text-green-500")}>
-                                    <Wifi size={8} /> {mutation.isPending ? "Syncing" : "Connected"}
+                                    <Wifi size={8} /> {mutation.isPending ? "Syncing" : "Cloud Active"}
                                 </span>
-                                <span>StreamScore MVP</span>
+                                <span>StreamScore v2.0</span>
                             </div>
                         </div>
 
                     </div>
 
                     {/* === RIGHT COLUMN: Player 2 === */}
-                    <div className="lg:col-span-4 flex flex-col h-full bg-slate-900/40 rounded-3xl border border-slate-800/60 relative overflow-hidden group hover:border-slate-700/60 transition-colors">
+                    <div className="lg:col-span-4 flex flex-col h-full min-h-[400px] bg-slate-900/40 rounded-3xl border border-slate-800/60 relative overflow-hidden group hover:border-slate-700/60 transition-colors">
                         <div className={clsx(
                             "absolute inset-0 border-2 rounded-3xl transition-all duration-300 pointer-events-none z-10",
                             safeMatch.player2.isServing ? "border-orange-500/50 shadow-[inset_0_0_20px_rgba(249,115,22,0.1)]" : "border-transparent"
@@ -495,18 +562,30 @@ export default function AdminPanel() {
 
                         <div className="flex-1 p-6 flex flex-col z-0 relative justify-between">
                             <div className="flex items-start justify-between">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Away</label>
-                                    <LiveInput
-                                        value={safeMatch.player2.name}
-                                        onCommit={(val) => mutation.mutate({ player2: { ...safeMatch.player2, name: val } })}
-                                        className="bg-transparent border-b border-dashed border-slate-700 hover:border-slate-500 focus:border-orange-500 py-1 text-xl font-bold text-white focus:outline-none transition-all placeholder:text-slate-700 w-full min-w-[150px]"
-                                        placeholder="PLAYER 2"
-                                    />
+                                <div className="w-full">
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 text-right">
+                                        Team 2
+                                    </label>
+                                    <div className="flex flex-col gap-1">
+                                        <LiveInput
+                                            value={safeMatch.player2.name}
+                                            onCommit={(val) => mutation.mutate({ player2: { ...safeMatch.player2, name: val } })}
+                                            className="bg-transparent border-b border-dashed border-slate-700 hover:border-slate-500 focus:border-orange-500 py-1 text-xl font-bold text-white focus:outline-none transition-all placeholder:text-slate-700 w-full text-right"
+                                            placeholder="PLAYER 1"
+                                        />
+                                        {(safeMatch.matchType === "Doubles" || safeMatch.matchType === "Mixed Doubles" || safeMatch.player2.name2) && (
+                                            <LiveInput
+                                                value={safeMatch.player2.name2 || ""}
+                                                onCommit={(val) => mutation.mutate({ player2: { ...safeMatch.player2, name2: val } })}
+                                                className="bg-transparent border-b border-dashed border-slate-700 hover:border-slate-500 focus:border-orange-500 py-1 text-xl font-bold text-white focus:outline-none transition-all placeholder:text-slate-700 w-full text-right"
+                                                placeholder="PLAYER 2"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex flex-col items-center justify-center gap-6">
+                            <div className="flex flex-col items-center justify-center gap-6 my-8">
                                 <div className="text-9xl leading-none font-mono font-black tracking-tighter text-white tabular-nums drop-shadow-2xl select-none">
                                     {safeMatch.player2.score}
                                 </div>
