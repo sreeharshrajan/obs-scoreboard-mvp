@@ -86,8 +86,8 @@ export default function SponsorsTab({ tournamentId }: SponsorsTabProps) {
 
     return (
         <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+            {/* Header - Hidden on Mobile */}
+            <div className="hidden md:flex items-center justify-between">
                 <div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Sponsors & Ads</h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Manage advertisements displayed during breaks.</p>
@@ -99,6 +99,11 @@ export default function SponsorsTab({ tournamentId }: SponsorsTabProps) {
                     <Plus size={16} /> Add Sponsor
                 </button>
             </div>
+
+            {/* Mobile Title (Optional? User said hide title "Sponsors & Ads", presumably the big header. But maybe we need *something*? 
+               User logic: "hide its current tile and button... replace the button for add match to add sponsor"
+               I will assume no title is needed on mobile as tabs indicate context, or simpler view.
+            */}
 
             {/* List */}
             {sponsors.length === 0 ? (
@@ -164,6 +169,14 @@ export default function SponsorsTab({ tournamentId }: SponsorsTabProps) {
                     ))}
                 </div>
             )}
+
+            {/* Mobile FAB */}
+            <button
+                onClick={openAdd}
+                className="md:hidden fixed bottom-6 right-6 z-30 flex items-center justify-center w-14 h-14 rounded-full bg-[#FF5A09] text-white shadow-xl shadow-[#FF5A09]/30 hover:scale-105 transition-transform"
+            >
+                <Plus size={24} />
+            </button>
 
             {/* Modal */}
             <SponsorModal

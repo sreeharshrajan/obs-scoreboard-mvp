@@ -210,7 +210,7 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                     </aside>
 
                     {/* RIGHT COLUMN (Matches) */}
-                    <main className={`lg:col-span-8 flex flex-col gap-6 ${activeTab === 'matches' ? 'flex' : 'hidden lg:flex'}`}>
+                    <main className={`lg:col-span-8 flex flex-col gap-6 ${activeTab === 'matches' ? 'flex' : 'hidden'} ${activeTab === 'sponsors' ? 'lg:hidden' : 'lg:flex'}`}>
                         <div className="flex items-center justify-between px-2 hidden md:flex">
                             <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Match Schedule</h2>
                             <div className="h-px flex-1 bg-slate-100 dark:bg-white/5 mx-6" />
@@ -284,7 +284,7 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
             </div>
 
             {/* MOBILE FAB FOR ADD MATCH */}
-            <div className="md:hidden fixed bottom-6 right-6 z-30">
+            <div className={`md:hidden fixed bottom-6 right-6 z-30 ${activeTab === 'sponsors' ? 'hidden' : 'block'}`}>
                 <button
                     onClick={() => router.push(`/tournaments/${tournamentId}/matches/new`)}
                     className="flex items-center justify-center w-14 h-14 rounded-full bg-[#FF5A09] text-white shadow-xl shadow-[#FF5A09]/30 hover:scale-105 transition-transform"
