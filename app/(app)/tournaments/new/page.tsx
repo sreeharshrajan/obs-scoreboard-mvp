@@ -54,7 +54,7 @@ export default function NewTournament() {
             const result = await response.json();
 
             if (result.success) {
-                router.push(`/dashboard/tournaments/${result.data.id}`);
+                router.push(`/tournaments/${result.data.id}`);
             } else {
                 setServerError(result.error || "Something went wrong");
             }

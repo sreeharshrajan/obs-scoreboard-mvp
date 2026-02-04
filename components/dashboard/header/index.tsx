@@ -3,19 +3,20 @@ import { useState } from "react";
 import { GamepadDirectional, LogOut, User, Menu, X, Trophy, Users } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { auth } from "@/lib/firebase/client";
-import { resolveRoles } from "@/lib/auth/roles"; 
+import { resolveRoles } from "@/lib/auth/roles";
 import Link from "next/link";
+import Image from "next/image"
 
 const DashboardHeader = () => {
     const { user } = useAuthStore();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    
+
     // Check admin status
     const { isAdmin } = resolveRoles(user?.email || null);
 
     const navLinks = [
         { name: "Tournaments", href: "/tournaments", icon: Trophy, public: true },
-        { name: "Users", href: "/users", icon: Users, public: false }, 
+        { name: "Users", href: "/users", icon: Users, public: false },
     ];
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -23,7 +24,7 @@ const DashboardHeader = () => {
     return (
         <>
             <header className="h-16 md:h-20 px-4 md:px-8 border-b border-slate-100 dark:border-white/5 backdrop-blur-xl bg-white/80 dark:bg-[#1A1A1A]/80 flex items-center justify-between sticky top-0 z-50">
-                
+
                 {/* Left: Branding */}
                 <Link href='/dashboard' className="flex items-center gap-3 md:gap-4 group cursor-pointer">
                     <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl border border-[#FF5A09]/20 flex items-center justify-center bg-white dark:bg-[#252525] shadow-sm transition-all duration-300 group-hover:rotate-6 group-hover:shadow-[#FF5A09]/10 group-hover:shadow-lg">
@@ -40,8 +41,8 @@ const DashboardHeader = () => {
                 <nav className="hidden md:flex items-center gap-6 mx-8">
                     {navLinks.map((link) => (
                         (link.public || isAdmin) && (
-                            <Link 
-                                key={link.href} 
+                            <Link
+                                key={link.href}
                                 href={link.href}
                                 className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-[#FF5A09] transition-colors"
                             >
@@ -57,12 +58,23 @@ const DashboardHeader = () => {
                     <div className="hidden sm:flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
                         <div className="w-6 h-6 rounded-full overflow-hidden bg-[#FF5A09]/10 flex items-center justify-center">
                             {user?.photoURL ? (
-                                <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                                <Image
+                                    src={user.photoURL}
+                                    alt={`${user.displayName || "User"} avatar`}
+                                    fill
+                                    sizes="40px"
+                                    className="object-cover"
+                                    priority
+                                />
                             ) : (
-                                <User size={12} className="text-[#FF5A09]" />
+                                <User
+                                    size={12}
+                                    className="text-[#FF5A09]"
+                                    aria-hidden="true"
+                                />
                             )}
                         </div>
-                        <div className="flex flex-col max-w-[100px]">
+                        <div className="flex flex-col max-w-25">
                             <span className="text-xs font-semibold truncate leading-none">
                                 {user?.displayName || "User"}
                             </span>
@@ -71,14 +83,18 @@ const DashboardHeader = () => {
                     </div>
 
                     <button
+                        type="button"
                         onClick={() => auth.signOut()}
+                        aria-label="Sign out"
+                        title="Sign out"
                         className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-slate-500 hover:text-[#FF5A09] transition-all"
                     >
-                        <LogOut size={18} />
+                        <LogOut size={18} aria-hidden="true" />
                     </button>
 
+
                     {/* Mobile Menu Trigger */}
-                    <button 
+                    <button
                         onClick={toggleMenu}
                         className="p-2 md:hidden text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors"
                     >
@@ -92,7 +108,7 @@ const DashboardHeader = () => {
                 <div className="fixed inset-0 z-40 md:hidden">
                     {/* Backdrop */}
                     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={toggleMenu} />
-                    
+
                     <nav className="fixed top-16 left-0 right-0 bg-white dark:bg-[#1A1A1A] border-b border-slate-100 dark:border-white/5 p-4 flex flex-col gap-2 shadow-xl animate-in slide-in-from-top duration-200">
                         {navLinks.map((link) => (
                             (link.public || isAdmin) && (
