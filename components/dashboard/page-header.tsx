@@ -18,7 +18,10 @@ export default function PageHeader() {
         if (pathname === "/users") {
             return {
                 title: "Platform Users",
-                subtitle: "Directory",
+                breadcrumbs: [
+                    { label: "Dashboard", href: "/dashboard" },
+                    { label: "Directory", href: null }
+                ],
                 backUrl: null,
                 action: {
                     label: "Add User",
@@ -30,7 +33,10 @@ export default function PageHeader() {
         if (pathname.includes("/users") && pathname.includes("/edit")) {
             return {
                 title: "Edit Account",
-                subtitle: "User Management",
+                breadcrumbs: [
+                    { label: "Directory", href: "/users" },
+                    { label: "User Management", href: null }
+                ],
                 backUrl: "/users",
                 backLabel: "Directory"
             };
@@ -40,7 +46,10 @@ export default function PageHeader() {
         if (pathname === "/tournaments") {
             return {
                 title: "Your Tournaments",
-                subtitle: "Event Archives",
+                breadcrumbs: [
+                    { label: "Dashboard", href: "/dashboard" },
+                    { label: "Event Archives", href: null }
+                ],
                 backUrl: null,
                 action: {
                     label: "Create New",
@@ -52,7 +61,10 @@ export default function PageHeader() {
         if (pathname === "/tournaments/new") {
             return {
                 title: "Create Tournament",
-                subtitle: "New Event",
+                breadcrumbs: [
+                    { label: "Tournaments", href: "/tournaments" },
+                    { label: "New Event", href: null }
+                ],
                 backUrl: "/tournaments",
                 backLabel: "Tournaments"
             };
@@ -66,7 +78,10 @@ export default function PageHeader() {
             if (parts.length === 2) {
                 return {
                     title: "Management",
-                    subtitle: "Tournament Console",
+                    breadcrumbs: [
+                        { label: "Tournaments", href: "/tournaments" },
+                        { label: "Management Dashboard", href: null }
+                    ],
                     backUrl: "/tournaments",
                     backLabel: "Tournaments"
                 };
@@ -76,7 +91,10 @@ export default function PageHeader() {
             if (parts[2] === "edit") {
                 return {
                     title: "Edit Tournament",
-                    subtitle: "Settings",
+                    breadcrumbs: [
+                        { label: "Management", href: `/tournaments/${tournamentId}` },
+                        { label: "Settings", href: null }
+                    ],
                     backUrl: `/tournaments/${tournamentId}`,
                     backLabel: "Console"
                 };
@@ -86,7 +104,10 @@ export default function PageHeader() {
             if (parts[2] === "matches" && parts[3] === "new") {
                 return {
                     title: "New Match",
-                    subtitle: "Schedule",
+                    breadcrumbs: [
+                        { label: "Management", href: `/tournaments/${tournamentId}` },
+                        { label: "Schedule", href: null }
+                    ],
                     backUrl: `/tournaments/${tournamentId}`,
                     backLabel: "Console"
                 };
@@ -96,7 +117,10 @@ export default function PageHeader() {
             if (parts[2] === "matches" && parts[3]) {
                 return {
                     title: "Match Control",
-                    subtitle: "Live Console",
+                    breadcrumbs: [
+                        { label: "Management", href: `/tournaments/${tournamentId}` },
+                        { label: "Live Console", href: null }
+                    ],
                     backUrl: `/tournaments/${tournamentId}`,
                     backLabel: "Console"
                 };
@@ -108,7 +132,9 @@ export default function PageHeader() {
             const displayName = user?.displayName || (user?.email ? user.email.split("@")[0] : "User");
             return {
                 title: `Hello, ${displayName}`,
-                subtitle: "Overview",
+                breadcrumbs: [
+                    { label: "Overview", href: null }
+                ],
                 backUrl: null,
                 action: !isAdmin ? {
                     label: "New Tournament",
@@ -128,7 +154,27 @@ export default function PageHeader() {
     return (
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-6 md:px-10 py-6 animate-in fade-in slide-in-from-top-2 duration-500">
             <div className="space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FF5A09] mb-1">{info.subtitle}</div>
+                {/* Breadcrumbs */}
+                <div className="flex items-center gap-2 mb-1">
+                    {info.breadcrumbs?.map((crumb, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                            {index > 0 && <span className="text-slate-300 text-[10px] font-bold">/</span>}
+                            {crumb.href ? (
+                                <Link
+                                    href={crumb.href}
+                                    className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors"
+                                >
+                                    {crumb.label}
+                                </Link>
+                            ) : (
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A09]">
+                                    {crumb.label}
+                                </span>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
                 <h1 className="text-3xl md:text-4xl font-instrument font-medium tracking-tight text-slate-900 dark:text-white">
                     {info.title}<span className="text-[#FF5A09]">.</span>
                 </h1>
@@ -138,7 +184,7 @@ export default function PageHeader() {
                 {info.backUrl && (
                     <Link
                         href={info.backUrl}
-                        className="h-11 px-6 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-black dark:hover:text-white font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="px-5 py-2.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-black dark:hover:text-white font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg active:scale-95"
                     >
                         <ChevronLeft size={14} /> {info.backLabel}
                     </Link>
@@ -147,7 +193,7 @@ export default function PageHeader() {
                 {info.action && (
                     <Link
                         href={info.action.href}
-                        className="h-11 px-6 rounded-xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/5"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg active:scale-95"
                     >
                         {info.action.icon && <info.action.icon size={14} />} {info.action.label}
                     </Link>
