@@ -26,6 +26,7 @@ export interface MatchState {
 
     // UI/Meta
     tournamentName?: string;
+    tournamentLogo?: string;
     category?: string; // Legacy/General category
     status: MatchStatus;
 

@@ -121,8 +121,11 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                 </div>
             </div>
 
-            {/* TOP RIGHT: Streamer Logo */}
-            <div className="absolute top-8 right-8">
+            {/* TOP RIGHT: Logos */}
+            <div className="absolute top-8 right-8 flex items-center gap-4">
+                {match.tournamentLogo && (
+                    <img src={match.tournamentLogo} alt="Tournament Logo" className="h-16 w-auto object-contain drop-shadow-md" />
+                )}
                 {match.streamerLogo && (
                     <img src={match.streamerLogo} alt="Streamer Logo" className="h-16 w-auto object-contain drop-shadow-md" />
                 )}
