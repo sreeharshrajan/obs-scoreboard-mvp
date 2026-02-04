@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import {
     Pause, Play, RefreshCw, Trophy, Clock,
     ZoomIn, ZoomOut, Activity, ArrowRightLeft,
-    Trash2, Wifi, ChevronUp, ChevronDown, RotateCcw
+    Trash2, Wifi, ChevronUp, ChevronDown, RotateCcw, Maximize, Minimize
 } from 'lucide-react';
 import clsx from 'clsx';
 import { MatchState, PlayerState } from '@/types/match';
@@ -96,6 +96,7 @@ export default function AdminPanel() {
     const queryClient = useQueryClient();
     const [currentTime, setCurrentTime] = useState<string>("");
     const [elapsedDisplay, setElapsedDisplay] = useState<number>(0);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Helper to get token
     const getToken = async () => {
@@ -218,6 +219,27 @@ export default function AdminPanel() {
         return () => clearInterval(timerInterval);
     }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed]);
 
+    // Fullscreen Logic
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            setIsFullscreen(true);
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                setIsFullscreen(false);
+            }
+        }
+    };
+
+    useEffect(() => {
+        const handleChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleChange);
+        return () => document.removeEventListener('fullscreenchange', handleChange);
+    }, []);
+
     const formatTime = (seconds: number) => {
         const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
         const m = Math.floor(safeSeconds / 60);
@@ -311,9 +333,18 @@ export default function AdminPanel() {
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-800">
-                        <Clock size={12} className="text-slate-500" />
-                        <span className="font-mono text-xs font-bold text-slate-300">{currentTime || "--:--"}</span>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleFullscreen}
+                            className="p-2 rounded-lg bg-slate-900/50 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                        >
+                            {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+                        </button>
+                        <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-800">
+                            <Clock size={12} className="text-slate-500" />
+                            <span className="font-mono text-xs font-bold text-slate-300">{currentTime || "--:--"}</span>
+                        </div>
                     </div>
                 </div>
                 {/* Background Grid Decoration */}

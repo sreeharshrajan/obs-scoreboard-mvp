@@ -14,7 +14,9 @@ interface TournamentData {
     name: string;
     location: string;
     startDate: string;
-    category: string;
+    endDate?: string;
+    category?: string;
+    type?: string;
     scoringType: string;
     status: string;
     owner: { displayName: string } | null;
@@ -141,9 +143,9 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
 
                             <div className="space-y-4 mt-2 md:mt-8">
                                 <DetailRow icon={<MapPin size={14} />} label="Location" value={tournament.location} />
-                                <DetailRow icon={<Calendar size={14} />} label="Start Date" value={tournament.startDate} />
-                                <DetailRow icon={<Trophy size={14} />} label="Category" value={tournament.category} />
-                                <DetailRow icon={<Hash size={14} />} label="Scoring" value={tournament.scoringType} />
+                                <DetailRow icon={<Calendar size={14} />} label="Dates" value={`${tournament.startDate}${tournament.endDate ? ` - ${tournament.endDate}` : ''}`} />
+                                <DetailRow icon={<Trophy size={14} />} label="Type" value={tournament.type || tournament.category || "Individual"} />
+                                <DetailRow icon={<Hash size={14} />} label="Scoring" value={tournament.scoringType || "Standard"} />
                                 <DetailRow icon={<Users size={14} />} label="Added by" value={tournament.owner?.displayName || "Admin"} />
                             </div>
 
