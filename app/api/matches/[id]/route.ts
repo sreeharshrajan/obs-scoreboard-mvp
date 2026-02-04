@@ -4,6 +4,15 @@ import { adminDb } from "@/lib/firebase/admin";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
 
 /**
+ * Helper to find a match document reference by ID across all tournaments
+ */
+async function findMatchDoc(matchId: string) {
+    const snapshot = await adminDb.collectionGroup("matches").get();
+    const doc = snapshot.docs.find((d) => d.id === matchId);
+    return doc || null;
+}
+
+/**
  * GET: Fetch a single match by ID
  */
 export async function GET(
@@ -19,13 +28,9 @@ export async function GET(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const doc = await adminDb
-            .collection("tournaments")
-            .doc(id)
-            .collection("matches")
-            .get();
+        const doc = await findMatchDoc(id);
 
-        if (!doc.exists) {
+        if (!doc || !doc.exists) {
             return NextResponse.json({ error: "Match not found" }, { status: 404 });
         }
 
@@ -37,7 +42,7 @@ export async function GET(
 }
 
 /**
- * PATCH: Update match details (scores, status, court, etc.)
+ * PATCH: Update match details
  */
 export async function PATCH(
     req: Request,
@@ -53,16 +58,13 @@ export async function PATCH(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const matchRef = adminDb.collection("matches").doc(id);
-        const doc = await matchRef.get();
+        const doc = await findMatchDoc(id);
 
-        if (!doc.exists) {
+        if (!doc) {
             return NextResponse.json({ error: "Match not found" }, { status: 404 });
         }
 
-        // Just update the body, assuming the frontend sends the correct structure.
-        // We preserve existing data and merge.
-        await matchRef.set({
+        await doc.ref.set({
             ...body,
             updatedAt: new Date().toISOString(),
         }, { merge: true });
@@ -90,7 +92,13 @@ export async function DELETE(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        await adminDb.collection("matches").doc(id).delete();
+        const doc = await findMatchDoc(id);
+
+        if (!doc) {
+            return NextResponse.json({ error: "Match not found" }, { status: 404 });
+        }
+
+        await doc.ref.delete();
 
         return NextResponse.json({ success: true, message: "Match deleted" });
     } catch (error: unknown) {
