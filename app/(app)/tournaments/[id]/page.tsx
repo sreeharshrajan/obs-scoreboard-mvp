@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/client";
 import MatchRow from "@/components/dashboard/MatchRow";
+import DashboardLoader from "@/components/dashboard/loader";
 
 interface TournamentData {
     id: string;
@@ -70,7 +71,7 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
         fetchData();
     }, [tournamentId]);
 
-    if (loading) return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-[#FF5A09]" size={32} /></div>;
+    if (loading) return <DashboardLoader message="Loading Tournament..." />;
     if (!tournament) {
         return (
             <div className="flex h-full items-center justify-center">
@@ -84,11 +85,7 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
     return (
         <div className="flex-1 w-full mx-auto px-6 md:px-10 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-            <div className="flex items-center gap-2 mb-6">
-                <Link href="/tournaments" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors">Tournaments</Link>
-                <span className="text-slate-300 text-xs">/</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Management Dashboard</span>
-            </div>
+            
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 

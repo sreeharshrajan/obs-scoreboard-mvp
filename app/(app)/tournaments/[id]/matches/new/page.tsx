@@ -11,17 +11,6 @@ export default function NewMatch({ params }: { params: Promise<{ id: string }> }
 
     return (
         <div className="max-w-2xl mx-auto py-10 px-6 animate-in fade-in slide-in-from-bottom-4">
-            <Link href={`/tournaments/${id}`} className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-8 hover:text-black">
-                <ChevronLeft size={14} /> Cancel
-            </Link>
-
-            <div className="mb-10 text-center">
-                <div className="w-16 h-16 bg-[#FF5A09]/10 text-[#FF5A09] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Swords size={28} />
-                </div>
-                <h1 className="text-3xl font-instrument">Create New Match</h1>
-                <p className="text-slate-400 text-sm mt-2 font-medium uppercase tracking-widest">Tournament ID: {id}</p>
-            </div>
 
             <form action={async (data) => {
                 setLoading(true);

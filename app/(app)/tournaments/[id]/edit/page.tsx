@@ -6,6 +6,8 @@ import { ChevronLeft, Save, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/client";
 import { User } from "firebase/auth";
+import DashboardLoader from "@/components/dashboard/loader";
+import ErrorFallback from "@/components/dashboard/error-fallback";
 
 interface TournamentData {
     name: string;
@@ -69,39 +71,16 @@ export default function EditTournament({ params }: { params: Promise<{ id: strin
     }, [id]);
 
     if (error) {
-        return (
-            <div className="p-10 text-center flex flex-col items-center gap-4">
-                <div className="bg-red-500/10 p-4 rounded-full">
-                    <AlertCircle className="text-red-500" size={32} />
-                </div>
-                <h3 className="text-lg font-bold">Error Loading Page</h3>
-                <p className="text-slate-500">{error}</p>
-                <Link href={`/tournaments/${id}`} className="text-blue-500 hover:underline">
-                    Return to Dashboard
-                </Link>
-            </div>
-        );
+        return <ErrorFallback error={error} backUrl={`/tournaments/${id}`} backLabel="Return to Dashboard" />;
     }
 
     if (!formData) {
-        return (
-            <div className="p-10 text-center">
-                <Loader2 className="animate-spin mx-auto text-[#FF5A09]" />
-                <p className="mt-2 text-slate-500 text-xs uppercase tracking-widest font-bold">Loading Details...</p>
-            </div>
-        );
+        return <DashboardLoader message="Loading Details..." />;
     }
 
     return (
         <div className="max-w-2xl mx-auto py-10 px-6 animate-in fade-in slide-in-from-bottom-4">
-            <Link
-                href={`/tournaments/${id}`}
-                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-8 hover:text-black dark:hover:text-white transition-colors"
-            >
-                <ChevronLeft size={14} /> Back to Dashboard
-            </Link>
 
-            <h1 className="text-3xl font-instrument mb-8">Edit Tournament</h1>
 
             <form
                 action={async (data) => {

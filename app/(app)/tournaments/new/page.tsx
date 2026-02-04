@@ -67,18 +67,6 @@ export default function NewTournament() {
 
     return (
         <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col py-6 animate-in fade-in duration-500">
-            <div className="flex items-center justify-between mb-8">
-                <Link href="/dashboard" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-[#FF5A09] transition-colors group">
-                    <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-                    Back to Dashboard
-                </Link>
-            </div>
-
-            <header className="mb-10">
-                <h1 className="text-3xl md:text-4xl font-instrument font-medium tracking-tight">
-                    Create <span className="italic font-light text-[#FF5A09]">Tournament.</span>
-                </h1>
-            </header>
 
             <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-7 space-y-5">

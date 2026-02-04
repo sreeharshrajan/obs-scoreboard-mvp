@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Trophy, Calendar, MapPin, Search, Plus, ArrowRight, Activity } from "lucide-react";
+import { Trophy, Calendar, MapPin, Search, ArrowRight, Activity } from "lucide-react";
 import Link from "next/link";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 
 import { Input } from "@/components/ui/Input";
+import DashboardLoader from "@/components/dashboard/loader";
 
 export default function TournamentListing() {
     const [tournaments, setTournaments] = useState<any[]>([]);
@@ -54,16 +55,7 @@ export default function TournamentListing() {
         <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col py-6 space-y-8 animate-in fade-in duration-500 overflow-hidden">
 
             {/* Header Area */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-1">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FF5A09] mb-1">Event Archives</div>
-                    <h1 className="text-4xl font-instrument font-medium tracking-tight">Your <span className="italic font-light text-[#FF5A09]">Tournaments.</span></h1>
-                </div>
 
-                <Link href="tournaments/new" className="h-11 px-6 rounded-xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/5">
-                    <Plus size={14} /> Create New
-                </Link>
-            </header>
 
             {/* Search & Filter Bar */}
             <div className="relative w-full max-w-md">
@@ -80,9 +72,7 @@ export default function TournamentListing() {
             {/* Grid Listing */}
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3].map(n => <div key={n} className="h-48 rounded-[2rem] bg-slate-100 dark:bg-white/5 animate-pulse" />)}
-                    </div>
+                    <DashboardLoader message="Loading Tournaments..." className="min-h-[400px]" />
                 ) : filteredTournaments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
                         {filteredTournaments.map((tournament) => (

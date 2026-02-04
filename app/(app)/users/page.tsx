@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Mail, Search, UserPlus, ArrowRight, UserCircle, X, Calendar, Fingerprint, CheckCircle2, Trash2 } from "lucide-react";
+import { Mail, Search, ArrowRight, UserCircle, X, Calendar, Fingerprint, CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/firebase/client";
 import { AdminGuard } from "@/components/auth/AdminGuard";
+import DashboardLoader from "@/components/dashboard/loader";
 
 // Interface (kept same as your code)
 interface User {
@@ -90,15 +91,7 @@ export default function UserListing() {
         <AdminGuard>
             <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col py-6 space-y-8 animate-in fade-in duration-500 relative">
 
-                <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-1">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FF5A09] mb-1">Directory</div>
-                        <h1 className="text-4xl font-instrument font-medium tracking-tight">Platform <span className="italic font-light text-[#FF5A09]">Users.</span></h1>
-                    </div>
-                    <Link href="users/new" className="h-11 px-6 rounded-xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/5">
-                        <UserPlus size={14} /> Add User
-                    </Link>
-                </header>
+
 
                 <div className="relative w-full max-w-md">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -113,9 +106,7 @@ export default function UserListing() {
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                     {loading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {[1, 2, 3].map(n => <div key={n} className="h-48 rounded-4xl bg-slate-100 dark:bg-white/5 animate-pulse" />)}
-                        </div>
+                        <DashboardLoader message="Loading Users..." className="min-h-[400px]" />
                     ) : filteredUsers.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
                             {filteredUsers.map((user) => (

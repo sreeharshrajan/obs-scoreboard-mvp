@@ -12,6 +12,8 @@ import clsx from 'clsx';
 import { MatchState, PlayerState } from '@/types/match';
 import { auth } from '@/lib/firebase/client';
 import { User } from 'firebase/auth';
+import DashboardLoader from "@/components/dashboard/loader";
+import ErrorFallback from "@/components/dashboard/error-fallback";
 
 // --- Fetchers ---
 const fetchMatch = async (tournamentId: string, matchId: string, token: string): Promise<MatchState> => {
@@ -279,10 +281,10 @@ export default function AdminPanel() {
         });
     };
 
-    if (isLoading) return <div className="h-screen w-full flex items-center justify-center bg-slate-950 text-blue-500 font-mono animate-pulse">Initializing System...</div>;
+    if (isLoading) return <DashboardLoader message="Initializing System..." className="bg-slate-950 text-blue-500 font-mono" />;
     if (isError || !match) {
         if (isError) console.error(isError);
-        return <div className="h-screen w-full flex items-center justify-center bg-slate-950 text-red-500 font-mono">Connection Lost or Match Not Found. Retrying...</div>;
+        return <ErrorFallback error="Connection Lost or Match Not Found" className="bg-slate-950 text-red-500 font-mono" />;
     }
 
     // Ensure default values

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import DashboardHeader from "@/components/dashboard/header";
 import DashboardFooter from "@/components/dashboard/footer";
 import DashboardLoader from "@/components/dashboard/loader";
+import PageHeader from "@/components/dashboard/page-header";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { setUser, setLoading, user, loading } = useAuthStore();
@@ -28,8 +29,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <div className="h-screen w-full flex flex-col bg-[#FDFDFD] dark:bg-[#1A1A1A] text-[#1A1A1A] dark:text-[#EAEAEA] overflow-hidden">
             <DashboardHeader />
-            <main className="flex-1 overflow-y-auto scrollbar-hide relative shadow-inner">
-                {children}
+            <main className="flex-1 overflow-hidden relative shadow-inner flex flex-col">
+                <PageHeader />
+                <div className="flex-1 overflow-y-auto relative">
+                    {children}
+                </div>
             </main>
             <DashboardFooter />
         </div>
