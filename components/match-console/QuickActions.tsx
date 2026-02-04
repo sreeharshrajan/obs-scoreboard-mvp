@@ -1,6 +1,7 @@
 
 import { ArrowRightLeft, Trophy } from 'lucide-react';
 import clsx from 'clsx';
+import { memo } from 'react';
 
 interface QuickActionsProps {
     onSwap: () => void;
@@ -9,7 +10,7 @@ interface QuickActionsProps {
     isCompleted: boolean;
 }
 
-export default function QuickActions({
+export default memo(function QuickActions({
     onSwap,
     onEndMatch,
     isCompleted,
@@ -40,4 +41,4 @@ export default function QuickActions({
 
         </>
     );
-}
+});

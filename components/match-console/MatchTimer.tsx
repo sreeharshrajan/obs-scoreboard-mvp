@@ -1,5 +1,7 @@
 import { Clock, Pause, Play, Coffee } from 'lucide-react';
 import clsx from 'clsx';
+import { memo } from 'react';
+
 interface MatchTimerProps {
     elapsedDisplay: number;
     isTimerRunning: boolean;
@@ -11,7 +13,7 @@ interface MatchTimerProps {
     onToggleBreak: () => void;
 }
 
-export default function MatchTimer({
+export default memo(function MatchTimer({
     elapsedDisplay,
     isTimerRunning,
     isCompleted,
@@ -24,11 +26,11 @@ export default function MatchTimer({
     return (
         <div className={clsx(
             "flex-1 rounded-3xl border transition-all duration-300 p-5 flex flex-col items-center justify-center relative",
-            isBreak 
-                ? "bg-indigo-50/30 dark:bg-indigo-500/5 border-indigo-100 dark:border-indigo-500/20" 
+            isBreak
+                ? "bg-indigo-50/30 dark:bg-indigo-500/5 border-indigo-100 dark:border-indigo-500/20"
                 : "bg-white dark:bg-[#1E1E1E] border-slate-100 dark:border-white/5 shadow-sm"
         )}>
-            
+
             {/* Compact Status Badge */}
             <div className="flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full bg-slate-50 dark:bg-white/5">
                 <Clock size={12} className={clsx(isTimerRunning && "animate-pulse text-emerald-500")} />
@@ -84,4 +86,4 @@ export default function MatchTimer({
             )}
         </div>
     );
-}
+});

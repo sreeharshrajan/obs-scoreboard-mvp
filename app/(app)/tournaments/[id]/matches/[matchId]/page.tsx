@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { MatchState } from '@/types/match';
 import { auth } from '@/lib/firebase/client';
@@ -44,6 +44,53 @@ const updateMatch = async ({ tournamentId, matchId, data, token }: { tournamentI
     if (!res.ok) throw new Error('Failed to update match');
     return res.json();
 };
+
+// --- Custom Hook for Debouncing ---
+function useDebouncedMutation(
+    mutationFn: (variables: Partial<MatchState>) => Promise<any>,
+    delay: number = 500
+) {
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const pendingUpdatesRef = useRef<Partial<MatchState>>({});
+
+    const debouncedMutate = useCallback((updates: Partial<MatchState>) => {
+        // Merge updates into pending
+        pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates };
+        if (updates.player1) {
+            pendingUpdatesRef.current.player1 = {
+                ...(pendingUpdatesRef.current.player1 || {}),
+                ...updates.player1
+            };
+        }
+        if (updates.player2) {
+            pendingUpdatesRef.current.player2 = {
+                ...(pendingUpdatesRef.current.player2 || {}),
+                ...updates.player2
+            };
+        }
+
+
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+            mutationFn(pendingUpdatesRef.current);
+            pendingUpdatesRef.current = {};
+            timeoutRef.current = null;
+        }, delay);
+    }, [mutationFn, delay]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
+
+    return debouncedMutate;
+}
+
 
 // --- Main Component ---
 
@@ -134,6 +181,10 @@ export default function MatchConsole() {
         },
     });
 
+    // Wrapper for debounced calls (specifically for rapid score/server updates)
+    const debouncedMutate = useDebouncedMutation(mutation.mutateAsync, 500);
+
+
     // 4. Sync Tournament Info to Match Doc (for Overlay)
     useEffect(() => {
         if (tournament && match) {
@@ -173,7 +224,7 @@ export default function MatchConsole() {
     }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed]);
 
     // Fullscreen Logic
-    const toggleFullscreen = () => {
+    const toggleFullscreen = useCallback(() => {
         if (!document.fullscreenElement) {
             containerRef.current?.requestFullscreen().catch((err) => {
                 console.error(`Error attempting to enable full-screen mode: ${err.message}`);
@@ -181,7 +232,7 @@ export default function MatchConsole() {
         } else {
             document.exitFullscreen();
         }
-    };
+    }, []);
 
     useEffect(() => {
         const handler = () => setIsFullscreen(!!document.fullscreenElement);
@@ -189,76 +240,119 @@ export default function MatchConsole() {
         return () => document.removeEventListener('fullscreenchange', handler);
     }, []);
 
-    const formatTime = (seconds: number) => {
+    const formatTime = useCallback((seconds: number) => {
         const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
         const m = Math.floor(safeSeconds / 60);
         const s = Math.floor(safeSeconds % 60);
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
+    }, []);
+
+
+    // Optimistic Updater Helper
+    const optimisticUpdate = useCallback((newData: Partial<MatchState>) => {
+        queryClient.setQueryData<MatchState>(['match', matchId], (old) => {
+            if (!old) return old;
+            const merged = { ...old, ...newData };
+            if (newData.player1) merged.player1 = { ...old.player1, ...newData.player1 };
+            if (newData.player2) merged.player2 = { ...old.player2, ...newData.player2 };
+            return merged;
+        });
+    }, [queryClient, matchId]);
+
 
     // --- Handlers ---
-    const handleScore = (team: 'player1' | 'player2', delta: number) => {
-        if (!match) return;
-        const currentScore = match[team]?.score || 0;
+
+    // Memoize the safeMatch object so it doesn't change reference purely due to re-renders (unless data changes)
+    const safeMatch = useMemo(() => {
+        if (!match) return null;
+        return {
+            ...match,
+            player1: match.player1 || { name: 'Player 1', score: 0, isServing: true },
+            player2: match.player2 || { name: 'Player 2', score: 0, isServing: false }
+        };
+    }, [match]);
+
+
+    const handleScore = useCallback((team: 'player1' | 'player2', delta: number) => {
+        if (!safeMatch) return;
+        const currentScore = safeMatch[team]?.score || 0;
         const newScore = Math.max(0, currentScore + delta);
-        mutation.mutate({ [team]: { ...match[team], score: newScore } });
-    };
 
-    const toggleServer = (team: 'player1' | 'player2') => {
-        if (!match) return;
-        mutation.mutate({
-            player1: { ...match.player1, isServing: team === 'player1' },
-            player2: { ...match.player2, isServing: team === 'player2' },
-            serverNumber: 1
-        });
-    };
+        // Optimistic Update immediately
+        const updates = { [team]: { ...safeMatch[team], score: newScore } };
+        optimisticUpdate(updates);
 
-    const handleStopTimer = () => {
-        if (!match || !match.timerStartTime) return;
+        // Debounced Server Update
+        debouncedMutate(updates);
+    }, [safeMatch, optimisticUpdate, debouncedMutate]);
+
+
+    const toggleServer = useCallback((team: 'player1' | 'player2') => {
+        if (!safeMatch) return;
+        const updates: Partial<MatchState> = {
+            player1: { ...safeMatch.player1, isServing: team === 'player1' },
+            player2: { ...safeMatch.player2, isServing: team === 'player2' },
+            serverNumber: 1 as 1
+        };
+        optimisticUpdate(updates);
+        debouncedMutate(updates);
+    }, [safeMatch, optimisticUpdate, debouncedMutate]);
+
+
+    const handleStopTimer = useCallback(() => {
+        if (!safeMatch || !safeMatch.timerStartTime) return;
         const now = Date.now();
-        const additionalSeconds = (now - match.timerStartTime) / 1000;
+        const additionalSeconds = (now - safeMatch.timerStartTime) / 1000;
         mutation.mutate({
             isTimerRunning: false,
-            timerElapsed: (match.timerElapsed || 0) + additionalSeconds,
+            timerElapsed: (safeMatch.timerElapsed || 0) + additionalSeconds,
             timerStartTime: null
         });
-    };
+    }, [safeMatch, mutation]);
 
-    const handleStartTimer = () => {
+    const handleStartTimer = useCallback(() => {
         mutation.mutate({
             isTimerRunning: true,
             timerStartTime: Date.now(),
-            status: 'live' // Automatically set to live when timer starts
+            status: 'live'
         });
-    };
+    }, [mutation]);
 
-    const handleEndMatch = () => {
-        if (safeMatch.isTimerRunning) handleStopTimer();
+    const handleToggleTimer = useCallback(() => {
+        if (!safeMatch) return;
+        safeMatch.isTimerRunning ? handleStopTimer() : handleStartTimer();
+    }, [safeMatch, handleStopTimer, handleStartTimer]);
+
+    const handleEndMatch = useCallback(() => {
+        if (safeMatch?.isTimerRunning) handleStopTimer();
         mutation.mutate({
             status: 'completed'
         });
-    };
+    }, [safeMatch, handleStopTimer, mutation]);
 
-    const handleToggleBreak = () => {
+    const handleToggleBreak = useCallback(() => {
+        if (!safeMatch) return;
         if (safeMatch.status === 'break') {
             mutation.mutate({ status: 'live' });
         } else {
             mutation.mutate({ status: 'break' });
         }
-    };
+    }, [safeMatch, mutation]);
 
-    const handleUpdateMatch = (updates: Partial<MatchState>) => {
+    const handleUpdateMatch = useCallback((updates: Partial<MatchState>) => {
         mutation.mutate(updates);
-    };
+    }, [mutation]);
 
-    const swapSides = () => {
-        if (!match) return;
+    const swapSides = useCallback(() => {
+        if (!safeMatch) return;
         mutation.mutate({
-            player1: match.player2,
-            player2: match.player1
+            player1: safeMatch.player2,
+            player2: safeMatch.player1
         });
-    };
+    }, [safeMatch, mutation]);
 
+    /* 
+    // Reset Not used in UI currently but kept for reference or future use
     const resetMatch = () => {
         if (!confirm('Are you sure you want to reset the match?')) return;
         if (!match) return;
@@ -272,19 +366,13 @@ export default function MatchConsole() {
             status: 'scheduled'
         });
     };
+    */
 
     if (isLoading) return <DashboardLoader message="Initializing System..." />;
-    if (isError || !match) {
+    if (isError || !match || !safeMatch) {
         if (isError) console.error(isError);
         return <ErrorFallback error="Connection Lost or Match Not Found" className="text-red-500" />;
     }
-
-    // Ensure default values
-    const safeMatch = {
-        ...match,
-        player1: match.player1 || { name: 'Player 1', score: 0, isServing: true },
-        player2: match.player2 || { name: 'Player 2', score: 0, isServing: false }
-    };
 
     const isCompleted = safeMatch.status === 'completed';
 
@@ -323,7 +411,7 @@ export default function MatchConsole() {
                         elapsedDisplay={elapsedDisplay}
                         isTimerRunning={safeMatch.isTimerRunning}
                         isCompleted={isCompleted}
-                        onToggleTimer={() => safeMatch.isTimerRunning ? handleStopTimer() : handleStartTimer()}
+                        onToggleTimer={handleToggleTimer}
                         formatTime={formatTime}
                         matchStatus={safeMatch.status}
                         isBreak={safeMatch.status === 'break'}

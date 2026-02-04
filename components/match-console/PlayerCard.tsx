@@ -2,6 +2,7 @@
 import { Minus, Plus } from 'lucide-react';
 import clsx from 'clsx';
 import { PlayerState, MatchState } from '@/types/match';
+import { memo } from 'react';
 
 interface PlayerCardProps {
     player: PlayerState;
@@ -13,7 +14,7 @@ interface PlayerCardProps {
     matchType: MatchState['matchType'];
 }
 
-export default function PlayerCard({
+export default memo(function PlayerCard({
     player,
     teamLabel,
     isServing,
@@ -84,4 +85,4 @@ export default function PlayerCard({
             )}
         </div>
     );
-}
+});

@@ -3,7 +3,7 @@ import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, I
 import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 
 interface ConsoleHeaderProps {
     matchId: string;
@@ -16,7 +16,7 @@ interface ConsoleHeaderProps {
     onToggleFullscreen: () => void;
 }
 
-export default function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen }: ConsoleHeaderProps) {
+export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen }: ConsoleHeaderProps) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -201,4 +201,4 @@ export default function ConsoleHeader({ matchId, tournamentId, tournamentName, m
             </div>
         </div>
     );
-}
+});
