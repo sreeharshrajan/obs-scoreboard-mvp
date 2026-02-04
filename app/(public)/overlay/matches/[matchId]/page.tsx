@@ -25,17 +25,7 @@ export default async function PublicMatchOverlay({
     return (
         // Wrapper must be full screen and transparent for OBS
         <main className="relative h-screen w-screen bg-transparent overflow-hidden">
-            <ScoreOverlay
-                team1={matchData.team1}
-                team2={matchData.team2}
-                score1={matchData.score1 || 0}
-                score2={matchData.score2 || 0}
-                status={matchData.status}
-                court={matchData.court}
-                // Optional: Pass custom logo or rally info from DB
-                logoUrl={matchData.streamerLogo}
-                extraInfo={matchData.lastRally ? `Longest Rally: ${matchData.lastRally} Shots` : undefined}
-            />
+            <ScoreOverlay matchId={matchId}/>
         </main>
     );
 }

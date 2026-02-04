@@ -26,6 +26,12 @@ service cloud.firestore {
         && request.resource.data[field] == request.auth.uid;
     }
 
+    // 1. PUBLIC READ FOR OVERLAY (Collection Group Rule)
+    // This MUST be at the top level and explicitly allow read for the 'matches' collection group
+    match /{path=**}/matches/{matchId} {
+      allow read: if true;
+    }
+
     /* ==========================
        USERS
        - Users can read their profile
@@ -45,18 +51,17 @@ service cloud.firestore {
     ========================== */
 
     match /tournaments/{tournamentId} {
-
-      allow read: if isAuthenticated()
-        && (isAdmin() || isOwner("ownerId"));
-
-      allow create: if isAuthenticated()
-        && isCreatingSelf("ownerId");
-
-      allow update: if isAuthenticated()
-        && (isAdmin() || isOwner("ownerId"))
-        && request.resource.data.ownerId == resource.data.ownerId;
-
+      allow read: if isAuthenticated() && (isAdmin() || isOwner("ownerId"));
+      allow create: if isAuthenticated() && isCreatingSelf("ownerId");
+      allow update: if isAuthenticated() && (isAdmin() || isOwner("ownerId"))
+                    && request.resource.data.ownerId == resource.data.ownerId;
       allow delete: if isAdmin();
+
+      // Sub-collection rule (for direct path access)
+      match /matches/{matchId} {
+        allow read: if true; 
+        allow write: if isAdmin() || isOwner("ownerId");
+      }
     }
 
     /* ==========================
@@ -75,18 +80,9 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    /* ==========================
-       RESULTS (WRITE-ONCE)
-    ========================== */
-
-    match /results/{resultId} {
-
-      allow read: if true; // public results
-
-      allow create: if isAuthenticated()
-        && isCreatingSelf("createdBy");
-
-      allow update, delete: if false; // immutable
+    // 3. GLOBAL FALLBACK (Keep this at the bottom)
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
