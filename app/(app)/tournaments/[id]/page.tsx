@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useState, use, useCallback } from "react";
 import { Plus, Play, Settings, Loader2, Calendar, MapPin, Trophy, Users, Hash, Edit3, Activity, Layers } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -34,46 +34,40 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
 
     const [tournament, setTournament] = useState<TournamentData | null>(null);
     const [matches, setMatches] = useState<Match[]>([]);
-
     const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({ total: 0, active: 0 });
 
-    // FIX: Initialized stats (setStats remains for future match fetching)
-    const [stats, setStats] = useState({ total: 0, active: 0 }); // Updated to state
+    const fetchData = useCallback(async () => {
+        try {
+            const user = auth.currentUser;
+            if (!user) return;
+            const token = await user.getIdToken();
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const [tRes, mRes] = await Promise.all([
+                fetch(`/api/tournaments/${tournamentId}`, { headers }),
+                fetch(`/api/tournaments/${tournamentId}/matches`, { headers })
+            ]);
+
+            if (tRes.ok) setTournament(await tRes.json());
+
+            if (mRes.ok) {
+                const matchData = await mRes.json();
+                setMatches(matchData);
+                setStats({
+                    total: matchData.length,
+                    active: matchData.filter((m: any) => m.status === "live" || m.status === "in_progress").length
+                });
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [tournamentId]);
 
     useEffect(() => {
-        const fetchTournament = async () => {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
-
-                const token = await user.getIdToken();
-
-                const headers = { Authorization: `Bearer ${token}` };
-
-                // Fetch Tournament and Matches in parallel
-                const [tRes, mRes] = await Promise.all([
-                    fetch(`/api/tournaments/${tournamentId}`, { headers }),
-                    fetch(`/api/tournaments/${tournamentId}/matches`, { headers })
-                ]);
-
-                if (tRes.ok) setTournament(await tRes.json());
-
-                if (mRes.ok) {
-                    const matchData = await mRes.json();
-                    setMatches(matchData);
-                    // Update stats dynamically
-                    setStats({
-                        total: matchData.length,
-                        active: matchData.filter((m: Match) => m.status === "live" || m.status === "in_progress").length
-                    });
-                }
-            } catch (error) {
-                console.error("Fetch error:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTournament();
+        fetchData();
     }, [tournamentId]);
 
     if (loading) return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-[#FF5A09]" size={32} /></div>;
@@ -179,7 +173,8 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                                 <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                                     {matches.length > 0 ? (
                                         matches.map((match) => (
-                                            <MatchRow key={match.id} match={match} tournamentId={tournamentId} />
+                                            <MatchRow
+                                                key={match.id} match={match} tournamentId={tournamentId} onMutation={fetchData} />
                                         ))
                                     ) : (
                                         <tr>
