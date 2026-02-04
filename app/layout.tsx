@@ -15,7 +15,7 @@ const instrumentSans = Instrument_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SCORESTREAMER | Professional OBS Broadcast Control",
+  title: "ScoreStreamer | Professional OBS Broadcast Control",
   description: "Elite score management for modern racquet sports.",
 };
 

@@ -20,7 +20,7 @@ export default function PageHeader() {
                 title: "Platform Users",
                 breadcrumbs: [
                     { label: "Dashboard", href: "/dashboard" },
-                    { label: "Directory", href: null }
+                    { label: "Users", href: null }
                 ],
                 backUrl: null,
                 action: {
@@ -34,11 +34,11 @@ export default function PageHeader() {
             return {
                 title: "Edit Account",
                 breadcrumbs: [
-                    { label: "Directory", href: "/users" },
+                    { label: "Users", href: "/users" },
                     { label: "User Management", href: null }
                 ],
                 backUrl: "/users",
-                backLabel: "Directory"
+                backLabel: "Users"
             };
         }
 
@@ -48,7 +48,7 @@ export default function PageHeader() {
                 title: "Your Tournaments",
                 breadcrumbs: [
                     { label: "Dashboard", href: "/dashboard" },
-                    { label: "Event Archives", href: null }
+                    { label: "Tournaments", href: null }
                 ],
                 backUrl: null,
                 action: {
@@ -62,8 +62,9 @@ export default function PageHeader() {
             return {
                 title: "Create Tournament",
                 breadcrumbs: [
+                    { label: "Dashboard", href: `/dashboard` },
                     { label: "Tournaments", href: "/tournaments" },
-                    { label: "New Event", href: null }
+                    { label: "New", href: null }
                 ],
                 backUrl: "/tournaments",
                 backLabel: "Tournaments"
@@ -77,13 +78,14 @@ export default function PageHeader() {
             // /tournaments/[id]
             if (parts.length === 2) {
                 return {
-                    title: "Management",
+                    title: "Tournament Details",
                     breadcrumbs: [
+                        { label: "Dashboard", href: `/dashboard` },
                         { label: "Tournaments", href: "/tournaments" },
-                        { label: "Management Dashboard", href: null }
+                        { label: "Details", href: null }
                     ],
                     backUrl: "/tournaments",
-                    backLabel: "Tournaments"
+                    backLabel: "All Tournaments"
                 };
             }
 
@@ -92,8 +94,10 @@ export default function PageHeader() {
                 return {
                     title: "Edit Tournament",
                     breadcrumbs: [
-                        { label: "Management", href: `/tournaments/${tournamentId}` },
-                        { label: "Settings", href: null }
+                        { label: "Dashboard", href: `/dashboard` },
+                        { label: "Tournaments", href: `/tournaments` },
+                        { label: "Tournament Details", href: `/tournaments/${tournamentId}` },
+                        { label: "Edit", href: null }
                     ],
                     backUrl: `/tournaments/${tournamentId}`,
                     backLabel: "Console"
@@ -122,7 +126,7 @@ export default function PageHeader() {
                         { label: "Live Console", href: null }
                     ],
                     backUrl: `/tournaments/${tournamentId}`,
-                    backLabel: "Console"
+                    backLabel: "Tournament Details"
                 };
             }
         }
@@ -176,11 +180,21 @@ export default function PageHeader() {
                 </div>
 
                 <h1 className="text-3xl md:text-4xl font-instrument font-medium tracking-tight text-slate-900 dark:text-white">
-                    {info.title}<span className="text-[#FF5A09]">.</span>
+                    {info.title.includes(" ") ? (
+                        <>
+                            {info.title.split(" ")[0]}{" "}
+                            <span className="italic font-light text-[#FF5A09]">
+                                {info.title.split(" ").slice(1).join(" ")}
+                            </span>
+                        </>
+                    ) : (
+                        info.title
+                    )}
+                    <span className="text-[#FF5A09]">.</span>
                 </h1>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="hidden md:block flex items-center gap-3">
                 {info.backUrl && (
                     <Link
                         href={info.backUrl}

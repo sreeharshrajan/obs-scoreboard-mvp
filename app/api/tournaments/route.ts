@@ -6,7 +6,7 @@ import { FieldValue } from "firebase-admin/firestore";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, location, startDate, category, scoringType, userId } = body;
+    const { name, location, startDate, endDate, type, logo, userId } = body;
 
     if (!userId) {
       return NextResponse.json(
@@ -19,8 +19,9 @@ export async function POST(request: Request) {
       name,
       location,
       startDate,
-      category,
-      scoringType,
+      endDate,
+      type,
+      logo,
       ownerId: userId,
       status: "Upcoming",
       createdAt: FieldValue.serverTimestamp(),

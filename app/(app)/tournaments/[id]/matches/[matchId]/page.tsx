@@ -307,7 +307,7 @@ export default function AdminPanel() {
                             {tournament?.name || safeMatch.tournamentName || "Tournament"}
                         </span>
                         <span className="text-sm font-bold text-slate-200 tracking-tight">
-                            {tournament?.category || safeMatch.category || "Match Category"}
+                            {safeMatch.category || "Match Category"} <span className="text-slate-700 mx-1">|</span> <span className="text-slate-400 font-medium">{safeMatch.scoringType || "Standard"}</span>
                         </span>
                     </div>
 

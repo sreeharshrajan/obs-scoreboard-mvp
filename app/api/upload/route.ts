@@ -12,13 +12,21 @@ export async function POST(req: Request) {
     try {
         await verifyRequest(req);
 
+        let folder = 'obs-scoreboard-users';
+        try {
+            const body = await req.json();
+            if (body?.folder) folder = body.folder;
+        } catch (e) {
+            // No body or invalid JSON, use default
+        }
+
         // Get the timestamp
         const timestamp = Math.round((new Date()).getTime() / 1000);
 
         // Generate the signature
         const signature = cloudinary.utils.api_sign_request({
             timestamp: timestamp,
-            folder: 'obs-scoreboard-users',
+            folder: folder,
         }, process.env.CLOUDINARY_API_SECRET || '');
 
         return NextResponse.json({

@@ -18,9 +18,30 @@ export default function NewMatch({ params }: { params: Promise<{ id: string }> }
                     player1: data.get("p1"),
                     player2: data.get("p2"),
                     court: data.get("court"),
+                    category: data.get("category"),
+                    scoringType: data.get("scoringType"),
                 };
                 await addMatch(id, matchData);
             }} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Category</label>
+                        <select name="category" className="w-full h-14 px-4 rounded-2xl border border-slate-200 outline-none bg-slate-50">
+                            <option value="Singles">Singles</option>
+                            <option value="Doubles">Doubles</option>
+                            <option value="Mixed Doubles">Mixed Doubles</option>
+                        </select>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Scoring Format</label>
+                        <select name="scoringType" className="w-full h-14 px-4 rounded-2xl border border-slate-200 outline-none bg-slate-50">
+                            <option value="21x3">Best of 3 (21 Points)</option>
+                            <option value="15x3">Best of 3 (15 Points)</option>
+                            <option value="30x1">Single Game (30 Points)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Player 1</label>

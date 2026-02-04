@@ -14,6 +14,7 @@ export interface MatchState {
     serverNumber?: 1 | 2; // Kept optional, but specific to doubles logic if we add it later
     tournamentName?: string;
     category?: string;
+    scoringType?: string;
     court?: string;
     overlayScale?: number;
     status?: string;
