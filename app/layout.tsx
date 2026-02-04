@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import { AuthProvider } from '@/lib/providers/AuthProvider';
 import QueryProvider from '@/lib/providers/QueryProvider';
 import { Geist, Instrument_Sans } from "next/font/google";
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${instrumentSans.variable} font-sans antialiased bg-white dark:bg-[#1A1A1A]`}>
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
+          <Toaster position="top-center" richColors />
         </QueryProvider>
       </body>
     </html>
