@@ -2,7 +2,15 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Trash2, Check, X, Edit2, Loader2 } from 'lucide-react';
+import {
+    MoreHorizontal,
+    Trash2,
+    Check,
+    X,
+    Edit2,
+    Loader2,
+    MonitorPlay // Added for the Overlay link
+} from 'lucide-react';
 import { auth } from "@/lib/firebase/client";
 
 interface Match {
@@ -154,6 +162,17 @@ function MatchRow({ match, tournamentId, onMutation }: MatchRowProps) {
                         </>
                     ) : (
                         <div className="flex items-center gap-1">
+                            {/* PUBLIC OVERLAY LINK */}
+                            <Link
+                                href={`/overlay/matches/${match.id}`}
+                                target="_blank"
+                                title="Open Score Overlay"
+                                aria-label="Open Score Overlay"
+                                className="p-2 rounded-lg hover:bg-[#FF5A09]/10 text-slate-400 hover:text-[#FF5A09] transition-colors"
+                            >
+                                <MonitorPlay size={16} />
+                            </Link>
+
                             <Link
                                 href={`/tournaments/${tournamentId}/matches/${match.id}`}
                                 title="View match details"

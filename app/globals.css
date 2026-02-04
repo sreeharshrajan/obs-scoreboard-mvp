@@ -43,3 +43,7 @@ body {
     @apply bg-[#FF5A09]/40;
   }
 }
+
+.bg-transparent {
+    background-color: rgba(0, 0, 0, 0) !important;
+}
