@@ -1,19 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Mail, Search, UserPlus, ArrowRight, UserCircle, X, Calendar, Fingerprint, CheckCircle2 } from "lucide-react";
+import { Mail, Search, UserPlus, ArrowRight, UserCircle, X, Calendar, Fingerprint, CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/firebase/client";
 import { AdminGuard } from "@/components/auth/AdminGuard";
 
-// Define the User interface to eliminate 'any'
+// Interface (kept same as your code)
 interface User {
     id: string;
     displayName: string | null;
     email: string | null;
     photoURL: string | null;
     role?: "Admin" | "Moderator" | "User";
-    createdAt?: { toDate: () => Date };
+    createdAt?: { toDate: () => Date } | any; // Type adjustment for serializable data
 }
 
 export default function UserListing() {
@@ -36,12 +36,50 @@ export default function UserListing() {
 
             if (res.ok) {
                 const data = await res.json();
-                setUsers(data);
+                // Fix date parsing from JSON
+                const parsedData = data.map((u: any) => ({
+                    ...u,
+                    createdAt: u.createdAt ? { toDate: () => new Date(u.createdAt) } : null
+                }));
+                setUsers(parsedData);
             }
             setLoading(false);
         };
         fetchUsers();
     }, []);
+
+    // --- NEW: Delete Handler ---
+    const handleDeleteUser = async (userId: string) => {
+        if (!confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) {
+            return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            const token = await user.getIdToken();
+            const res = await fetch(`/api/users/${userId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                alert(errorData.error || "Failed to delete user");
+                return;
+            }
+
+            // UI Update: Remove user from state
+            setUsers((prev) => prev.filter((u) => u.id !== userId));
+            setSelectedUser(null); // Close modal
+            alert("User deleted successfully.");
+
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            alert("An unexpected error occurred.");
+        }
+    };
 
     const filteredUsers = users.filter(user =>
         user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -100,7 +138,8 @@ export default function UserListing() {
                     <UserModal 
                         user={selectedUser} 
                         isCurrentUser={selectedUser.id === currentUid}
-                        onClose={() => setSelectedUser(null)} 
+                        onClose={() => setSelectedUser(null)}
+                        onDelete={() => handleDeleteUser(selectedUser.id)} // Pass handler
                     />
                 )}
             </div>
@@ -168,7 +207,26 @@ function UserCard({ user, isYou, onClick }: { user: User; isYou: boolean; onClic
     );
 }
 
-function UserModal({ user, isCurrentUser, onClose }: { user: User; isCurrentUser: boolean; onClose: () => void }) {
+// Update Modal to accept onDelete and show delete button
+function UserModal({ 
+    user, 
+    isCurrentUser, 
+    onClose, 
+    onDelete 
+}: { 
+    user: User; 
+    isCurrentUser: boolean; 
+    onClose: () => void;
+    onDelete: () => void;
+}) {
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleConfirmDelete = async () => {
+        setIsDeleting(true);
+        await onDelete();
+        setIsDeleting(false);
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="absolute inset-0" onClick={onClose} />
@@ -215,14 +273,25 @@ function UserModal({ user, isCurrentUser, onClose }: { user: User; isCurrentUser
                         <ModalStat icon={<Calendar size={16} />} label="Join Date" value={user.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'Recently'} />
                     </div>
 
-                    {/* Hide buttons for current user */}
                     {!isCurrentUser && (
                         <div className="pt-8 flex flex-col gap-3">
                             <button className="h-14 w-full rounded-2xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-[0.2em] hover:scale-[1.01] active:scale-[0.99] transition-all">
                                 Edit User Account
                             </button>
-                            <button className="h-14 w-full rounded-2xl border border-red-500/20 text-red-500 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all">
-                                Restrict Access
+                            
+                            {/* DELETE BUTTON */}
+                            <button 
+                                onClick={handleConfirmDelete}
+                                disabled={isDeleting}
+                                className="h-14 w-full rounded-2xl border border-red-500/20 text-red-500 bg-red-500/5 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDeleting ? (
+                                    <span>Deleting...</span>
+                                ) : (
+                                    <>
+                                        <Trash2 size={14} /> Delete User
+                                    </>
+                                )}
                             </button>
                         </div>
                     )}
