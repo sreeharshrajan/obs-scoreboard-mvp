@@ -5,6 +5,7 @@ import { Plus, Play, Settings, Loader2, Calendar, MapPin, Trophy, Users, Hash, E
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/client";
+import MatchRow from "@/components/dashboard/MatchRow";
 
 interface TournamentData {
     id: string;
@@ -17,16 +18,27 @@ interface TournamentData {
     owner: { displayName: string } | null;
 }
 
+interface Match {
+    id: string;
+    status: string;
+    team1: string;
+    team2: string;
+    court: string;
+    startTime?: string;
+}
+
 export default function TournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
     const resolvedParams = use(params);
     const tournamentId = resolvedParams.id;
 
     const [tournament, setTournament] = useState<TournamentData | null>(null);
+    const [matches, setMatches] = useState<Match[]>([]);
+
     const [loading, setLoading] = useState(true);
 
     // FIX: Initialized stats (setStats remains for future match fetching)
-    const [stats] = useState({ total: 0, active: 0 });
+    const [stats, setStats] = useState({ total: 0, active: 0 }); // Updated to state
 
     useEffect(() => {
         const fetchTournament = async () => {
@@ -36,14 +48,24 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
 
                 const token = await user.getIdToken();
 
-                const res = await fetch(`/api/tournaments/${tournamentId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setTournament(data);
+                const headers = { Authorization: `Bearer ${token}` };
+
+                // Fetch Tournament and Matches in parallel
+                const [tRes, mRes] = await Promise.all([
+                    fetch(`/api/tournaments/${tournamentId}`, { headers }),
+                    fetch(`/api/tournaments/${tournamentId}/matches`, { headers })
+                ]);
+
+                if (tRes.ok) setTournament(await tRes.json());
+
+                if (mRes.ok) {
+                    const matchData = await mRes.json();
+                    setMatches(matchData);
+                    // Update stats dynamically
+                    setStats({
+                        total: matchData.length,
+                        active: matchData.filter((m: Match) => m.status === "live" || m.status === "in_progress").length
+                    });
                 }
             } catch (error) {
                 console.error("Fetch error:", error);
@@ -138,17 +160,12 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                     <div className="flex items-center justify-between px-2">
                         <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Match Schedule</h2>
                         <div className="h-px flex-1 bg-slate-100 dark:bg-white/5 mx-6" />
-
-                        {/* FIX: Added aria-label for accessibility */}
-                        <button
-                            aria-label="Match Schedule Settings"
-                            className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-black dark:hover:text-white transition-colors"
-                        >
+                        <button aria-label="Settings" className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-black dark:hover:white transition-colors">
                             <Settings size={16} />
                         </button>
                     </div>
 
-                    <div className="bg-white dark:bg-[#1A1A1A]/40 border border-slate-200 dark:border-white/5 rounded-4xl min-h-100 overflow-hidden">
+                    <div className="bg-white dark:bg-[#1A1A1A]/40 border border-slate-200 dark:border-white/5 rounded-4xl min-h-[400px] overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
@@ -159,17 +176,23 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
                                         <th className="px-8 py-5 text-right">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-50 dark:divide-white/5 h-full">
-                                    <tr className="group hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors h-full">
-                                        <td className="px-8 py-12 text-center text-slate-400 text-[10px] uppercase font-bold tracking-widest italic" colSpan={4}>
-                                            <div className="flex flex-col items-center gap-3 h-full">
-                                                <div className="w-12 h-12 rounded-full border border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center">
-                                                    <Play size={16} className="text-slate-300" />
+                                <tbody className="divide-y divide-slate-50 dark:divide-white/5">
+                                    {matches.length > 0 ? (
+                                        matches.map((match) => (
+                                            <MatchRow key={match.id} match={match} tournamentId={tournamentId} />
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td className="px-8 py-20 text-center text-slate-400 text-[10px] uppercase font-bold tracking-widest italic" colSpan={4}>
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-full border border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center">
+                                                        <Play size={16} className="text-slate-300" />
+                                                    </div>
+                                                    No matches found.
                                                 </div>
-                                                No matches found.
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
