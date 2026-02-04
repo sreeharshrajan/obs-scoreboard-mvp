@@ -1,19 +1,39 @@
-// hooks/useAdmin.ts
-import { useAuth } from "@/context/AuthContext"; // Assuming you have an AuthContext
+import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase/client";
 import { resolveRoles } from "@/lib/auth/roles";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { onAuthStateChanged, User } from "firebase/auth";
 
-export function useAdminGuard() {
-  const { user, loading } = useAuth();
+export function useAdmin(redirectTo: string | null = "/login") {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const roles = resolveRoles(user?.email ?? null);
 
   useEffect(() => {
-    if (!loading && (!user || !roles.isAdmin)) {
-      router.push("/dashboard");
-    }
-  }, [user, loading, roles.isAdmin, router]);
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
+      if (user) {
+        // resolveRoles returns { isAdmin: boolean }
+        const roles = resolveRoles(user.email);
+        const adminStatus = roles.isAdmin; 
+        
+        setIsAdmin(adminStatus);
 
-  return { isAdmin: roles.isAdmin, loading };
+        // If a redirect path is provided and user is NOT an admin
+        if (!adminStatus && redirectTo) {
+          router.push(redirectTo);
+        }
+      } else {
+        setIsAdmin(false);
+        if (redirectTo) {
+          router.push(redirectTo);
+        }
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router, redirectTo]);
+
+  return { isAdmin, loading };
 }
