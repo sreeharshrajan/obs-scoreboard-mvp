@@ -440,6 +440,7 @@ export default function MatchConsole() {
                 {/* Center Control Column */}
                 <div className="lg:col-span-4 flex flex-col gap-6">
                     <MatchTimer
+                        matchDetails={safeMatch}
                         elapsedDisplay={elapsedDisplay}
                         isTimerRunning={safeMatch.isTimerRunning}
                         isCompleted={isCompleted}
