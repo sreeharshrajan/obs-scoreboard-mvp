@@ -46,9 +46,38 @@ export default memo(function MatchTimer({
                 </div>
             </div>
 
+            {/* Match Metadata Grid */}
+            {isCompleted && (
+                < div className="grid grid-cols-2 gap-x-8 gap-y-2 my-4">
+                    <div className="flex items-center gap-2">
+                        <MapPin size={12} className="text-slate-400" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 capitalize">
+                            {matchDetails.court || "Court 1"}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-right justify-end">
+                        <Info size={12} className="text-slate-400" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                            {matchDetails.matchType || "Singles"}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Hash size={12} className="text-slate-400" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                            {matchDetails.scoringType || "21x3"} pts
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-right justify-end">
+                        <Clock size={12} className="text-slate-400" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                            {matchDetails.roundType || "Knockout"}
+                        </span>
+                    </div>
+                </div>
+            )}
 
             {/* Main Timer Group */}
-            <div className="flex flex-col items-center">
+            < div className="flex flex-col items-center" >
                 <div className={clsx(
                     "flex items-center gap-2 mb-1 px-4 py-1 rounded-full transition-colors mb-2",
                     isTimerRunning ? "bg-emerald-500/10 text-emerald-500" : "bg-slate-100 dark:bg-white/5 text-slate-500"
@@ -65,7 +94,7 @@ export default memo(function MatchTimer({
                 )}>
                     {formatTime(elapsedDisplay)}
                 </div>
-            </div>
+            </div >
 
             {/* Action Buttons */}
             {!isCompleted && (
@@ -101,6 +130,6 @@ export default memo(function MatchTimer({
                     </button>
                 </div>
             )}
-        </div>
+        </div >
     );
 });
