@@ -8,7 +8,7 @@ import Image from "next/image";
 import { auth } from "@/lib/firebase/client";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import DashboardLoader from "@/components/dashboard/loader";
+import { FormSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
 
 interface UserData {
@@ -77,7 +77,7 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
     }
 
     if (fetching || !userData) {
-        return <DashboardLoader message="Loading User..." />;
+        return <FormSkeleton />;
     }
 
     return (

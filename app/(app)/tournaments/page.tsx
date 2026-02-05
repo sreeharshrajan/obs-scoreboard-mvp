@@ -6,7 +6,7 @@ import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 
 import { Input } from "@/components/ui/Input";
-import DashboardLoader from "@/components/dashboard/loader";
+import GridSkeleton from "@/components/dashboard/grid-skeleton";
 
 export default function TournamentListing() {
     const [tournaments, setTournaments] = useState<any[]>([]);
@@ -72,7 +72,7 @@ export default function TournamentListing() {
             {/* Grid Listing */}
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {loading ? (
-                    <DashboardLoader message="Loading Tournaments..." className="min-h-[400px]" />
+                    <GridSkeleton />
                 ) : filteredTournaments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
                         {filteredTournaments.map((tournament) => (

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/firebase/client";
 import { AdminGuard } from "@/components/auth/AdminGuard";
-import DashboardLoader from "@/components/dashboard/loader";
+import GridSkeleton from "@/components/dashboard/grid-skeleton";
 
 // Interface (kept same as your code)
 interface User {
@@ -106,7 +106,7 @@ export default function UserListing() {
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                     {loading ? (
-                        <DashboardLoader message="Loading Users..." className="min-h-[400px]" />
+                        <GridSkeleton />
                     ) : filteredUsers.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
                             {filteredUsers.map((user) => (

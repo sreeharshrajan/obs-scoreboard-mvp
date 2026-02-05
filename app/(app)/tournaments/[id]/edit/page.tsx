@@ -11,7 +11,7 @@ import { auth } from "@/lib/firebase/client";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import Image from "next/image";
-import DashboardLoader from "@/components/dashboard/loader";
+import { FormSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
 
 const tournamentSchema = z.object({
@@ -128,7 +128,7 @@ export default function EditTournament({ params }: { params: Promise<{ id: strin
 
 
     if (error) return <ErrorFallback error={error} backUrl={`/tournaments/${id}`} backLabel="Back to Dashboard" />;
-    if (isLoading) return <DashboardLoader message="Loading Tournament..." />;
+    if (isLoading) return <FormSkeleton />;
 
     return (
         <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col py-6 animate-in fade-in duration-500">

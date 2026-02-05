@@ -8,7 +8,7 @@ import { ChevronLeft, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
-import DashboardLoader from "@/components/dashboard/loader";
+import { FormSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -145,7 +145,7 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
     };
 
     if (error) return <ErrorFallback error={error} backUrl={`/tournaments/${tournamentId}`} backLabel="Back to Tournament" />;
-    if (isLoading) return <DashboardLoader message="Loading Match Details..." />;
+    if (isLoading) return <FormSkeleton />;
 
     return (
         <div className="flex-1 w-full max-w-4xl mx-auto px-6 md:px-10 flex flex-col py-6 animate-in fade-in duration-500">

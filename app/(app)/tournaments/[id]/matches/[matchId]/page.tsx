@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { MatchState } from '@/types/match';
 import { auth } from '@/lib/firebase/client';
 import { User } from 'firebase/auth';
-import DashboardLoader from "@/components/dashboard/loader";
+import { MatchConsoleSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
 
 // Components
@@ -368,7 +368,7 @@ export default function MatchConsole() {
     };
     */
 
-    if (isLoading) return <DashboardLoader message="Initializing System..." />;
+    if (isLoading) return <MatchConsoleSkeleton />;
     if (isError || !match || !safeMatch) {
         if (isError) console.error(isError);
         return <ErrorFallback error="Connection Lost or Match Not Found" className="text-red-500" />;

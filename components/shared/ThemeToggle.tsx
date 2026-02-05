@@ -22,7 +22,19 @@ export default function ThemeToggle() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    if (!mounted) return <div className="w-10 h-10" />; // Placeholder to prevent layout shift
+    if (!mounted) {
+        return (
+            <div className="relative">
+                <button
+                    disabled
+                    className="flex items-center justify-center w-10 h-10 rounded-xl transition-all 
+                   bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 opacity-50"
+                >
+                    <Monitor size={18} className="text-slate-700 dark:text-slate-200" />
+                </button>
+            </div>
+        );
+    }
 
     const options = [
         { value: "light", label: "Light", icon: Sun },

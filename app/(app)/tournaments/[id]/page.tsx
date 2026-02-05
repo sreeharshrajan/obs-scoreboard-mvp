@@ -8,7 +8,7 @@ import { auth } from "@/lib/firebase/client";
 import MatchRow from "@/components/dashboard/MatchRow";
 import MatchCard from "@/components/dashboard/MatchCard"; // New component
 import SponsorsTab from "@/components/dashboard/SponsorsTab"; // New component
-import DashboardLoader from "@/components/dashboard/loader";
+import { SplitLayoutSkeleton } from "@/components/dashboard/skeletons";
 import { Match } from "@/types/match";
 
 interface TournamentData {
@@ -70,7 +70,7 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
         fetchData();
     }, [tournamentId]);
 
-    if (loading) return <DashboardLoader message="Loading Tournament..." />;
+    if (loading) return <SplitLayoutSkeleton />;
     if (!tournament) {
         return (
             <div className="flex h-full items-center justify-center">

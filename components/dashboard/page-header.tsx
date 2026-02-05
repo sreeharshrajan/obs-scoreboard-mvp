@@ -6,9 +6,11 @@ import { ChevronLeft, Plus, UserPlus } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { resolveRoles } from "@/lib/auth/roles";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function PageHeader() {
     const pathname = usePathname();
-    const { user } = useAuthStore();
+    const { user, loading } = useAuthStore();
     const { isAdmin } = resolveRoles(user?.email || null);
 
     const getHeaderInfo = () => {
@@ -180,19 +182,23 @@ export default function PageHeader() {
                     ))}
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-instrument font-medium tracking-tight text-slate-900 dark:text-white">
-                    {info.title.includes(" ") ? (
-                        <>
-                            {info.title.split(" ")[0]}{" "}
-                            <span className="italic font-light text-[#FF5A09]">
-                                {info.title.split(" ").slice(1).join(" ")}
-                            </span>
-                        </>
-                    ) : (
-                        info.title
-                    )}
-                    <span className="text-[#FF5A09]">.</span>
-                </h1>
+                {loading ? (
+                    <Skeleton className="h-10 w-64 rounded-xl" />
+                ) : (
+                    <h1 className="text-3xl md:text-4xl font-instrument font-medium tracking-tight text-slate-900 dark:text-white">
+                        {info.title.includes(" ") ? (
+                            <>
+                                {info.title.split(" ")[0]}{" "}
+                                <span className="italic font-light text-[#FF5A09]">
+                                    {info.title.split(" ").slice(1).join(" ")}
+                                </span>
+                            </>
+                        ) : (
+                            info.title
+                        )}
+                        <span className="text-[#FF5A09]">.</span>
+                    </h1>
+                )}
             </div>
 
             <div className="hidden md:block flex items-center gap-3">
@@ -205,13 +211,17 @@ export default function PageHeader() {
                     </Link>
                 )}
 
-                {info.action && (
-                    <Link
-                        href={info.action.href}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg active:scale-95"
-                    >
-                        {info.action.icon && <info.action.icon size={14} />} {info.action.label}
-                    </Link>
+                {loading ? (
+                    info.action && <Skeleton className="h-10 w-32 rounded-full" />
+                ) : (
+                    info.action && (
+                        <Link
+                            href={info.action.href}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg active:scale-95"
+                        >
+                            {info.action.icon && <info.action.icon size={14} />} {info.action.label}
+                        </Link>
+                    )
                 )}
             </div>
         </header>

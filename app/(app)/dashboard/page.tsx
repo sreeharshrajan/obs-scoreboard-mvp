@@ -7,7 +7,7 @@ import { Users, Trophy, GamepadDirectional, LayoutDashboard } from "lucide-react
 
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import DashboardLoader from "@/components/dashboard/loader";
+import PageSkeleton from "@/components/dashboard/page-skeleton";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
@@ -34,7 +34,7 @@ export default function Dashboard() {
   }, [isAdmin]);
 
   if (loading) {
-    return <DashboardLoader message="Loading Dashboard" className="min-h-[60vh]" />;
+    return <PageSkeleton />;
   }
 
   return (

@@ -7,9 +7,10 @@ import { auth } from "@/lib/firebase/client";
 import { resolveRoles } from "@/lib/auth/roles";
 import Link from "next/link";
 import Image from "next/image"
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardHeader = () => {
-    const { user } = useAuthStore();
+    const { user, loading } = useAuthStore();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Check admin status
@@ -40,51 +41,67 @@ const DashboardHeader = () => {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex items-center gap-6 mx-8">
-                    {navLinks.map((link) => (
-                        (link.public || isAdmin) && (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-[#FF5A09] transition-colors"
-                            >
-                                {link.name}
-                            </Link>
-                        )
-                    ))}
+                    {loading ? (
+                        <>
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-4 w-24" />
+                        </>
+                    ) : (
+                        navLinks.map((link) => (
+                            (link.public || isAdmin) && (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-[#FF5A09] transition-colors"
+                                >
+                                    {link.name}
+                                </Link>
+                            )
+                        ))
+                    )}
                 </nav>
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-4">
                     {/* Profile Chip */}
-                    <Link
-                        href={`/users/${user?.uid}/edit`}
-                        className="hidden sm:flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
-                    >
-                        <div className="w-6 h-6 rounded-full overflow-hidden bg-[#FF5A09]/10 flex items-center justify-center relative">
-                            {user?.photoURL ? (
-                                <Image
-                                    src={user.photoURL}
-                                    alt={`${user.displayName || "User"} avatar`}
-                                    fill
-                                    sizes="40px"
-                                    className="object-cover"
-                                    priority
-                                />
-                            ) : (
-                                <User
-                                    size={12}
-                                    className="text-[#FF5A09]"
-                                    aria-hidden="true"
-                                />
-                            )}
+                    {loading ? (
+                        <div className="hidden sm:flex items-center gap-3 px-3 py-1 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-3 w-24" />
+                            </div>
                         </div>
-                        <div className="flex flex-col max-w-25">
-                            <span className="text-xs font-semibold truncate leading-none">
-                                {user?.displayName || "User"}
-                            </span>
-                            {isAdmin && <span className="text-[8px] font-bold text-[#FF5A09] uppercase mt-1">Admin</span>}
-                        </div>
-                    </Link>
+                    ) : (
+                        <Link
+                            href={`/users/${user?.uid}/edit`}
+                            className="hidden sm:flex items-center gap-3 px-3 py-1 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                        >
+                            <div className="h-8 w-8 rounded-full overflow-hidden bg-[#FF5A09]/10 flex items-center justify-center relative">
+                                {user?.photoURL ? (
+                                    <Image
+                                        src={user.photoURL}
+                                        alt={`${user.displayName || "User"} avatar`}
+                                        fill
+                                        sizes="32px"
+                                        className="object-cover"
+                                        priority
+                                    />
+                                ) : (
+                                    <User
+                                        size={14}
+                                        className="text-[#FF5A09]"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                            </div>
+                            <div className="flex flex-col min-w-24">
+                                <span className="text-xs font-semibold truncate leading-none">
+                                    {user?.displayName || "User"}
+                                </span>
+                                {isAdmin && <span className="text-[8px] font-bold text-[#FF5A09] uppercase mt-1">Admin</span>}
+                            </div>
+                        </Link>
+                    )}
                     <ThemeToggle />
 
                     <button

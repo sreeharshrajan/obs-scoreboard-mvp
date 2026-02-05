@@ -6,7 +6,6 @@ import { useAuthStore } from "@/lib/stores/authStore";
 import { useRouter, usePathname } from "next/navigation";
 import DashboardHeader from "@/components/dashboard/header";
 import DashboardFooter from "@/components/dashboard/footer";
-import DashboardLoader from "@/components/dashboard/loader";
 import PageHeader from "@/components/dashboard/page-header";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -23,9 +22,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return () => unsub();
     }, [setUser, setLoading, router]);
 
-    if (loading) return (
-        <DashboardLoader />
-    );
 
     // Hide PageHeader on Match Console (Live)
     // Matches /tournaments/[id]/matches/[matchId] but NOT /new or /edit
