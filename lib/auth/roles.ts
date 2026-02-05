@@ -4,7 +4,9 @@ const ADMIN_EMAILS = new Set([
 ]);
 
 export function resolveRoles(email: string | null) {
+  const isAdmin = email ? ADMIN_EMAILS.has(email) : false;
+
   return {
-    isAdmin: true, // Everyone is an admin now
+    isAdmin,
   };
 }
