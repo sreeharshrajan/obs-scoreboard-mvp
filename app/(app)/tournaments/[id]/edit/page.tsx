@@ -4,7 +4,7 @@ import { use, useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowRight, ChevronLeft, Upload, Loader2, Save } from "lucide-react";
+import { ArrowRight, ChevronLeft, Upload, Loader2, Save, LayoutGrid, Monitor } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
@@ -133,20 +133,23 @@ export default function EditTournament({ params }: { params: Promise<{ id: strin
     return (
         <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col py-6 animate-in fade-in duration-500">
 
-            <div className="mb-8">
-                <Link href={`/tournaments/${id}`} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors mb-4">
-                    <ChevronLeft size={14} /> Back to Dashboard
-                </Link>
-                <h1 className="text-3xl font-instrument font-medium">Edit Tournament</h1>
-            </div>
-
             <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* LEFT COLUMN: Event Details */}
                 <div className="lg:col-span-7 space-y-6">
                     <div className="bg-slate-50 dark:bg-white/5 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/5 space-y-6">
-                        <div className="space-y-1">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Event Details</h3>
-                            <p className="text-xs text-slate-500">Update information about the tournament.</p>
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Event Details</h3>
+                                <p className="text-xs text-slate-500">Update information about the tournament.</p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors">
+                                    <LayoutGrid size={12} /> Dashboard
+                                </Link>
+                                <Link href={`/tournaments/${id}`} className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors">
+                                    <Monitor size={12} /> Console
+                                </Link>
+                            </div>
                         </div>
 
                         <Input

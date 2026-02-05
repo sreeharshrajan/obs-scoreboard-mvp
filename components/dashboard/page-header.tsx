@@ -103,7 +103,7 @@ export default function PageHeader() {
                         { label: "Edit", href: null }
                     ],
                     backUrl: `/tournaments/${tournamentId}`,
-                    backLabel: "Console"
+                    backLabel: "Tournament Details"
                 };
             }
 
@@ -116,7 +116,7 @@ export default function PageHeader() {
                         { label: "Schedule", href: null }
                     ],
                     backUrl: `/tournaments/${tournamentId}`,
-                    backLabel: "Console"
+                    backLabel: "Tournament Details"
                 };
             }
 
