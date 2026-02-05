@@ -34,16 +34,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     return (
         <div className="absolute top-8 left-8 flex items-stretch bg-black/90 text-white rounded-xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-left-4">
             <div className={clsx("flex flex-col items-center justify-center px-2 min-w-[80px]", isLive ? 'bg-[#FF5A09]' : 'bg-slate-900')}>
-                {match.showStreamerLogo !== false && match.streamerLogo ? (
-                    <Image
-                        src={match.streamerLogo}
-                        alt="Streamer Logo"
-                        width={0}
-                        height={0}
-                        sizes="100vw"
-                        className="w-12 h-12 object-contain mb-1"
-                    />
-                ) : match.showTournamentLogo !== false && match.tournamentLogo ? (
+                {match.showTournamentLogo !== false && match.tournamentLogo ? (
                     <Image
                         src={match.tournamentLogo}
                         alt="Tournament Logo"

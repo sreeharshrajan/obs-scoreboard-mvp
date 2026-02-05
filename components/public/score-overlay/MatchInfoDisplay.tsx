@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { MatchState } from "@/types/match";
 
 interface MatchInfoDisplayProps {
     match: MatchState;
