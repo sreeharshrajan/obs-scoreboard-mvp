@@ -20,22 +20,31 @@ export async function updateUser(token: string, id: string, data: { displayName?
 
     // Update Firestore
     console.log(`[updateUser] Updating user ${id} with data:`, data);
-    await adminDb.collection("users").doc(id).set({
-        ...data,
-        updatedAt: new Date(),
-    }, { merge: true });
-    console.log(`[updateUser] User ${id} updated successfully in Firestore.`);
+    try {
+        await adminDb.collection("users").doc(id).set({
+            ...data,
+            updatedAt: new Date(),
+        }, { merge: true });
+        console.log(`[updateUser] User ${id} updated successfully in Firestore.`);
+    } catch (error) {
+        console.error("[updateUser] Firestore update failed:", error);
+        throw new Error("Database update failed");
+    }
 
     // Update Firebase Auth (if name/image changed)
     try {
-        if (data.displayName || data.photoURL) {
-            await getAuth().updateUser(id, {
-                displayName: data.displayName,
-                photoURL: data.photoURL,
-            });
+        if (data.displayName || data.photoURL !== undefined) {
+            const updateParams: { displayName?: string; photoURL?: string | null } = {};
+            if (data.displayName) updateParams.displayName = data.displayName;
+            if (data.photoURL !== undefined) updateParams.photoURL = data.photoURL || null;
+
+            if (Object.keys(updateParams).length > 0) {
+                await getAuth().updateUser(id, updateParams);
+            }
         }
     } catch (error) {
         console.error("Error updating Auth profile:", error);
+        // Don't throw here, as DB update succeeded
     }
 
     revalidatePath(`/users`);

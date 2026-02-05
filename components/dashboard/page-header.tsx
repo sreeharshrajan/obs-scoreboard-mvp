@@ -134,6 +134,19 @@ export default function PageHeader() {
             }
         }
 
+        // Account Settings
+        if (pathname === "/account") {
+            return {
+                title: "Account Settings",
+                breadcrumbs: [
+                    { label: "Dashboard", href: "/dashboard" },
+                    { label: "Account", href: null }
+                ],
+                backUrl: "/dashboard",
+                backLabel: "Dashboard"
+            };
+        }
+
         // Dashboard (Default)
         if (pathname === "/dashboard" || pathname === "/") {
             const displayName = user?.displayName || (user?.email ? user.email.split("@")[0] : "User");

@@ -56,7 +56,11 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                     <ArrowLeft size={20} />
                 </Link>
                 <div>
-                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
+                        {match.streamerLogo && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={match.streamerLogo} alt="Streamer" className="w-5 h-5 object-contain" />
+                        )}
                         Match <span className="text-[#FF5A09]">Console</span>
                     </h2>
                     <div className="flex items-center gap-2">
@@ -64,11 +68,11 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                             "text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded",
                             match.status === 'live' ? "bg-red-500/10 text-red-500" : "bg-slate-100 dark:bg-white/5 text-slate-400"
                         )}>
-                            Status: {match.status || 'Scheduled'}
+                            {match.status || 'Scheduled'}
                         </span>
                         <span className="text-slate-300 dark:text-white/10">|</span>
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            Court {match.court || 'TBD'}
+                            {match.court || 'TBD'}
                         </span>
                     </div>
                 </div>

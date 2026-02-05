@@ -73,7 +73,7 @@ const DashboardHeader = () => {
                         </div>
                     ) : (
                         <Link
-                            href={`/users/${user?.uid}/edit`}
+                            href="/account"
                             className="hidden sm:flex items-center gap-3 px-3 py-1 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
                         >
                             <div className="h-8 w-8 rounded-full overflow-hidden bg-[#FF5A09]/10 flex items-center justify-center relative">
@@ -146,6 +146,14 @@ const DashboardHeader = () => {
                             )
                         ))}
                         <hr className="my-2 border-slate-100 dark:border-white/5" />
+                        <Link
+                            href="/account"
+                            onClick={toggleMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-sm font-bold uppercase tracking-widest transition-colors"
+                        >
+                            <User size={18} className="text-[#FF5A09]" />
+                            Account
+                        </Link>
                         <button
                             onClick={() => auth.signOut()}
                             className="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 text-sm font-bold uppercase tracking-widest transition-colors"

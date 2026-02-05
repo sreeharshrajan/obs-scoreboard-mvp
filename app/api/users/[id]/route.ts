@@ -23,15 +23,20 @@ export async function GET(
         }
         if (!id) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
 
-        const user = await getAuth().getUser(id);
+        const userRecord = await getAuth().getUser(id);
+
+        // Fetch additional data from Firestore
+        const userDoc = await adminDb.collection("users").doc(id).get();
+        const userData = userDoc.exists ? userDoc.data() : {};
 
         return NextResponse.json({
-            id: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            role: user.customClaims?.role || "User",
-            createdAt: user.metadata.creationTime,
+            id: userRecord.uid,
+            email: userRecord.email,
+            displayName: userRecord.displayName, // Auth might be more up to date for basic profile
+            photoURL: userRecord.photoURL,
+            role: userRecord.customClaims?.role || "User",
+            createdAt: userRecord.metadata.creationTime,
+            ...userData, // Merge Firestore data (streamerLogo, etc)
         });
 
     } catch (error: unknown) {

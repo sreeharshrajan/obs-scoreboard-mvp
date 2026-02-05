@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useState, useEffect, useRef } from "react";
-import { updateUser } from "@/lib/actions/user-actions";
+import { useState, useEffect, useRef } from "react";
+import { updateProfile } from "@/lib/actions/profile-actions";
 import { Save, Loader2, Upload, LayoutGrid, Users } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,6 +9,8 @@ import { auth } from "@/lib/firebase/client";
 import { Input } from "@/components/ui/Input";
 import { FormSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface UserData {
     id: string;
@@ -19,8 +21,8 @@ interface UserData {
     streamerLogo?: string;
 }
 
-export default function EditUser({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function AccountPage() {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [userData, setUserData] = useState<UserData | null>(null);
@@ -37,44 +39,50 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const user = auth.currentUser;
+                let user = auth.currentUser;
                 let token = "";
-                if (user) token = await user.getIdToken();
 
-                if (!token) {
+                if (!user) {
                     await new Promise<void>((resolve) => {
-                        const unsub = auth.onAuthStateChanged(async (u) => {
-                            if (u) token = await u.getIdToken();
+                        const unsub = auth.onAuthStateChanged((u) => {
+                            user = u;
                             unsub();
                             resolve();
                         });
                     });
                 }
 
-                if (!token) throw new Error("Not authenticated");
+                if (user) {
+                    token = await user.getIdToken();
+                }
 
-                const res = await fetch(`/api/users/${id}`, {
+                if (!token || !user) {
+                    // Redirect to login if not authenticated (should be handled by middleware/layout generally)
+                    throw new Error("Not authenticated");
+                }
+
+                const res = await fetch(`/api/users/${user.uid}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
-                if (!res.ok) throw new Error("Failed to fetch user");
+                if (!res.ok) throw new Error("Failed to fetch user data");
                 const data = await res.json();
                 setUserData(data);
                 setPhotoURL(data.photoURL || "");
                 setStreamerLogo(data.streamerLogo || "");
-            } catch (err) {
+            } catch (err: any) {
                 console.error(err);
-                setError("Failed to load user data");
+                setError(err.message || "Failed to load account data");
             } finally {
                 setFetching(false);
             }
         };
         fetchUser();
-    }, [id]);
+    }, []);
 
 
     if (error) {
-        return <ErrorFallback error={error} backUrl="/users" backLabel="Back to Directory" />;
+        return <ErrorFallback error={error} backUrl="/dashboard" backLabel="Back to Dashboard" />;
     }
 
     if (fetching || !userData) {
@@ -88,7 +96,7 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                     setLoading(true);
                     const token = await auth.currentUser?.getIdToken();
                     if (!token) {
-                        alert("Not authenticated");
+                        toast.error("Not authenticated");
                         setLoading(false);
                         return;
                     }
@@ -100,10 +108,12 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                     };
 
                     try {
-                        await updateUser(token, id, updates);
+                        await updateProfile(token, updates);
+                        router.refresh();
+                        toast.success("Profile updated successfully");
                     } catch (e: any) {
                         console.error(e);
-                        alert(e.message || "Failed to update user");
+                        toast.error(e.message || "Failed to update profile");
                     } finally {
                         setLoading(false);
                     }
@@ -115,15 +125,12 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                     <div className="bg-slate-50 dark:bg-white/5 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/5 space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">User Details</h3>
-                                <p className="text-xs text-slate-500">Update personal information and branding.</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Account Settings</h3>
+                                <p className="text-xs text-slate-500">Manage your personal profile and branding.</p>
                             </div>
                             <div className="flex items-center gap-4">
                                 <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors">
                                     <LayoutGrid size={12} /> Dashboard
-                                </Link>
-                                <Link href="/users" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#FF5A09] transition-colors">
-                                    <Users size={12} /> Directory
                                 </Link>
                             </div>
                         </div>
@@ -204,7 +211,7 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                                         if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
                                         const uploadData = await uploadRes.json();
                                         setPhotoURL(uploadData.secure_url);
-                                    } catch (err) { console.error(err); alert("Upload failed"); }
+                                    } catch (err) { console.error(err); toast.error("Upload failed"); }
                                     finally { setIsUploading(false); }
                                 }}
                             />
@@ -262,7 +269,7 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                                         if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
                                         const uploadData = await uploadRes.json();
                                         setStreamerLogo(uploadData.secure_url);
-                                    } catch (err) { console.error(err); alert("Logo upload failed"); }
+                                    } catch (err) { console.error(err); toast.error("Logo upload failed"); }
                                     finally { setIsUploadingLogo(false); }
                                 }}
                             />

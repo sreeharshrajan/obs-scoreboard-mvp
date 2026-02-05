@@ -147,6 +147,22 @@ export default function MatchConsole() {
         enabled: !!tournamentId,
     });
 
+    // 2.5. Data Query: User Profile (for Logo Sync)
+    const { data: userProfile } = useQuery({
+        queryKey: ['userProfile'],
+        queryFn: async () => {
+            const user = auth.currentUser;
+            if (!user) return null;
+            const token = await user.getIdToken();
+            const res = await fetch(`/api/users/${user.uid}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+            return res.json();
+        },
+        staleTime: 1000 * 60 * 5, // Cache for 5 min
+    });
+
     const isLoading = isMatchLoading || isTournamentLoading;
     const isError = isMatchError;
 
@@ -185,23 +201,39 @@ export default function MatchConsole() {
     const debouncedMutate = useDebouncedMutation(mutation.mutateAsync, 500);
 
 
-    // 4. Sync Tournament Info to Match Doc (for Overlay)
+    // 4. Sync Info to Match Doc (Tournament Logo + Streamer Logo)
     useEffect(() => {
-        if (tournament && match) {
-            const shouldUpdate =
-                (tournament.name && match.tournamentName !== tournament.name) ||
-                (tournament.category && match.category !== tournament.category) ||
-                (tournament.logo && match.tournamentLogo !== tournament.logo);
+        if (match) {
+            const updates: Partial<MatchState> = {};
+            let hasUpdates = false;
 
-            if (shouldUpdate) {
-                mutation.mutate({
-                    tournamentName: tournament.name,
-                    category: tournament.category,
-                    tournamentLogo: tournament.logo
-                });
+            // Sync Tournament Info
+            if (tournament) {
+                if (tournament.name && match.tournamentName !== tournament.name) {
+                    updates.tournamentName = tournament.name;
+                    hasUpdates = true;
+                }
+                if (tournament.category && match.category !== tournament.category) {
+                    updates.category = tournament.category;
+                    hasUpdates = true;
+                }
+                if (tournament.logo && match.tournamentLogo !== tournament.logo) {
+                    updates.tournamentLogo = tournament.logo;
+                    hasUpdates = true;
+                }
+            }
+
+            // Sync Streamer Logo
+            if (userProfile?.streamerLogo && match.streamerLogo !== userProfile.streamerLogo) {
+                updates.streamerLogo = userProfile.streamerLogo;
+                hasUpdates = true;
+            }
+
+            if (hasUpdates) {
+                mutation.mutate(updates);
             }
         }
-    }, [tournament, match, mutation]);
+    }, [tournament, match, mutation, userProfile]);
 
 
     // 5. Timer & Clock Logic

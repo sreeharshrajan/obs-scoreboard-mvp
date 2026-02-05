@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity, Clock } from "lucide-react";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import Image from "next/image";
 
 interface ScoreboardProps {
     match: MatchState;
@@ -33,8 +34,24 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     return (
         <div className="absolute top-8 left-8 flex items-stretch bg-black/90 text-white rounded-xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-left-4">
             <div className={clsx("flex flex-col items-center justify-center px-2 min-w-[80px]", isLive ? 'bg-[#FF5A09]' : 'bg-slate-900')}>
-                {match.showTournamentLogo !== false && match.tournamentLogo ? (
-                    <img src={match.tournamentLogo} alt="Logo" className="w-12 h-12 object-contain mb-1" />
+                {match.showStreamerLogo !== false && match.streamerLogo ? (
+                    <Image
+                        src={match.streamerLogo}
+                        alt="Streamer Logo"
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        className="w-12 h-12 object-contain mb-1"
+                    />
+                ) : match.showTournamentLogo !== false && match.tournamentLogo ? (
+                    <Image
+                        src={match.tournamentLogo}
+                        alt="Tournament Logo"
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        className="w-12 h-12 object-contain mb-1"
+                    />
                 ) : (
                     isLive ? <Activity size={24} className="text-white" /> : <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{match.status || 'OFF'}</span>
                 )}
