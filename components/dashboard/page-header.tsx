@@ -4,11 +4,12 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Plus, UserPlus } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { resolveRoles } from "@/lib/auth/roles";
 
 export default function PageHeader() {
     const pathname = usePathname();
     const { user } = useAuthStore();
-    const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    const { isAdmin } = resolveRoles(user?.email || null);
 
     const getHeaderInfo = () => {
         const parts = pathname.split('/').filter(Boolean);

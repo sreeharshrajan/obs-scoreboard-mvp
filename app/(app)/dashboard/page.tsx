@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { resolveRoles } from "@/lib/auth/roles";
 import { AdminStats, ApiResponse } from "@/lib/types/admin";
 import { Users, Trophy, GamepadDirectional, LayoutDashboard } from "lucide-react";
 
@@ -13,7 +14,7 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const { isAdmin } = resolveRoles(user?.email || null);
   const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
 
   useEffect(() => {

@@ -27,12 +27,13 @@ export async function GET() {
     const roles = resolveRoles(email ?? null);
 
     // 3️⃣ Admin verification logic
-    if (!roles.isAdmin) {
+    // Removed strict admin check to allow regular users to access their own stats
+    /* if (!roles.isAdmin) {
       return NextResponse.json(
         { success: false, error: "Forbidden: Admin access required" },
         { status: 403 }
       );
-    }
+    } */
 
     // 4️⃣ Fetch stats (Firestore count aggregation)
     const [
