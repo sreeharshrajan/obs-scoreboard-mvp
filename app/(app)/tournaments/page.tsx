@@ -8,25 +8,60 @@ import { db, auth } from "@/lib/firebase/client";
 import { Input } from "@/components/ui/Input";
 import GridSkeleton from "@/components/dashboard/grid-skeleton";
 
+import { resolveRoles } from "@/lib/auth/roles";
+
 export default function TournamentListing() {
     const [tournaments, setTournaments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [usersMap, setUsersMap] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 setTournaments([]);
                 setLoading(false);
+                setIsAdmin(false);
                 return;
             }
 
             try {
-                const q = query(
-                    collection(db, "tournaments"),
-                    where("ownerId", "==", user.uid),
-                    orderBy("createdAt", "desc")
-                );
+                const roles = resolveRoles(user.email);
+                setIsAdmin(roles.isAdmin);
+                let q;
+
+                if (roles.isAdmin) {
+                    q = query(
+                        collection(db, "tournaments"),
+                        orderBy("createdAt", "desc")
+                    );
+
+                    // Fetch users to get display names
+                    try {
+                        const token = await user.getIdToken();
+                        const res = await fetch("/api/users", {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (res.ok) {
+                            const usersData = await res.json();
+                            const map: Record<string, string> = {};
+                            usersData.forEach((u: any) => {
+                                map[u.id] = u.displayName || "Unknown User";
+                            });
+                            setUsersMap(map);
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch users for mapping", err);
+                    }
+
+                } else {
+                    q = query(
+                        collection(db, "tournaments"),
+                        where("ownerId", "==", user.uid),
+                        orderBy("createdAt", "desc")
+                    );
+                }
 
                 const snapshot = await getDocs(q);
 
@@ -76,7 +111,12 @@ export default function TournamentListing() {
                 ) : filteredTournaments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
                         {filteredTournaments.map((tournament) => (
-                            <TournamentCard key={tournament.id} tournament={tournament} />
+                            <TournamentCard
+                                key={tournament.id}
+                                tournament={tournament}
+                                isAdmin={isAdmin}
+                                ownerName={usersMap[tournament.ownerId]}
+                            />
                         ))}
                     </div>
                 ) : (
@@ -89,7 +129,36 @@ export default function TournamentListing() {
     );
 }
 
-function TournamentCard({ tournament }: { tournament: any }) {
+// Helper function to calculate status based on dates
+function getTournamentStatus(startDateStr: string, endDateStr: string, currentStatus: string) {
+    if (!startDateStr || !endDateStr) return currentStatus || "Upcoming";
+
+    const now = new Date();
+    // Reset time to verify strict date comparison (ignoring time of day)
+    now.setHours(0, 0, 0, 0);
+
+    // Parse YYYY-MM-DD strings as local time
+    const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
+
+    const startDate = new Date(startYear, startMonth - 1, startDay);
+    const endDate = new Date(endYear, endMonth - 1, endDay);
+
+    // If clearly past
+    if (now > endDate) return "Completed";
+
+    // If currently active (start <= now <= end)
+    if (now >= startDate && now <= endDate) return "Live";
+
+    // Otherwise check if it's future
+    if (now < startDate) return "Upcoming";
+
+    return currentStatus || "Upcoming";
+}
+
+function TournamentCard({ tournament, isAdmin, ownerName }: { tournament: any, isAdmin: boolean, ownerName?: string }) {
+    const displayStatus = getTournamentStatus(tournament.startDate, tournament.endDate, tournament.status);
+
     const statusColors: any = {
         Upcoming: "bg-blue-500/10 text-blue-500",
         Live: "bg-[#FF5A09]/10 text-[#FF5A09]",
@@ -100,9 +169,10 @@ function TournamentCard({ tournament }: { tournament: any }) {
         <Link href={`/tournaments/${tournament.id}`} className="group p-6 rounded-[2rem] bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all duration-500 flex flex-col justify-between h-56 relative overflow-hidden">
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
-                    <div className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider ${statusColors[tournament.status] || statusColors.Upcoming}`}>
-                        {tournament.status || "Upcoming"}
+                    <div className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider ${statusColors[displayStatus] || statusColors.Upcoming}`}>
+                        {displayStatus}
                     </div>
+                    {/* Badge removed as requested */}
                     <ArrowRight size={16} className="text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </div>
 
@@ -115,7 +185,15 @@ function TournamentCard({ tournament }: { tournament: any }) {
                         <MapPin size={12} className="text-slate-300" /> {tournament.location}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        <Calendar size={12} className="text-slate-300" /> {tournament.startDate}
+                        <Calendar size={12} className="text-slate-300" />
+                        <span>
+                            {tournament.startDate}
+                            {isAdmin && ownerName && (
+                                <span className="text-slate-500 ml-1">
+                                    by {ownerName}
+                                </span>
+                            )}
+                        </span>
                     </div>
                 </div>
             </div>
