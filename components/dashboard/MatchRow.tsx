@@ -111,10 +111,10 @@ function MatchRow({ match, tournamentId, onMutation }: MatchRowProps) {
                             <GamepadDirectional size={16} />
                         </Link>
 
-                        {/* EDIT LINK */}
+                        {/* EDIT OVERLAY LINK */}
                         <Link
-                            href={`/tournaments/${tournamentId}/matches/${match.id}/edit`}
-                            title="Edit Match"
+                            href={`/tournaments/${tournamentId}/matches/${match.id}/overlay-editor`}
+                            title="Edit Overlay Layout"
                             className="p-2 transition-opacity text-slate-400 hover:text-[#FF5A09]"
                         >
                             <Edit2 size={14} />

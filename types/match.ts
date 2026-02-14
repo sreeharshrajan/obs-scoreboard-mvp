@@ -35,8 +35,39 @@ export interface MatchState {
     status: MatchStatus;
 
     serverNumber?: 1 | 2;
-    overlayScale?: number;
     streamerLogo?: string;
+
+    // Overlay Configuration
+    overlayConfig?: {
+        version: number;
+        activeOrientation?: 'landscape' | 'portrait';
+        resolutions?: {
+            landscape?: { width: number; height: number };
+            portrait?: { width: number; height: number };
+        };
+        layouts?: {
+            landscape?: {
+                id: string;
+                type: 'scoreboard' | 'sponsors' | 'matchInfo' | 'ticker';
+                position: { x: number; y: number };
+                scale: number;
+                visible: boolean;
+                opacity: number;
+                zIndex: number;
+            }[];
+            portrait?: {
+                id: string;
+                type: 'scoreboard' | 'sponsors' | 'matchInfo' | 'ticker';
+                position: { x: number; y: number };
+                scale: number;
+                visible: boolean;
+                opacity: number;
+                zIndex: number;
+            }[];
+        };
+        // Legacy: For backward compatibility during migration
+        components?: any[];
+    };
 }
 
 export interface Match extends MatchState {

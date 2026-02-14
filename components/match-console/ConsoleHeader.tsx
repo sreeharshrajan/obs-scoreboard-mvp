@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, ZoomIn, ZoomOut, Info, LayoutTemplate } from 'lucide-react';
+import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, ZoomIn, ZoomOut, Info, LayoutTemplate, Palette } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
@@ -96,10 +96,20 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                     <Link
                         href={`/overlay/matches/${matchId}`}
                         target="_blank"
+                        title="View Public Overlay"
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm"
                     >
                         <LayoutTemplate size={16} />
-                        <span className="hidden md:inline">Overlay</span>
+                        <span className="hidden md:inline">View</span>
+                    </Link>
+
+                    <Link
+                        href={`/tournaments/${tournamentId}/matches/${matchId}/overlay-editor`}
+                        title="Customize Overlay Layout"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm"
+                    >
+                        <Palette size={16} />
+                        <span className="hidden md:inline">Design</span>
                     </Link>
 
                     <Link
@@ -139,22 +149,7 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                                 <ToggleItem icon={<Users size={16} />} label="Streamer Branding" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
                                 <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
 
-                                <div className="mx-2 mt-4 mb-2 p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-white/5">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overlay Zoom</span>
-                                        <span className="text-xs font-black text-[#FF5A09] px-2 py-0.5 bg-orange-500/10 rounded-lg">{Math.round((match.overlayScale || 1) * 100)}%</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <ZoomOut size={14} className="text-slate-400" />
-                                        <input
-                                            type="range" min="0.5" max="1.5" step="0.05"
-                                            value={match.overlayScale || 1}
-                                            onChange={(e) => onUpdateMatch({ overlayScale: parseFloat(e.target.value) })}
-                                            className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-[#FF5A09]"
-                                        />
-                                        <ZoomIn size={14} className="text-slate-400" />
-                                    </div>
-                                </div>
+                                {/* Overlay Zoom Removed - Managed in Overlay Editor */}
                             </div>
                         </div>
                     )}

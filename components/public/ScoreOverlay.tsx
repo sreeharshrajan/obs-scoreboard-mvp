@@ -103,10 +103,67 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
 
     if (loading || error || !match) return null; // Keep OBS clean on error/loading
 
+    // Render based on overlayConfig if available
+    if (match.overlayConfig) {
+        // Determine which components to use
+        let componentsToRender: any[] = [];
+        const orientation = match.overlayConfig.activeOrientation || 'landscape';
+
+        if (match.overlayConfig.layouts) {
+            // New schema
+            componentsToRender = orientation === 'landscape'
+                ? (match.overlayConfig.layouts.landscape || [])
+                : (match.overlayConfig.layouts.portrait || []);
+        } else if (match.overlayConfig.components) {
+            // Legacy fallback
+            componentsToRender = match.overlayConfig.components;
+        }
+
+        if (componentsToRender.length > 0) {
+            return (
+                <div className="fixed inset-0 overflow-hidden font-instrument pointer-events-none">
+                    {componentsToRender.filter(c => c.visible).sort((a, b) => a.zIndex - b.zIndex).map((comp: any) => {
+                        const style: React.CSSProperties = {
+                            position: 'absolute',
+                            left: comp.position.x,
+                            top: comp.position.y,
+                            transform: `scale(${comp.scale})`,
+                            transformOrigin: 'top left',
+                            opacity: comp.opacity,
+                            zIndex: comp.zIndex,
+                        };
+
+                        return (
+                            <div key={comp.id} style={style}>
+                                {comp.type === 'scoreboard' && (
+                                    <Scoreboard match={match} elapsedDisplay={elapsedDisplay} />
+                                )}
+                                {comp.type === 'sponsors' && (
+                                    <>
+                                        <SponsorBreakDisplay sponsors={sponsors} currentSponsorIndex={currentSponsorIndex} match={match} />
+                                        <SponsorTickler sponsors={sponsors} currentSponsorIndex={currentSponsorIndex} match={match} />
+                                    </>
+                                )}
+                                {comp.type === 'matchInfo' && (
+                                    <MatchInfoDisplay match={match} />
+                                )}
+                                {comp.type === 'ticker' && (
+                                    // Placeholder for ticker if not implemented yet, or just empty
+                                    <div />
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+    }
+
+
+    // FALLBACK TO DEFAULT LAYOUT
     return (
         <div
             className="fixed inset-0 p-8 pointer-events-none font-instrument transition-opacity duration-500"
-            style={{ transform: `scale(${match.overlayScale || 1})`, transformOrigin: 'center' }}
         >
             <SponsorBreakDisplay
                 sponsors={sponsors}
