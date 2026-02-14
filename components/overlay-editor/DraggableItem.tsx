@@ -21,7 +21,7 @@ export interface OverlayComponent {
     label: string;
 }
 
-interface DraggableItemProps {
+export interface DraggableItemProps {
     component: OverlayComponent;
     isSelected: boolean;
     onSelect: (id: string) => void;
@@ -29,22 +29,25 @@ interface DraggableItemProps {
     elapsedDisplay?: number;
     sponsors?: any[];
     currentSponsorIndex?: number;
+    canvasScale: number;
 }
 
-export function DraggableItem({ component, isSelected, onSelect, match, elapsedDisplay = 0, sponsors = [], currentSponsorIndex = 0 }: DraggableItemProps) {
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+export function DraggableItem({ component, isSelected, onSelect, match, elapsedDisplay = 0, sponsors = [], currentSponsorIndex = 0, canvasScale }: DraggableItemProps) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: component.id,
     });
 
     const style: React.CSSProperties = {
-        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        // Adjust the transform based on the scale so the item tracks the mouse 1:1 visually
+        transform: transform ? `translate3d(${transform.x / canvasScale}px, ${transform.y / canvasScale}px, 0)` : undefined,
         left: component.position.x,
         top: component.position.y,
         position: 'absolute',
         zIndex: component.zIndex,
         opacity: component.opacity,
         scale: component.scale,
-        transformOrigin: 'top left', // Important for scaling behavior to match ScoreOverlay
+        transformOrigin: 'top left',
+        touchAction: 'none', // Critical for dnd-kit standard pointer sensors
     };
 
     return (
@@ -54,10 +57,12 @@ export function DraggableItem({ component, isSelected, onSelect, match, elapsedD
             {...listeners}
             {...attributes}
             onPointerDown={(e) => {
+                e.stopPropagation(); // Stop propagation to prevent canvas deselect
                 onSelect(component.id);
                 listeners?.onPointerDown?.(e);
             }}
-            className={`cursor-move ${isSelected ? 'ring-2 ring-[#FF5A09] ring-offset-2 ring-offset-black/50' : 'hover:ring-1 hover:ring-white/20'} transition-all`}
+            // Remove transition when dragging to prevent "lag" or "fighting"
+            className={`cursor-move ${isSelected ? 'ring-2 ring-[#FF5A09] ring-offset-2 ring-offset-black/50' : 'hover:ring-1 hover:ring-white/20'} ${isDragging ? '' : 'transition-all'}`}
         >
             {/* Visual Representation */}
             <div className="pointer-events-none select-none">
