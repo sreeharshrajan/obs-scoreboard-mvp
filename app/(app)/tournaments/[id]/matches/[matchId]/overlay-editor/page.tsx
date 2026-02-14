@@ -11,6 +11,9 @@ import { EditorSidebar } from '@/components/overlay-editor/EditorSidebar';
 import { EditorCanvas } from '@/components/overlay-editor/EditorCanvas';
 import { OverlayComponent } from '@/components/overlay-editor/DraggableItem';
 
+import { db } from '@/lib/firebase/client';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+
 const DEFAULT_COMPONENTS: OverlayComponent[] = [
     { id: 'scoreboard', type: 'scoreboard', position: { x: 50, y: 850 }, scale: 1, visible: true, opacity: 1, zIndex: 10, label: 'Scoreboard' },
     { id: 'sponsors', type: 'sponsors', position: { x: 1400, y: 50 }, scale: 1, visible: true, opacity: 1, zIndex: 5, label: 'Sponsors Carousel' },
@@ -37,6 +40,11 @@ export default function OverlayEditor() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Live Data State
+    const [elapsedDisplay, setElapsedDisplay] = useState<number>(0);
+    const [sponsors, setSponsors] = useState<{ id: string, advertUrl: string, name: string }[]>([]);
+    const [currentSponsorIndex, setCurrentSponsorIndex] = useState(0);
+
     // Derived State
     const components = orientation === 'landscape' ? landscapeComponents : portraitComponents;
     const setComponents = useCallback((param: OverlayComponent[] | ((prev: OverlayComponent[]) => OverlayComponent[])) => {
@@ -61,6 +69,57 @@ export default function OverlayEditor() {
             return res.json();
         },
     });
+
+    // Timer Logic
+    useEffect(() => {
+        if (!match) return;
+
+        if (!match.isTimerRunning) {
+            const val = match.timerElapsed || 0;
+            setElapsedDisplay(prev => (prev !== val ? val : prev));
+            return;
+        }
+
+        const calculateTime = () => {
+            const now = Date.now();
+            const startTime = match.timerStartTime ?? now;
+            return (match.timerElapsed || 0) + (now - startTime) / 1000;
+        };
+
+        setElapsedDisplay(calculateTime());
+        const timerInterval = setInterval(() => {
+            setElapsedDisplay(calculateTime());
+        }, 100);
+
+        return () => clearInterval(timerInterval);
+    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match]);
+
+    // Sponsors Logic
+    useEffect(() => {
+        if (!tournamentId) return;
+
+        const q = query(collection(db, "tournaments", tournamentId, "sponsors"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const activeSponsors = snapshot.docs
+                .map(d => ({ id: d.id, ...d.data() } as any))
+                .filter(s => s.status === true)
+                .sort((a, b) => (a.priority || 99) - (b.priority || 99));
+            setSponsors(activeSponsors);
+        });
+
+        return () => unsubscribe();
+    }, [tournamentId]);
+
+    // Carousel Timer
+    useEffect(() => {
+        if (sponsors.length === 0) return;
+
+        const interval = setInterval(() => {
+            setCurrentSponsorIndex(prev => (prev + 1) % sponsors.length);
+        }, 8000);
+
+        return () => clearInterval(interval);
+    }, [sponsors.length]);
 
     // Load initial state
     useEffect(() => {
@@ -173,6 +232,10 @@ export default function OverlayEditor() {
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 onDragEnd={handleDragEnd}
+                match={match}
+                elapsedDisplay={elapsedDisplay}
+                sponsors={sponsors}
+                currentSponsorIndex={currentSponsorIndex}
             />
         </div>
     );

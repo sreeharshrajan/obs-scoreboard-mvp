@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { DndContext, useSensor, useSensors, PointerSensor, DragEndEvent } from '@dnd-kit/core';
 import { restrictToParentElement } from '@dnd-kit/modifiers';
 import { OverlayComponent, DraggableItem } from './DraggableItem';
+import { MatchState } from '@/types/match';
 
 interface EditorCanvasProps {
     width: number;
@@ -11,9 +12,13 @@ interface EditorCanvasProps {
     selectedId: string | null;
     onSelect: (id: string | null) => void;
     onDragEnd: (event: DragEndEvent) => void;
+    match: MatchState | undefined;
+    elapsedDisplay: number;
+    sponsors: any[];
+    currentSponsorIndex: number;
 }
 
-export function EditorCanvas({ width, height, orientation, components, selectedId, onSelect, onDragEnd }: EditorCanvasProps) {
+export function EditorCanvas({ width, height, orientation, components, selectedId, onSelect, onDragEnd, match, elapsedDisplay, sponsors, currentSponsorIndex }: EditorCanvasProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(1);
 
@@ -79,6 +84,10 @@ export function EditorCanvas({ width, height, orientation, components, selectedI
                                 component={component}
                                 isSelected={selectedId === component.id}
                                 onSelect={(id) => onSelect(id)}
+                                match={match}
+                                elapsedDisplay={elapsedDisplay}
+                                sponsors={sponsors}
+                                currentSponsorIndex={currentSponsorIndex}
                             />
                         ))}
                     </DndContext>

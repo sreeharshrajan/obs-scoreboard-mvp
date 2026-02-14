@@ -1,9 +1,9 @@
 import Image from "next/image";
-import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, ZoomIn, ZoomOut, Info, LayoutTemplate, Palette } from 'lucide-react';
+import { Maximize, Minimize, ArrowLeft, Edit, LayoutTemplate, Palette } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
-import { useState, useRef, useEffect, memo } from 'react';
+import { memo } from 'react';
 
 interface ConsoleHeaderProps {
     matchId: string;
@@ -17,23 +17,6 @@ interface ConsoleHeaderProps {
 }
 
 export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen }: ConsoleHeaderProps) {
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsSettingsOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const toggleSetting = (key: keyof MatchState) => {
-        const currentVal = key === 'isSponsorsOverlayActive' ? !!match.isSponsorsOverlayActive : match[key] !== false;
-        onUpdateMatch({ [key]: !currentVal });
-    };
 
     return (
         <header className="relative z-50 flex items-center justify-between bg-white dark:bg-[#1E1E1E] border border-slate-200/60 dark:border-white/10 p-2 md:p-3 rounded-[24px] shadow-sm">
@@ -121,40 +104,6 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                     </Link>
                 </div>
 
-                {/* Settings Toggle */}
-                <div className="relative" ref={dropdownRef}>
-                    <button
-                        onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                        className={clsx(
-                            "flex h-10 px-4 items-center gap-2 rounded-xl transition-all font-bold text-xs uppercase tracking-wide active:scale-95",
-                            isSettingsOpen
-                                ? "bg-[#FF5A09] text-white shadow-lg shadow-orange-500/30"
-                                : "bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                        )}
-                    >
-                        <Settings size={18} className={isSettingsOpen ? "animate-spin-slow" : ""} />
-                        <span className="hidden sm:inline">Settings</span>
-                    </button>
-
-                    {/* Dropdown Menu (Improved Contrast) */}
-                    {isSettingsOpen && (
-                        <div className="absolute top-full right-0 mt-3 w-72 origin-top-right overflow-hidden bg-white dark:bg-[#1A1A1A] rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-white/10 p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
-                            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 mb-2">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Graphics Configuration</p>
-                            </div>
-
-                            <div className="space-y-0.5">
-                                <ToggleItem icon={<Monitor size={16} />} label="Sponsor Cards" active={!!match.isSponsorsOverlayActive} onClick={() => toggleSetting('isSponsorsOverlayActive')} />
-                                <ToggleItem icon={<ImageIcon size={16} />} label="Tournament Logo" active={match.showTournamentLogo !== false} onClick={() => toggleSetting('showTournamentLogo')} />
-                                <ToggleItem icon={<Users size={16} />} label="Streamer Branding" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
-                                <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
-
-                                {/* Overlay Zoom Removed - Managed in Overlay Editor */}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
                 {/* Fullscreen Button */}
                 <button
                     onClick={onToggleFullscreen}
@@ -167,30 +116,3 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
         </header>
     );
 });
-
-function ToggleItem({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void }) {
-    return (
-        <button
-            onClick={onClick}
-            className="flex w-full items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group"
-        >
-            <div className="flex items-center gap-3">
-                <div className={clsx("transition-colors", active ? "text-[#FF5A09]" : "text-slate-400")}>
-                    {icon}
-                </div>
-                <span className={clsx("text-[13px] font-bold transition-colors", active ? "text-slate-900 dark:text-white" : "text-slate-500")}>
-                    {label}
-                </span>
-            </div>
-            <div className={clsx(
-                "w-8 h-4 rounded-full p-0.5 transition-all duration-300",
-                active ? "bg-[#FF5A09]" : "bg-slate-200 dark:bg-white/10"
-            )}>
-                <div className={clsx(
-                    "w-3 h-3 bg-white rounded-full transition-transform duration-300 shadow-sm",
-                    active ? "translate-x-4" : "translate-x-0"
-                )} />
-            </div>
-        </button>
-    );
-}
