@@ -32,52 +32,73 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     };
 
     return (
-        <div className="absolute top-8 left-8 flex items-stretch bg-black/90 text-white rounded-xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-left-4">
-            <div className={clsx("flex flex-col items-center justify-center px-2 min-w-[80px]", isLive ? 'bg-[#FF5A09]' : 'bg-slate-900')}>
+        <div className="absolute top-12 left-12 flex items-stretch bg-black/90 text-white rounded-2xl overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
+            <div className={clsx("flex flex-col items-center justify-center px-4 min-w-[100px]", isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
                 {match.showTournamentLogo !== false && match.tournamentLogo ? (
-                    <Image
-                        src={match.tournamentLogo}
-                        alt="Tournament Logo"
-                        width={0}
-                        height={0}
-                        sizes="100vw"
-                        className="w-12 h-12 object-contain mb-1"
-                    />
+                    <div className="relative w-16 h-16 mb-2">
+                        <Image
+                            src={match.tournamentLogo}
+                            alt="Tournament Logo"
+                            fill
+                            className="object-contain"
+                        />
+                    </div>
                 ) : (
-                    isLive ? <Activity size={24} className="text-white" /> : <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{match.status || 'OFF'}</span>
+                    isLive ? <Activity size={32} className="text-white" /> : <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{match.status || 'OFF'}</span>
                 )}
-                {(match.status === 'break') && <span className="text-[8px] font-bold uppercase text-white animate-pulse mt-1">BREAK</span>}
+                {(match.status === 'break') && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-1">BREAK</span>}
             </div>
 
             <div className="flex flex-col divide-y divide-white/10">
                 {/* Player 1 */}
-                <div className="flex items-center justify-between min-w-[300px] px-4 py-2 gap-4 relative overflow-hidden">
-                    <div className="flex items-center gap-2">
-                        {p1Serving && <div className="w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse shadow-[0_0_8px_#FF5A09]" />}
+                <div className="flex items-center justify-between min-w-[400px] px-8 py-5 gap-8 relative overflow-hidden">
+                    <div className="flex items-center gap-4">
+                        <div className={clsx(
+                            "w-3 h-3 rounded-full transition-all duration-500",
+                            p1Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
+                        )} />
                         <div className="flex flex-col">
-                            <span className={clsx("text-sm font-black uppercase tracking-tight", p1Serving ? "text-white" : "text-white/70")}>{p1Name}</span>
+                            <span className={clsx(
+                                "text-xl font-black uppercase tracking-tight transition-colors duration-300",
+                                p1Serving ? "text-white" : "text-white/60"
+                            )}>
+                                {p1Name}
+                            </span>
                         </div>
                     </div>
-                    <span className="text-3xl font-black tabular-nums text-[#FF5A09]">{p1Score}</span>
+                    <span className="text-5xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
+                        {p1Score}
+                    </span>
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex items-center justify-between min-w-[300px] px-4 py-2 gap-4 relative overflow-hidden">
-                    <div className="flex items-center gap-2">
-                        {p2Serving && <div className="w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse shadow-[0_0_8px_#FF5A09]" />}
+                <div className="flex items-center justify-between min-w-[400px] px-8 py-5 gap-8 relative overflow-hidden">
+                    <div className="flex items-center gap-4">
+                        <div className={clsx(
+                            "w-3 h-3 rounded-full transition-all duration-500",
+                            p2Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
+                        )} />
                         <div className="flex flex-col">
-                            <span className={clsx("text-sm font-black uppercase tracking-tight", p2Serving ? "text-white" : "text-white/70")}>{p2Name}</span>
+                            <span className={clsx(
+                                "text-xl font-black uppercase tracking-tight transition-colors duration-300",
+                                p2Serving ? "text-white" : "text-white/60"
+                            )}>
+                                {p2Name}
+                            </span>
                         </div>
                     </div>
-                    <span className="text-3xl font-black tabular-nums text-[#FF5A09]">{p2Score}</span>
+                    <span className="text-5xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
+                        {p2Score}
+                    </span>
                 </div>
             </div>
 
             {/* Timer Section */}
-            <div className="flex flex-col items-center justify-center px-4 bg-white/5 border-l border-white/10 min-w-[90px]">
-                <Clock size={12} className="text-white/40 mb-1" />
-                <span className="text-xl font-mono font-bold tracking-tight">{formatTime(elapsedDisplay)}</span>
+            <div className="flex flex-col items-center justify-center px-8 bg-white/5 border-l border-white/10 min-w-[120px]">
+                <Clock size={16} className="text-white/40 mb-2" />
+                <span className="text-3xl font-mono font-black tracking-tight text-white/90">{formatTime(elapsedDisplay)}</span>
             </div>
         </div>
     );
 }
+

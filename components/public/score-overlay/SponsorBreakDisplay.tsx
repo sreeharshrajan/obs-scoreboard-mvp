@@ -38,14 +38,20 @@ export default function SponsorBreakDisplay({ sponsors, currentSponsorIndex, mat
                     </div>
 
                     {/* Break Indicator Pill */}
-                    <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 bg-black/50 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[#FF5A09] animate-pulse" />
-                        <span className="text-white font-bold uppercase tracking-[0.2em] text-sm">
-                            {match.status === 'break' ? "Break" : "Ad Break"}
+                    <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 bg-black/60 backdrop-blur-xl border border-white/20 px-10 py-4 rounded-full flex items-center gap-4 shadow-2xl">
+                        <div className="w-3 h-3 rounded-full bg-[#FF5A09] animate-pulse shadow-[0_0_12px_#FF5A09]" />
+                        <span className="text-white font-black uppercase tracking-[0.4em] text-lg">
+                            {match.status === 'break' ? "Match Break" : "Ad Break"}
                         </span>
+                    </div>
+
+                    {/* Progress Indicator (Optional but looks cool) */}
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#FF5A09] transition-all duration-1000 ease-linear" style={{ width: '45%' }} />
                     </div>
                 </div>
             )}
         </div>
     );
 }
+

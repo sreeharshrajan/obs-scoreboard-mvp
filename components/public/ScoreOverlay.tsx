@@ -11,6 +11,8 @@ import SponsorBreakDisplay from "./score-overlay/SponsorBreakDisplay";
 import SponsorTickler from "./score-overlay/SponsorTickler";
 import MatchInfoDisplay from "./score-overlay/MatchInfoDisplay";
 
+import ResolutionWrapper from "./score-overlay/ResolutionWrapper";
+
 export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const [match, setMatch] = useState<MatchState | null>(null);
     const [loading, setLoading] = useState(true);
@@ -104,30 +106,32 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     if (loading || error || !match) return null; // Keep OBS clean on error/loading
 
     return (
-        <div
-            className="fixed inset-0 p-8 pointer-events-none font-instrument transition-opacity duration-500"
-            style={{ transform: `scale(${match.overlayScale || 1})`, transformOrigin: 'center' }}
-        >
-            <SponsorBreakDisplay
-                sponsors={sponsors}
-                currentSponsorIndex={currentSponsorIndex}
-                match={match}
-            />
+        <ResolutionWrapper>
+            <div
+                className="w-full h-full p-12 pointer-events-none font-instrument transition-opacity duration-500"
+                style={{ transform: `scale(${match.overlayScale || 1})`, transformOrigin: 'top left' }}
+            >
+                <SponsorBreakDisplay
+                    sponsors={sponsors}
+                    currentSponsorIndex={currentSponsorIndex}
+                    match={match}
+                />
 
-            <SponsorTickler
-                sponsors={sponsors}
-                currentSponsorIndex={currentSponsorIndex}
-                match={match}
-            />
+                <SponsorTickler
+                    sponsors={sponsors}
+                    currentSponsorIndex={currentSponsorIndex}
+                    match={match}
+                />
 
-            <Scoreboard
-                match={match}
-                elapsedDisplay={elapsedDisplay}
-            />
+                <Scoreboard
+                    match={match}
+                    elapsedDisplay={elapsedDisplay}
+                />
 
-            <MatchInfoDisplay
-                match={match}
-            />
-        </div>
+                <MatchInfoDisplay
+                    match={match}
+                />
+            </div>
+        </ResolutionWrapper>
     );
 }
