@@ -33,11 +33,11 @@ export default function MatchInfoDisplay({ match }: MatchInfoDisplayProps) {
                 {/* Sub details pills: Round, Age Group, Court */}
                 {(match.roundType || match.ageGroup || match.court) && (
                     <div className="flex items-center justify-end flex-wrap gap-1.5 mt-0.5">
-                        {match.roundType && (
+                        {/* {match.roundType && (
                             <span className="text-[10px] font-bold text-white/70 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
                                 {match.roundType}
                             </span>
-                        )}
+                        )} */}
                         {match.ageGroup && (
                             <span className="text-[10px] font-bold text-white/70 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
                                 {match.ageGroup}

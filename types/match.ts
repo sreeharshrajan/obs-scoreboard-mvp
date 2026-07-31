@@ -39,6 +39,11 @@ export interface MatchState {
     overlayTemplate?: 'default' | 'classic' | 'bwf';
     streamerLogo?: string;
     showFullScreenMatchDetails?: boolean;
+
+    // Sponsor Options
+    sponsorDisplayMode?: 'card' | 'logoOnly';
+    sponsorPosition?: 'left' | 'center' | 'right';
+    sponsorLogoSize?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export interface Match extends MatchState {

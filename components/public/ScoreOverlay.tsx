@@ -10,11 +10,13 @@ import Scoreboard from "./score-overlay/Scoreboard";
 import SponsorBreakDisplay from "./score-overlay/SponsorBreakDisplay";
 import SponsorTickler from "./score-overlay/SponsorTickler";
 import MatchInfoDisplay from "./score-overlay/MatchInfoDisplay";
+import FullScreenMatchInfo from "./score-overlay/FullScreenMatchInfo";
 
 // Classic Components
 import ClassicScoreboard from "./score-overlay/classic/ClassicScoreboard";
 import ClassicMatchInfoDisplay from "./score-overlay/classic/ClassicMatchInfoDisplay";
 import ClassicSponsorTickler from "./score-overlay/classic/ClassicSponsorTickler";
+import ClassicFullScreenMatchInfo from "./score-overlay/classic/ClassicFullScreenMatchInfo";
 
 // BWF Pro Components
 import BwfScoreboard from "./score-overlay/bwf/BwfScoreboard";
@@ -147,36 +149,50 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                 </>
             ) : isClassic ? (
                 <>
-                    <ClassicSponsorTickler
+                    {!match.showFullScreenMatchDetails && (
+                        <>
+                            <ClassicSponsorTickler
+                                sponsors={sponsors}
+                                currentSponsorIndex={currentSponsorIndex}
+                                match={match}
+                            />
+                            <ClassicScoreboard
+                                match={match}
+                                elapsedDisplay={elapsedDisplay}
+                            />
+                            <ClassicMatchInfoDisplay
+                                match={match}
+                            />
+                        </>
+                    )}
+                    <ClassicFullScreenMatchInfo
+                        match={match}
                         sponsors={sponsors}
                         currentSponsorIndex={currentSponsorIndex}
-                        match={match}
-                    />
-
-                    <ClassicScoreboard
-                        match={match}
-                        elapsedDisplay={elapsedDisplay}
-                    />
-
-                    <ClassicMatchInfoDisplay
-                        match={match}
                     />
                 </>
             ) : (
                 <>
-                    <SponsorTickler
+                    {!match.showFullScreenMatchDetails && (
+                        <>
+                            <SponsorTickler
+                                sponsors={sponsors}
+                                currentSponsorIndex={currentSponsorIndex}
+                                match={match}
+                            />
+                            <Scoreboard
+                                match={match}
+                                elapsedDisplay={elapsedDisplay}
+                            />
+                            <MatchInfoDisplay
+                                match={match}
+                            />
+                        </>
+                    )}
+                    <FullScreenMatchInfo
+                        match={match}
                         sponsors={sponsors}
                         currentSponsorIndex={currentSponsorIndex}
-                        match={match}
-                    />
-
-                    <Scoreboard
-                        match={match}
-                        elapsedDisplay={elapsedDisplay}
-                    />
-
-                    <MatchInfoDisplay
-                        match={match}
                     />
                 </>
             )}
