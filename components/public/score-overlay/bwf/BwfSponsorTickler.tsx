@@ -1,9 +1,10 @@
 import React from 'react';
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import { getActiveSponsor, Sponsor } from '@/lib/matchHelpers';
 
 interface BwfSponsorTicklerProps {
-    sponsors: { id: string, advertUrl: string, name: string }[];
+    sponsors: Sponsor[];
     currentSponsorIndex: number;
     match: MatchState;
 }
@@ -21,7 +22,7 @@ export default function BwfSponsorTickler({ sponsors, currentSponsorIndex, match
                 ? "h-28 max-w-[360px]"
                 : "h-14 max-w-[200px]"; // default 'md'
 
-    const currentSponsor = sponsors[currentSponsorIndex];
+    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, match.isSponsorsOverlayActive);
 
     return (
         <div className={clsx(

@@ -1,30 +1,29 @@
 import React from 'react';
-import clsx from 'clsx';
 import { MatchState } from "@/types/match";
 import Image from "next/image";
+import { getMatchDetails, Sponsor } from '@/lib/matchHelpers';
 
 interface BwfFullScreenMatchInfoProps {
     match: MatchState;
-    sponsors: { id: string, advertUrl: string, name: string }[];
+    sponsors: Sponsor[];
     currentSponsorIndex: number;
 }
 
 export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsorIndex }: BwfFullScreenMatchInfoProps) {
     if (!match.showFullScreenMatchDetails) return null;
 
-    const p1Name = match.player1?.name || "Player 1";
-    const p1Name2 = match.player1?.name2;
-    const p2Name = match.player2?.name || "Player 2";
-    const p2Name2 = match.player2?.name2;
-    const p1Score = match.player1?.score || 0;
-    const p2Score = match.player2?.score || 0;
-
-    const tournamentName = match.tournamentName || "TOURNAMENT";
-    const matchCategory = match.matchCategory || match.category || "MATCH";
-    const courtName = match.court || "COURT 1";
-    
-    const showSponsor = sponsors && sponsors.length > 0 && match.isSponsorsOverlayActive;
-    const activeSponsor = showSponsor ? sponsors[currentSponsorIndex] : null;
+    const {
+        p1Name,
+        p1Name2,
+        p2Name,
+        p2Name2,
+        p1Score,
+        p2Score,
+        tournamentName,
+        matchCategory,
+        courtName,
+        activeSponsor,
+    } = getMatchDetails(match, sponsors, currentSponsorIndex);
 
     return (
         <div className="absolute inset-x-0 bottom-16 flex justify-center z-30 pointer-events-none font-sans px-12 animate-in slide-in-from-bottom-12 fade-in duration-700">
