@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ChevronLeft, Save, Loader2 } from "lucide-react";
+import { ChevronLeft, Save, Loader2, RotateCcw, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
@@ -13,6 +13,8 @@ import ErrorFallback from "@/components/dashboard/error-fallback";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { toast } from "sonner";
+import { resetMatchState } from "@/lib/scoring/engine";
+import { MatchState } from "@/types/match";
 
 const matchSchema = z.object({
     player1: z.object({
@@ -49,6 +51,7 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [rawMatch, setRawMatch] = useState<MatchState | null>(null);
 
     const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<MatchFormValues>({
         resolver: zodResolver(matchSchema),
@@ -82,6 +85,7 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
 
                 if (!res.ok) throw new Error("Failed to load match");
                 const data = await res.json();
+                setRawMatch(data);
 
                 reset({
                     player1: {
@@ -139,6 +143,42 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
         } catch (err: any) {
             console.error(err);
             toast.error("Failed to save changes");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleFullMatchReset = async () => {
+        if (!rawMatch) return;
+
+        const confirmMsg = "Reset this match?\n\nThis will:\n• Clear all rally scores\n• Remove completed game history\n• Remove score event history\n• Reset the server\n• Return the match to its initial state\n\nTournament, fixture, player, and scheduling information will be preserved.\n\nThis action cannot be undone.";
+        if (!confirm(confirmMsg)) return;
+
+        setIsSaving(true);
+        try {
+            const user = auth.currentUser;
+            if (!user) throw new Error("Unauthorized");
+            const token = await user.getIdToken();
+
+            const resetData = resetMatchState(rawMatch);
+
+            const res = await fetch(`/api/tournaments/${tournamentId}/matches/${matchId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(resetData)
+            });
+
+            if (!res.ok) throw new Error("Failed to reset match");
+
+            toast.success("Match reset to initial state");
+            router.push(`/tournaments/${tournamentId}/matches/${matchId}`);
+            router.refresh();
+        } catch (err: any) {
+            console.error(err);
+            toast.error("Failed to reset match");
         } finally {
             setIsSaving(false);
         }
@@ -244,8 +284,8 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: Players & Submit */}
-                <div className="lg:col-span-5 flex flex-col h-full">
+                {/* RIGHT COLUMN: Players & Submit & Danger Zone */}
+                <div className="lg:col-span-5 flex flex-col h-full gap-4">
                     {/* Combined Players & Action Card */}
                     <div className="p-5 rounded-[2rem] bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col gap-4 shadow-sm flex-1">
                         <div className="space-y-0.5 text-center">
@@ -315,8 +355,29 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
                             </button>
                         </div>
                     </div>
+
+                    {/* Danger Zone / Admin Actions */}
+                    <div className="p-4 rounded-[2rem] bg-red-500/5 border border-red-500/10 flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-xs">
+                            <AlertTriangle size={14} />
+                            <span>Administrative Actions</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">
+                            Reset all match scores, completed games, and event logs while keeping player and match info intact.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={handleFullMatchReset}
+                            disabled={isSaving}
+                            className="mt-1 w-full h-9 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                        >
+                            <RotateCcw size={12} />
+                            Reset Match State
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     );
 }
+

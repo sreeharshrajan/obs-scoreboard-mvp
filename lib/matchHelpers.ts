@@ -62,8 +62,9 @@ export function getMatchDetails(
 
     const p1Score = match.player1?.score || 0;
     const p2Score = match.player2?.score || 0;
-    const p1Serving = match.player1?.isServing ?? false;
-    const p2Serving = match.player2?.isServing ?? false;
+    const currentServer = match.currentServer ?? (match.player1?.isServing ? 'player1' : 'player2');
+    const p1Serving = currentServer === 'player1';
+    const p2Serving = currentServer === 'player2';
 
     const tournamentName = match.tournamentName || "TOURNAMENT MATCH";
     const matchCategory = match.matchCategory || match.category || "GENERAL";

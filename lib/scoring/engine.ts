@@ -1,4 +1,4 @@
-import { MatchState, MatchRules, GameResult } from '@/types/match';
+import { MatchState, MatchRules, GameResult, ScoreEvent } from '@/types/match';
 import { isGameComplete, isMatchComplete } from './rules';
 
 // ── Types ──
@@ -11,12 +11,7 @@ export interface ScoringContext {
     readonly team: Team;
     readonly delta: number;
     readonly rules: MatchRules;
-}
-
-// ── Helper ──
-
-function opponent(team: Team): Team {
-    return team === 'player1' ? 'player2' : 'player1';
+    readonly previousState: MatchState;
 }
 
 // ── Pipeline Stage 1: Apply Score ──
@@ -46,7 +41,7 @@ export function applyScore(ctx: ScoringContext): ScoringContext {
 
 /**
  * Rally point rule: the team that scored (delta > 0) becomes the server.
- * Uses ctx.team and ctx.delta explicitly — does not infer from score state.
+ * Sets currentServer as single source of truth.
  * 
  * Only applies when:
  *   - rules.rallyPoint is true
@@ -59,29 +54,65 @@ export function applyServeRule(ctx: ScoringContext): ScoringContext {
         return ctx;
     }
 
-    const opp = opponent(team);
+    return {
+        ...ctx,
+        state: {
+            ...state,
+            currentServer: team,
+        },
+    };
+}
+
+// ── Pipeline Stage 3: Record Score Event ──
+
+/**
+ * Records a ScoreEvent into state.scoreEvents.
+ * Must run BEFORE applyGameRule so game-winning rally scores are preserved in event history!
+ */
+export function recordScoreEvent(ctx: ScoringContext): ScoringContext {
+    const { state, team, delta, previousState } = ctx;
+
+    // Calculate current match timer elapsed time
+    const now = Date.now();
+    const elapsedTime = state.isTimerRunning && state.timerStartTime
+        ? (state.timerElapsed || 0) + (now - state.timerStartTime) / 1000
+        : (state.timerElapsed || 0);
+
+    const gameHistory = state.gameHistory ?? [];
+    const currentGameNumber = gameHistory.length + 1;
+
+    const event: ScoreEvent = {
+        timestamp: now,
+        elapsedTime,
+        gameNumber: currentGameNumber,
+        team,
+        delta,
+        previousScore: {
+            player1: previousState.player1?.score ?? 0,
+            player2: previousState.player2?.score ?? 0,
+        },
+        resultingScore: {
+            player1: state.player1?.score ?? 0,
+            player2: state.player2?.score ?? 0,
+        },
+    };
+
+    const existingEvents = state.scoreEvents ?? [];
 
     return {
         ...ctx,
         state: {
             ...state,
-            [team]: {
-                ...state[team],
-                isServing: true,
-            },
-            [opp]: {
-                ...state[opp],
-                isServing: false,
-            },
+            scoreEvents: [...existingEvents, event],
         },
     };
 }
 
-// ── Pipeline Stage 3: Apply Game Rule ──
+// ── Pipeline Stage 4: Apply Game Rule ──
 
 /**
  * Checks if the current game is complete after the score change.
- * If complete: archives a GameResult, increments gamesWon, resets rally scores to 0-0.
+ * If complete: archives a GameResult with completedAt timestamp, increments gamesWon, resets rally scores to 0-0.
  * 
  * Only applies when rules.autoEndGame is true.
  */
@@ -102,11 +133,14 @@ export function applyGameRule(ctx: ScoringContext): ScoringContext {
     }
 
     const gameHistory = state.gameHistory ?? [];
+    const now = Date.now();
+
     const newGameResult: GameResult = {
         gameNumber: gameHistory.length + 1,
         player1Score: p1Score,
         player2Score: p2Score,
         winner,
+        completedAt: now,
     };
 
     const p1GamesWon = (state.player1?.gamesWon ?? 0) + (winner === 'player1' ? 1 : 0);
@@ -131,11 +165,11 @@ export function applyGameRule(ctx: ScoringContext): ScoringContext {
     };
 }
 
-// ── Pipeline Stage 4: Apply Match Rule ──
+// ── Pipeline Stage 5: Apply Match Rule ──
 
 /**
  * Checks if the match is complete after game updates.
- * If a player has won enough games, sets status to 'completed'.
+ * If a player has won enough games, sets status to 'completed' and sets completedAt timestamp.
  * 
  * Only applies when rules.autoEndMatch is true.
  */
@@ -160,6 +194,7 @@ export function applyMatchRule(ctx: ScoringContext): ScoringContext {
         state: {
             ...state,
             status: 'completed',
+            completedAt: Date.now(),
         },
     };
 }
@@ -167,7 +202,7 @@ export function applyMatchRule(ctx: ScoringContext): ScoringContext {
 // ── Pipeline Runner ──
 
 /**
- * Runs the full scoring pipeline: score → serve → game → match.
+ * Runs the full scoring pipeline: score → serve → event log → game → match → version increment.
  * Each stage is a pure function that returns a new immutable context.
  * 
  * @param state  Current match state (not mutated)
@@ -182,18 +217,57 @@ export function processScoringPipeline(
     delta: number,
     rules: MatchRules
 ): MatchState {
+    const clonedState: MatchState = JSON.parse(JSON.stringify(state));
+
     const initialCtx: ScoringContext = {
-        state: JSON.parse(JSON.stringify(state)), // deep clone for immutability
+        state: clonedState,
         team,
         delta,
         rules,
+        previousState: clonedState,
     };
 
     let ctx = initialCtx;
     ctx = applyScore(ctx);
     ctx = applyServeRule(ctx);
+    ctx = recordScoreEvent(ctx);
     ctx = applyGameRule(ctx);
     ctx = applyMatchRule(ctx);
 
-    return ctx.state;
+    const finalState = ctx.state;
+    finalState.version = (state.version ?? 0) + 1;
+
+    return finalState;
 }
+
+// ── Shared Administrative Reset Helper ──
+
+/**
+ * Resets a match to its initial editable scoring state while preserving
+ * all tournament, court, category, player, fixture, and scheduling information.
+ */
+export function resetMatchState(existingMatch: MatchState): MatchState {
+    return {
+        ...existingMatch,
+        player1: {
+            ...existingMatch.player1,
+            score: 0,
+            gamesWon: 0,
+        },
+        player2: {
+            ...existingMatch.player2,
+            score: 0,
+            gamesWon: 0,
+        },
+        currentServer: 'player1',
+        gameHistory: [],
+        scoreEvents: [],
+        status: 'scheduled',
+        isTimerRunning: false,
+        timerStartTime: null,
+        timerElapsed: 0,
+        completedAt: undefined,
+        version: (existingMatch.version ?? 0) + 1,
+    };
+}
+

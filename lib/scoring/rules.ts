@@ -4,15 +4,15 @@ import { MatchRules } from '@/types/match';
 
 type Team = 'player1' | 'player2';
 
-const RULE_REGISTRY: Record<string, Record<string, MatchRules>> = {
-    badminton: {
-        '21x3': { bestOf: 3, targetScore: 21, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true },
-        '21x1': { bestOf: 1, targetScore: 21, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true },
-        '15x3': { bestOf: 3, targetScore: 15, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true },
-        '15x1': { bestOf: 1, targetScore: 15, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true },
-        '30x1': { bestOf: 1, targetScore: 30, winBy: 1, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true },
-    },
-};
+const RULE_REGISTRY: Record<string, Record<string, MatchRules>> = Object.freeze({
+    badminton: Object.freeze({
+        '21x3': Object.freeze({ bestOf: 3, targetScore: 21, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true }),
+        '21x1': Object.freeze({ bestOf: 1, targetScore: 21, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true }),
+        '15x3': Object.freeze({ bestOf: 3, targetScore: 15, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true }),
+        '15x1': Object.freeze({ bestOf: 1, targetScore: 15, winBy: 2, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true }),
+        '30x1': Object.freeze({ bestOf: 1, targetScore: 30, winBy: 1, maxScore: 30, rallyPoint: true, autoEndGame: true, autoEndMatch: true }),
+    }),
+});
 
 const FALLBACK_RULES: MatchRules = RULE_REGISTRY.badminton['21x3'];
 

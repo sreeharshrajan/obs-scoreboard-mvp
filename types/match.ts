@@ -1,7 +1,7 @@
 export interface PlayerState {
     name: string;
     name2?: string; // For doubles/mixed
-    isServing: boolean;
+    isServing?: boolean; // Legacy fallback — derived at runtime via currentServer
     score: number;
     gamesWon?: number; // Games won in this match (0, 1, or 2). Defaults to 0 for legacy docs.
 }
@@ -14,6 +14,25 @@ export interface GameResult {
     player1Score: number;
     player2Score: number;
     winner: 'player1' | 'player2';
+    startedAt?: number;
+    completedAt?: number;
+}
+
+// Lightweight audit and broadcast replay score event log
+export interface ScoreEvent {
+    timestamp: number;
+    elapsedTime: number;
+    gameNumber: number;
+    team: 'player1' | 'player2';
+    delta: number;
+    previousScore: {
+        player1: number;
+        player2: number;
+    };
+    resultingScore: {
+        player1: number;
+        player2: number;
+    };
 }
 
 // Configurable sport rules — runtime only, never persisted.
@@ -32,6 +51,7 @@ export interface MatchState {
     sport: 'badminton';
     player1: PlayerState;
     player2: PlayerState;
+    currentServer?: 'player1' | 'player2'; // Single source of truth for serving state
     isTimerRunning: boolean;
     timerStartTime: number | null;
     timerElapsed: number;
@@ -51,12 +71,15 @@ export interface MatchState {
 
     // Game Structure — derived currentGame = (gameHistory?.length ?? 0) + 1
     gameHistory?: GameResult[];
+    scoreEvents?: ScoreEvent[];
 
     // UI/Meta
     tournamentName?: string;
     tournamentLogo?: string;
     category?: string; // Legacy/General category
     status: MatchStatus;
+    completedAt?: number;
+    version?: number; // Concurrency tracking
 
     serverNumber?: 1 | 2;
     overlayScale?: number;
@@ -74,3 +97,4 @@ export interface Match extends MatchState {
     id: string;
     startTime?: string;
 }
+

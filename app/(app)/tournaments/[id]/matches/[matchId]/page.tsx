@@ -195,6 +195,7 @@ export default function MatchConsole() {
             if (context?.previous) {
                 queryClient.setQueryData(['match', matchId], context.previous);
             }
+            toast.error("Unable to save score. Changes have been reverted.");
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['match', matchId] });
@@ -303,8 +304,9 @@ export default function MatchConsole() {
         if (!match) return null;
         return {
             ...match,
-            player1: match.player1 || { name: 'Player 1', score: 0, isServing: true },
-            player2: match.player2 || { name: 'Player 2', score: 0, isServing: false }
+            currentServer: match.currentServer ?? 'player1',
+            player1: match.player1 || { name: 'Player 1', score: 0 },
+            player2: match.player2 || { name: 'Player 2', score: 0 }
         };
     }, [match]);
 
@@ -321,38 +323,15 @@ export default function MatchConsole() {
         // Run scoring pipeline (pure — returns new state)
         const newState = processScoringPipeline(safeMatch, team, delta, rules);
 
-        // Build diff for optimistic update
-        const updates: Partial<MatchState> = {};
-        if (newState.player1.score !== safeMatch.player1.score ||
-            newState.player1.isServing !== safeMatch.player1.isServing ||
-            newState.player1.gamesWon !== (safeMatch.player1.gamesWon ?? 0)) {
-            updates.player1 = newState.player1;
-        }
-        if (newState.player2.score !== safeMatch.player2.score ||
-            newState.player2.isServing !== safeMatch.player2.isServing ||
-            newState.player2.gamesWon !== (safeMatch.player2.gamesWon ?? 0)) {
-            updates.player2 = newState.player2;
-        }
-        if (JSON.stringify(newState.gameHistory ?? []) !== JSON.stringify(safeMatch.gameHistory ?? [])) {
-            updates.gameHistory = newState.gameHistory;
-        }
-        if (newState.status !== safeMatch.status) {
-            updates.status = newState.status;
-        }
-
-        if (Object.keys(updates).length === 0) return;
-
-        optimisticUpdate(updates);
-        debouncedMutate(updates);
+        optimisticUpdate(newState);
+        debouncedMutate(newState);
     }, [safeMatch, optimisticUpdate, debouncedMutate]);
 
 
     const toggleServer = useCallback((team: 'player1' | 'player2') => {
         if (!safeMatch) return;
         const updates: Partial<MatchState> = {
-            player1: { ...safeMatch.player1, isServing: team === 'player1' },
-            player2: { ...safeMatch.player2, isServing: team === 'player2' },
-            serverNumber: 1 as 1
+            currentServer: team,
         };
         optimisticUpdate(updates);
         debouncedMutate(updates);
@@ -413,7 +392,13 @@ export default function MatchConsole() {
 
     const handleResetGame = useCallback(() => {
         if (!safeMatch) return;
-        if (!confirm('Reset current game scores to 0-0?')) return;
+        const { currentGame, p1GamesWon, p2GamesWon } = getGameStructure(safeMatch);
+        const p1Score = safeMatch.player1?.score ?? 0;
+        const p2Score = safeMatch.player2?.score ?? 0;
+
+        const confirmMsg = `Reset Game ${currentGame}?\n\nCurrent rally score: ${p1Score}–${p2Score}\nCompleted games: ${p1GamesWon}–${p2GamesWon}\n\nThis cannot be undone.`;
+        if (!confirm(confirmMsg)) return;
+
         mutation.mutate({
             player1: { ...safeMatch.player1, score: 0 },
             player2: { ...safeMatch.player2, score: 0 },
@@ -469,7 +454,7 @@ export default function MatchConsole() {
                 <PlayerCard
                     player={safeMatch.player1}
                     teamLabel="Team One"
-                    isServing={safeMatch.player1.isServing}
+                    isServing={safeMatch.currentServer === 'player1'}
                     isCompleted={isCompleted}
                     onScoreChange={(delta) => handleScore('player1', delta)}
                     onToggleServer={() => toggleServer('player1')}
@@ -508,7 +493,7 @@ export default function MatchConsole() {
                 <PlayerCard
                     player={safeMatch.player2}
                     teamLabel="Team Two"
-                    isServing={safeMatch.player2.isServing}
+                    isServing={safeMatch.currentServer === 'player2'}
                     isCompleted={isCompleted}
                     onScoreChange={(delta) => handleScore('player2', delta)}
                     onToggleServer={() => toggleServer('player2')}
