@@ -11,13 +11,11 @@ interface ScoreboardProps {
 }
 
 export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
-    // Handle Badminton Schema
-    const p1Name = match.player1?.name2
-        ? `${match.player1.name} / ${match.player1.name2}`
-        : match.player1?.name || "Player 1";
-    const p2Name = match.player2?.name2
-        ? `${match.player2.name} / ${match.player2.name2}`
-        : match.player2?.name || "Player 2";
+    // Handle Badminton / Doubles Schema
+    const p1Name = match.player1?.name || "Player 1";
+    const p1Name2 = match.player1?.name2;
+    const p2Name = match.player2?.name || "Player 2";
+    const p2Name2 = match.player2?.name2;
 
     const currentServer = match.currentServer ?? (match.player1?.isServing ? 'player1' : 'player2');
     const p1Serving = currentServer === 'player1';
@@ -58,13 +56,22 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             "w-3 h-3 rounded-full transition-all duration-500",
                             p1Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
                         )} />
-                        <div className="flex flex-col">
+                        <div className="flex flex-col justify-center">
                             <span className={clsx(
-                                "text-xl font-black uppercase tracking-tight transition-colors duration-300",
+                                "font-black uppercase tracking-tight transition-colors duration-300 line-clamp-1 leading-tight",
+                                p1Name2 ? "text-base" : "text-xl",
                                 p1Serving ? "text-white" : "text-white/60"
                             )}>
                                 {p1Name}
                             </span>
+                            {p1Name2 && (
+                                <span className={clsx(
+                                    "text-base font-bold uppercase tracking-tight transition-colors duration-300 line-clamp-1 leading-tight mt-0.5",
+                                    p1Serving ? "text-white/90" : "text-white/50"
+                                )}>
+                                    {p1Name2}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -96,13 +103,22 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             "w-3 h-3 rounded-full transition-all duration-500",
                             p2Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
                         )} />
-                        <div className="flex flex-col">
+                        <div className="flex flex-col justify-center">
                             <span className={clsx(
-                                "text-xl font-black uppercase tracking-tight transition-colors duration-300",
+                                "font-black uppercase tracking-tight transition-colors duration-300 line-clamp-1 leading-tight",
+                                p2Name2 ? "text-base" : "text-xl",
                                 p2Serving ? "text-white" : "text-white/60"
                             )}>
                                 {p2Name}
                             </span>
+                            {p2Name2 && (
+                                <span className={clsx(
+                                    "text-base font-bold uppercase tracking-tight transition-colors duration-300 line-clamp-1 leading-tight mt-0.5",
+                                    p2Serving ? "text-white/90" : "text-white/50"
+                                )}>
+                                    {p2Name2}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-1.5">
