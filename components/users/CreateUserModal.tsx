@@ -72,6 +72,7 @@ export function CreateUserModal({ onClose, onUserCreated }: CreateUserModalProps
 
     // Fetch matches list when selectedTournamentId changes
     useEffect(() => {
+        setSelectedMatchId("all");
         if (!assignTournament || !selectedTournamentId) return;
         const fetchMatches = async () => {
             setLoadingMatches(true);

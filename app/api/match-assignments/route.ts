@@ -18,12 +18,14 @@ import type { PermissionProfileName, PermissionSet } from "@/lib/types/permissio
 export async function GET(req: Request) {
     try {
         const auth = await verifyRequest(req);
-        const superAdminError = enforceSuperAdmin(auth);
-        if (superAdminError) return superAdminError;
 
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get("userId");
         const tournamentId = searchParams.get("tournamentId");
+
+        if (!auth.roles.isSuperAdmin && !auth.roles.isOrganizer && userId !== auth.uid) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
 
         let query: FirebaseFirestore.Query = adminDb.collection("match_assignments");
 
@@ -34,12 +36,23 @@ export async function GET(req: Request) {
             query = query.where("tournamentId", "==", tournamentId);
         }
 
-        const snapshot = await query.orderBy("createdAt", "desc").get();
+        const snapshot = await query.get();
 
-        const assignments = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
+        const assignments = snapshot.docs
+            .map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+            .sort((a: any, b: any) => {
+                const getTs = (val: any) => {
+                    if (!val) return 0;
+                    if (typeof val?.toDate === "function") return val.toDate().getTime();
+                    if (val?.seconds) return val.seconds * 1000;
+                    const parsed = new Date(val).getTime();
+                    return isNaN(parsed) ? 0 : parsed;
+                };
+                return getTs(b.createdAt) - getTs(a.createdAt);
+            });
 
         return NextResponse.json(assignments);
     } catch (error: unknown) {

@@ -1,7 +1,51 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
-import { ApiResponse } from "@/lib/types/admin";
+import { verifyRequest } from "@/lib/auth/verifyRequest";
 import { FieldValue } from "firebase-admin/firestore";
+
+export async function GET(request: Request) {
+  try {
+    try {
+      await verifyRequest(request);
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const snapshot = await adminDb.collection("tournaments").get();
+
+    const tournaments = snapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name || "Unnamed Tournament",
+          location: data.location || "",
+          startDate: data.startDate || "",
+          endDate: data.endDate || "",
+          type: data.type || data.category || "Individual",
+          logo: data.logo || "",
+          status: data.status || "Upcoming",
+          ownerId: data.ownerId || "",
+          createdAt: data.createdAt,
+        };
+      })
+      .sort((a: any, b: any) => {
+        const getTs = (val: any) => {
+          if (!val) return 0;
+          if (typeof val.toDate === "function") return val.toDate().getTime();
+          if (val.seconds) return val.seconds * 1000;
+          const parsed = new Date(val).getTime();
+          return isNaN(parsed) ? 0 : parsed;
+        };
+        return getTs(b.createdAt) - getTs(a.createdAt);
+      });
+
+    return NextResponse.json(tournaments);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to fetch tournaments";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -35,3 +79,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

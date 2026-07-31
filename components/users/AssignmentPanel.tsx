@@ -59,9 +59,8 @@ export function AssignmentPanel({ userId, userName }: AssignmentPanelProps) {
         fetchAssignments();
     }, [userId]);
 
-    // Load tournaments when adding assignment
+    // Load tournaments
     useEffect(() => {
-        if (!isAdding) return;
         const fetchTournaments = async () => {
             try {
                 const user = auth.currentUser;
@@ -73,17 +72,20 @@ export function AssignmentPanel({ userId, userName }: AssignmentPanelProps) {
                 if (res.ok) {
                     const data = await res.json();
                     setTournaments(data);
-                    if (data.length > 0) setSelectedTournamentId(data[0].id);
+                    if (data.length > 0 && !selectedTournamentId) {
+                        setSelectedTournamentId(data[0].id);
+                    }
                 }
             } catch (err) {
                 console.error("Fetch tournaments error:", err);
             }
         };
         fetchTournaments();
-    }, [isAdding]);
+    }, [userId, isAdding]);
 
     // Load matches when tournament selection changes
     useEffect(() => {
+        setSelectedMatchId("all");
         if (!isAdding || !selectedTournamentId) return;
         const fetchMatches = async () => {
             try {
@@ -166,6 +168,8 @@ export function AssignmentPanel({ userId, userName }: AssignmentPanelProps) {
         }
     };
 
+    const tournamentMap = new Map(tournaments.map(t => [t.id, t.name]));
+
     return (
         <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-white/5">
             <div className="flex items-center justify-between">
@@ -218,7 +222,7 @@ export function AssignmentPanel({ userId, userName }: AssignmentPanelProps) {
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Profile Profile</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Permission Profile</label>
                         <select
                             value={permissionProfile}
                             onChange={(e) => setPermissionProfile(e.target.value as PermissionProfileName)}
@@ -271,7 +275,7 @@ export function AssignmentPanel({ userId, userName }: AssignmentPanelProps) {
                                         </span>
                                     </div>
                                     <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                        Tournament: {assignment.tournamentId.slice(0, 8)}...
+                                        Tournament: {tournamentMap.get(assignment.tournamentId) || `${assignment.tournamentId.slice(0, 8)}...`}
                                         {assignment.matchId && ` • Match: ${assignment.matchId.slice(0, 8)}...`}
                                     </p>
                                 </div>
