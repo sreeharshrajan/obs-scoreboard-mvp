@@ -96,6 +96,8 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                 .filter(s => s.status === true)
                 .sort((a, b) => (a.priority || 99) - (b.priority || 99));
             setSponsors(activeSponsors);
+        }, (err) => {
+            console.error("Sponsors Firestore listener error:", err);
         });
 
         return () => unsubscribe();

@@ -26,6 +26,9 @@ export default function SponsorsTab({ tournamentId }: SponsorsTabProps) {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sponsor));
             setSponsors(data);
             setLoading(false);
+        }, (err) => {
+            console.error("Firestore Sponsors listener error:", err);
+            setLoading(false);
         });
         return () => unsubscribe();
     }, [tournamentId]);
