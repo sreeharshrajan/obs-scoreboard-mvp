@@ -174,26 +174,28 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Sponsor Position</p>
-                                        <div className="grid grid-cols-3 gap-1.5">
-                                            {(['left', 'center', 'right'] as const).map((pos) => (
-                                                <button
-                                                    key={pos}
-                                                    type="button"
-                                                    onClick={() => onUpdateMatch({ sponsorPosition: pos })}
-                                                    className={clsx(
-                                                        "px-2 py-1.5 rounded-xl text-[11px] font-bold capitalize transition-all border text-center cursor-pointer",
-                                                        (match.sponsorPosition || 'center') === pos
-                                                            ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                            : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                                                    )}
-                                                >
-                                                    {pos}
-                                                </button>
-                                            ))}
+                                    {match.overlayTemplate !== 'bwf' && (
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Sponsor Position</p>
+                                            <div className="grid grid-cols-3 gap-1.5">
+                                                {(['left', 'center', 'right'] as const).map((pos) => (
+                                                    <button
+                                                        key={pos}
+                                                        type="button"
+                                                        onClick={() => onUpdateMatch({ sponsorPosition: pos })}
+                                                        className={clsx(
+                                                            "px-2 py-1.5 rounded-xl text-[11px] font-bold capitalize transition-all border text-center cursor-pointer",
+                                                            (match.sponsorPosition || 'center') === pos
+                                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                                        )}
+                                                    >
+                                                        {pos}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Logo Size</p>
