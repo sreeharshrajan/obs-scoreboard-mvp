@@ -3,6 +3,7 @@ import { MatchState } from "@/types/match";
 import Image from "next/image";
 import { Trophy } from 'lucide-react';
 import { getMatchDetails, Sponsor } from '@/lib/matchHelpers';
+import clsx from 'clsx';
 
 interface FullScreenMatchInfoProps {
     match: MatchState;
@@ -18,13 +19,12 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
         p1Name2,
         p2Name,
         p2Name2,
-        p1Score,
-        p2Score,
         tournamentName,
         matchCategory,
         courtName,
         matchType,
         activeSponsor,
+        gameScores,
     } = getMatchDetails(match, sponsors, currentSponsorIndex);
 
     return (
@@ -73,8 +73,23 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center justify-center min-w-[70px] h-20 rounded-2xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] px-4 shadow-[0_0_20px_rgba(255,90,9,0.35)] border border-orange-400/30">
-                            <span className="text-4xl font-black tabular-nums text-white drop-shadow-md">{p1Score}</span>
+                        <div className="flex items-center gap-2.5">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "min-w-[64px] h-20 rounded-2xl flex flex-col items-center justify-center px-3 shadow-lg border transition-all",
+                                        box.isCurrent
+                                            ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
+                                            : box.p1Winner
+                                            ? "bg-white/15 border-white/20"
+                                            : "bg-white/5 border-white/5 opacity-50"
+                                    )}
+                                >
+                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p1Score}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -85,8 +100,23 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
 
                     {/* Player 2 Side */}
                     <div className="flex-1 flex items-center justify-between px-10 bg-gradient-to-bl from-white/5 to-transparent">
-                        <div className="flex items-center justify-center min-w-[70px] h-20 rounded-2xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] px-4 shadow-[0_0_20px_rgba(255,90,9,0.35)] border border-orange-400/30">
-                            <span className="text-4xl font-black tabular-nums text-white drop-shadow-md">{p2Score}</span>
+                        <div className="flex items-center gap-2.5">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "min-w-[64px] h-20 rounded-2xl flex flex-col items-center justify-center px-3 shadow-lg border transition-all",
+                                        box.isCurrent
+                                            ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
+                                            : box.p2Winner
+                                            ? "bg-white/15 border-white/20"
+                                            : "bg-white/5 border-white/5 opacity-50"
+                                    )}
+                                >
+                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p2Score}</span>
+                                </div>
+                            ))}
                         </div>
                         <div className="flex flex-col items-end justify-center pl-4 text-right">
                             <span className="text-3xl font-black text-white uppercase tracking-tight line-clamp-1">

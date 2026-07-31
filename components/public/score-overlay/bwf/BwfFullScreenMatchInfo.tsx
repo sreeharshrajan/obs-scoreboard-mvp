@@ -2,6 +2,7 @@ import React from 'react';
 import { MatchState } from "@/types/match";
 import Image from "next/image";
 import { getMatchDetails, Sponsor } from '@/lib/matchHelpers';
+import clsx from 'clsx';
 
 interface BwfFullScreenMatchInfoProps {
     match: MatchState;
@@ -17,12 +18,11 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
         p1Name2,
         p2Name,
         p2Name2,
-        p1Score,
-        p2Score,
         tournamentName,
         matchCategory,
         courtName,
         activeSponsor,
+        gameScores,
     } = getMatchDetails(match, sponsors, currentSponsorIndex);
 
     return (
@@ -60,19 +60,34 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
                 {/* Bottom Section - Players */}
                 <div className="flex h-32 bg-[#e6e7e8] border-t border-slate-300">
                     {/* Player 1 */}
-                    <div className="flex-1 flex items-center justify-end px-12 relative">
-                        <div className="absolute left-8 w-16 h-16 bg-[#38b77a] rounded flex items-center justify-center shadow-inner border border-[#2e9c67]">
-                            <span className="text-3xl font-black text-white">{p1Score}</span>
-                        </div>
-                        <div className="flex flex-col items-end justify-center">
-                            <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-right line-clamp-1 leading-none">
+                    <div className="flex-1 flex items-center justify-between px-8">
+                        <div className="flex flex-col items-start justify-center">
+                            <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-left line-clamp-1 leading-none">
                                 {p1Name}
                             </span>
                             {p1Name2 && (
-                                <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-right line-clamp-1 leading-none mt-1">
+                                <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-left line-clamp-1 leading-none mt-1">
                                     {p1Name2}
                                 </span>
                             )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "w-14 h-16 rounded flex flex-col items-center justify-center border shadow-inner transition-all",
+                                        box.isCurrent
+                                            ? "bg-[#38b77a] text-white border-[#2e9c67]"
+                                            : box.p1Winner
+                                            ? "bg-slate-300 text-slate-900 border-slate-400 font-bold"
+                                            : "bg-slate-200 text-slate-400 border-slate-300"
+                                    )}
+                                >
+                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">G{box.gameNumber}</span>
+                                    <span className="text-2xl font-black">{box.p1Score}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -82,19 +97,34 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
                     </div>
 
                     {/* Player 2 */}
-                    <div className="flex-1 flex items-center justify-start px-12 relative">
-                        <div className="flex flex-col items-start justify-center">
-                            <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-left line-clamp-1 leading-none">
+                    <div className="flex-1 flex items-center justify-between px-8">
+                        <div className="flex items-center gap-2">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "w-14 h-16 rounded flex flex-col items-center justify-center border shadow-inner transition-all",
+                                        box.isCurrent
+                                            ? "bg-[#38b77a] text-white border-[#2e9c67]"
+                                            : box.p2Winner
+                                            ? "bg-slate-300 text-slate-900 border-slate-400 font-bold"
+                                            : "bg-slate-200 text-slate-400 border-slate-300"
+                                    )}
+                                >
+                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">G{box.gameNumber}</span>
+                                    <span className="text-2xl font-black">{box.p2Score}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex flex-col items-end justify-center">
+                            <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-right line-clamp-1 leading-none">
                                 {p2Name}
                             </span>
                             {p2Name2 && (
-                                <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-left line-clamp-1 leading-none mt-1">
+                                <span className="text-4xl font-black text-slate-800 uppercase tracking-tight text-right line-clamp-1 leading-none mt-1">
                                     {p2Name2}
                                 </span>
                             )}
-                        </div>
-                        <div className="absolute right-8 w-16 h-16 bg-[#38b77a] rounded flex items-center justify-center shadow-inner border border-[#2e9c67]">
-                            <span className="text-3xl font-black text-white">{p2Score}</span>
                         </div>
                     </div>
                 </div>

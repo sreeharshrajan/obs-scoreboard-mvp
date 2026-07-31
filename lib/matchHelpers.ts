@@ -26,6 +26,16 @@ export function getActiveSponsor(
     return sponsors[safeIndex] || null;
 }
 
+export interface GameScoreBox {
+    gameNumber: number;
+    p1Score: number | string;
+    p2Score: number | string;
+    isCurrent: boolean;
+    isCompleted: boolean;
+    p1Winner?: boolean;
+    p2Winner?: boolean;
+}
+
 export interface MatchDetailsData {
     p1Name: string;
     p1Name2?: string;
@@ -40,6 +50,7 @@ export interface MatchDetailsData {
     currentGame: number;
     totalGames: number;
     gameHistory: GameResult[];
+    gameScores: GameScoreBox[];
     tournamentName: string;
     matchCategory: string;
     courtName: string;
@@ -80,6 +91,8 @@ export function getMatchDetails(
     const { currentGame, totalGames, p1GamesWon, p2GamesWon, gameHistory } =
         getGameStructure(match);
 
+    const gameScores = getPerGameScores(match);
+
     return {
         p1Name,
         p1Name2,
@@ -94,6 +107,7 @@ export function getMatchDetails(
         currentGame,
         totalGames,
         gameHistory,
+        gameScores,
         tournamentName,
         matchCategory,
         courtName,
@@ -127,3 +141,53 @@ export function getGameStructure(match: MatchState): {
         gameHistory,
     };
 }
+
+/**
+ * Returns score per game for each set in the match (e.g. Game 1, Game 2, Game 3).
+ * For completed games, shows archived scores from gameHistory.
+ * For the active game, shows current rally scores from match.player1/player2.
+ * For future unplayed games, shows '-'.
+ */
+export function getPerGameScores(match: MatchState): GameScoreBox[] {
+    const gameHistory = match.gameHistory ?? [];
+    const rules = getRuleSet(match.sport, match.scoringType);
+    const totalGames = rules.bestOf;
+    const isCompleted = match.status === 'completed';
+    const currentGameNumber = Math.min(gameHistory.length + 1, totalGames);
+
+    const boxes: GameScoreBox[] = [];
+
+    for (let g = 1; g <= totalGames; g++) {
+        if (g <= gameHistory.length) {
+            const h = gameHistory[g - 1];
+            boxes.push({
+                gameNumber: g,
+                p1Score: h.player1Score,
+                p2Score: h.player2Score,
+                isCurrent: false,
+                isCompleted: true,
+                p1Winner: h.winner === 'player1',
+                p2Winner: h.winner === 'player2',
+            });
+        } else if (g === currentGameNumber && !isCompleted) {
+            boxes.push({
+                gameNumber: g,
+                p1Score: match.player1?.score ?? 0,
+                p2Score: match.player2?.score ?? 0,
+                isCurrent: true,
+                isCompleted: false,
+            });
+        } else {
+            boxes.push({
+                gameNumber: g,
+                p1Score: '-',
+                p2Score: '-',
+                isCurrent: false,
+                isCompleted: false,
+            });
+        }
+    }
+
+    return boxes;
+}
+

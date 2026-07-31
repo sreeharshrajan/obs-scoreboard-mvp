@@ -28,10 +28,14 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
         courtName,
         activeSponsor,
         gameHistory,
+        gameScores,
     } = getMatchDetails(match, sponsors, currentSponsorIndex);
 
-    const formatScore = (score: number) => {
-        return score < 10 ? `0${score}` : `${score}`;
+    const formatScore = (score: number | string) => {
+        if (typeof score === 'number') {
+            return score < 10 ? `0${score}` : `${score}`;
+        }
+        return score;
     };
 
     return (
@@ -89,9 +93,24 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                                 )}
                             </div>
                         </div>
-                        {/* White Classic Score Pill */}
-                        <div className="bg-white text-slate-900 px-5 py-2.5 rounded-2xl shadow-xl border border-slate-200 min-w-[76px] flex items-center justify-center">
-                            <span className="text-4xl font-black tabular-nums">{formatScore(p1Score)}</span>
+                        {/* Classic Per-Game Score Pills */}
+                        <div className="flex items-center gap-2">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "px-4 py-2 rounded-2xl shadow-xl border flex flex-col items-center justify-center min-w-[60px] transition-all",
+                                        box.isCurrent
+                                            ? "bg-red-600 text-white border-red-400 font-black"
+                                            : box.p1Winner
+                                            ? "bg-white text-slate-900 border-slate-200 font-bold"
+                                            : "bg-white/10 text-white/40 border-white/5"
+                                    )}
+                                >
+                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-3xl font-black tabular-nums">{formatScore(box.p1Score)}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -102,9 +121,24 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
 
                     {/* Player 2 Side */}
                     <div className="flex-1 flex items-center justify-between px-10">
-                        {/* White Classic Score Pill */}
-                        <div className="bg-white text-slate-900 px-5 py-2.5 rounded-2xl shadow-xl border border-slate-200 min-w-[76px] flex items-center justify-center">
-                            <span className="text-4xl font-black tabular-nums">{formatScore(p2Score)}</span>
+                        {/* Classic Per-Game Score Pills */}
+                        <div className="flex items-center gap-2">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "px-4 py-2 rounded-2xl shadow-xl border flex flex-col items-center justify-center min-w-[60px] transition-all",
+                                        box.isCurrent
+                                            ? "bg-red-600 text-white border-red-400 font-black"
+                                            : box.p2Winner
+                                            ? "bg-white text-slate-900 border-slate-200 font-bold"
+                                            : "bg-white/10 text-white/40 border-white/5"
+                                    )}
+                                >
+                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-3xl font-black tabular-nums">{formatScore(box.p2Score)}</span>
+                                </div>
+                            ))}
                         </div>
                         <div className="flex items-center gap-4 pl-4 text-right">
                             <div className="flex flex-col items-end justify-center">

@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity, Clock } from "lucide-react";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
-import { getGameStructure } from "@/lib/matchHelpers";
+import { getGameStructure, getPerGameScores } from "@/lib/matchHelpers";
 import Image from "next/image";
 
 interface ClassicScoreboardProps {
@@ -17,15 +17,14 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
     const p2Name = match.player2?.name2
         ? `${match.player2.name} / ${match.player2.name2}`
         : match.player2?.name || "Player 2";
-    const p1Score = match.player1?.score || 0;
-    const p2Score = match.player2?.score || 0;
-    const p1Serving = match.player1?.isServing ?? false;
-    const p2Serving = match.player2?.isServing ?? false;
+
+    const currentServer = match.currentServer ?? (match.player1?.isServing ? 'player1' : 'player2');
+    const p1Serving = currentServer === 'player1';
+    const p2Serving = currentServer === 'player2';
 
     const isLive = match.status === "live" || match.isTimerRunning;
-
-    const { p1GamesWon, p2GamesWon, totalGames, currentGame } = getGameStructure(match);
-    const gamesNeeded = Math.ceil(totalGames / 2);
+    const gameScores = getPerGameScores(match);
+    const { totalGames, currentGame } = getGameStructure(match);
 
     const formatTime = (seconds: number) => {
         const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
@@ -34,8 +33,11 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-    const formatScore = (score: number) => {
-        return score < 10 ? `0${score}` : `${score}`;
+    const formatScore = (score: number | string) => {
+        if (typeof score === 'number') {
+            return score < 10 ? `0${score}` : `${score}`;
+        }
+        return score;
     };
 
     return (
@@ -58,7 +60,7 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
             {/* Middle Player Rows (Dark Carbon Bars) */}
             <div className="flex flex-col divide-y divide-white/10 bg-[#1E293B] border-y border-white/10">
                 {/* Player 1 Row */}
-                <div className="flex-1 flex items-center justify-between min-w-[360px] px-6 gap-6 relative">
+                <div className="flex-1 flex items-center justify-between min-w-[380px] px-6 gap-6 relative">
                     <div className="flex items-center gap-3.5">
                         <div className={clsx(
                             "w-3.5 h-3.5 rounded-full transition-all duration-300",
@@ -72,29 +74,26 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* Games Won Dots */}
-                        {totalGames > 1 && (
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: gamesNeeded }).map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className={clsx(
-                                            "w-1.5 h-1.5 rounded-full",
-                                            i < p1GamesWon ? "bg-red-500" : "bg-white/20"
-                                        )}
-                                    />
-                                ))}
+                        {gameScores.map((box) => (
+                            <div
+                                key={box.gameNumber}
+                                className={clsx(
+                                    "px-3 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[44px] transition-all",
+                                    box.isCurrent
+                                        ? "bg-red-600 text-white font-black ring-2 ring-red-400"
+                                        : box.p1Winner
+                                        ? "bg-white text-slate-900 font-bold"
+                                        : "bg-white/10 text-white/40"
+                                )}
+                            >
+                                <span className="text-2xl font-black tabular-nums">{formatScore(box.p1Score)}</span>
                             </div>
-                        )}
-                        {/* Score Pill */}
-                        <div className="bg-white text-slate-900 px-3.5 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[48px]">
-                            <span className="text-2xl font-black tabular-nums">{formatScore(p1Score)}</span>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
                 {/* Player 2 Row */}
-                <div className="flex-1 flex items-center justify-between min-w-[360px] px-6 gap-6 relative">
+                <div className="flex-1 flex items-center justify-between min-w-[380px] px-6 gap-6 relative">
                     <div className="flex items-center gap-3.5">
                         <div className={clsx(
                             "w-3.5 h-3.5 rounded-full transition-all duration-300",
@@ -108,24 +107,21 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* Games Won Dots */}
-                        {totalGames > 1 && (
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: gamesNeeded }).map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className={clsx(
-                                            "w-1.5 h-1.5 rounded-full",
-                                            i < p2GamesWon ? "bg-red-500" : "bg-white/20"
-                                        )}
-                                    />
-                                ))}
+                        {gameScores.map((box) => (
+                            <div
+                                key={box.gameNumber}
+                                className={clsx(
+                                    "px-3 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[44px] transition-all",
+                                    box.isCurrent
+                                        ? "bg-red-600 text-white font-black ring-2 ring-red-400"
+                                        : box.p2Winner
+                                        ? "bg-white text-slate-900 font-bold"
+                                        : "bg-white/10 text-white/40"
+                                )}
+                            >
+                                <span className="text-2xl font-black tabular-nums">{formatScore(box.p2Score)}</span>
                             </div>
-                        )}
-                        {/* Score Pill */}
-                        <div className="bg-white text-slate-900 px-3.5 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[48px]">
-                            <span className="text-2xl font-black tabular-nums">{formatScore(p2Score)}</span>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>

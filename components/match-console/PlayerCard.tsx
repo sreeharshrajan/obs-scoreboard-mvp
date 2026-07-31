@@ -47,19 +47,11 @@ export default memo(function PlayerCard({
                         {teamLabel}
                     </span>
                     {isServing && <div className="lg:hidden w-1.5 h-1.5 bg-[#FF5A09] rounded-full animate-pulse" />}
-                    {/* Games Won Dots */}
-                    <div className="flex items-center gap-1 ml-auto">
-                        {Array.from({ length: gamesNeeded }).map((_, i) => (
-                            <div
-                                key={i}
-                                className={clsx(
-                                    "w-2 h-2 lg:w-2.5 lg:h-2.5 rounded-full transition-all duration-300",
-                                    i < gamesWon
-                                        ? "bg-[#FF5A09] shadow-[0_0_6px_rgba(255,90,9,0.4)]"
-                                        : "bg-slate-200 dark:bg-white/10"
-                                )}
-                            />
-                        ))}
+                    {/* Games Won Badge */}
+                    <div className="flex items-center gap-1.5 ml-auto">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                            Sets: {gamesWon}
+                        </span>
                     </div>
                 </div>
 
