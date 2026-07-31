@@ -6,28 +6,55 @@ interface MatchInfoDisplayProps {
 }
 
 export default function MatchInfoDisplay({ match }: MatchInfoDisplayProps) {
-    return (
-        <div className="absolute top-12 right-12 flex flex-row items-start gap-6 animate-in slide-in-from-right-12 duration-700">
-            {match.showMatchInfo !== false && (match.matchCategory || match.category || match.tournamentName) && (
-                <div className="bg-black/90 text-white px-8 py-6 rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] flex items-center gap-6 border border-white/10 backdrop-blur-xl">
-                    <div className="flex flex-col gap-1 text-right">
-                        <span className="text-xs font-black uppercase tracking-[0.3em] text-[#FF5A09] mb-2">{match.tournamentName || "Tournament"}</span>
-                        <div className="flex flex-col">
-                            <span className="text-2xl font-black uppercase tracking-tight text-white">{match.matchCategory || match.category || "Match"}</span>
-                            <div className="flex items-center justify-end gap-3 text-xs font-bold text-white/40 uppercase tracking-[0.15em] mt-2">
-                                {match.roundType && <span>{match.roundType}</span>}
-                                {match.roundType && match.ageGroup && <span className="text-[#FF5A09]/40">•</span>}
-                                {match.ageGroup && <span>{match.ageGroup}</span>}
-                                {(match.roundType || match.ageGroup) && match.court && <span className="text-[#FF5A09]/40">•</span>}
-                                {match.court && <span>{match.court}</span>}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+    const hasCategory = match.matchCategory || match.category;
+    const hasTournament = match.tournamentName;
 
+    if (match.showMatchInfo === false || (!hasCategory && !hasTournament)) {
+        return null;
+    }
+
+    return (
+        <div className="absolute top-12 right-12 h-[128px] flex items-stretch gap-4 animate-in slide-in-from-right-8 duration-700">
+            <div className="h-full bg-slate-950/90 text-white px-7 rounded-2xl shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl flex flex-col justify-center items-end gap-1.5 min-w-[300px] max-w-[500px]">
+                {/* Tournament Tag - Wraps naturally onto next lines, NO ellipsis or text trimming */}
+                {match.tournamentName && (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FF5A09] bg-[#FF5A09]/10 border border-[#FF5A09]/20 px-2.5 py-1 rounded-md text-right whitespace-normal break-words leading-tight">
+                        {match.tournamentName}
+                    </span>
+                )}
+
+                {/* Match Category / Title */}
+                {hasCategory && (
+                    <span className="text-lg font-black uppercase tracking-tight text-white/95 leading-tight text-right whitespace-normal break-words">
+                        {hasCategory}
+                    </span>
+                )}
+
+                {/* Sub details pills: Round, Age Group, Court */}
+                {(match.roundType || match.ageGroup || match.court) && (
+                    <div className="flex items-center justify-end flex-wrap gap-1.5 mt-0.5">
+                        {match.roundType && (
+                            <span className="text-[10px] font-bold text-white/70 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
+                                {match.roundType}
+                            </span>
+                        )}
+                        {match.ageGroup && (
+                            <span className="text-[10px] font-bold text-white/70 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
+                                {match.ageGroup}
+                            </span>
+                        )}
+                        {match.court && (
+                            <span className="text-[10px] font-bold text-[#FF5A09] bg-[#FF5A09]/10 border border-[#FF5A09]/20 px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
+                                {match.court}
+                            </span>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Streamer Logo */}
             {match.showStreamerLogo !== false && match.streamerLogo && (
-                <div className="relative h-[100px] w-auto drop-shadow-2xl">
+                <div className="relative h-full w-auto drop-shadow-lg flex items-center justify-center bg-slate-950/90 border border-white/10 rounded-2xl p-3.5 backdrop-blur-xl">
                     <img
                         src={match.streamerLogo}
                         alt="Streamer Logo"

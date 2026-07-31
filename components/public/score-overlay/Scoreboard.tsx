@@ -32,10 +32,10 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     };
 
     return (
-        <div className="absolute top-12 left-12 flex items-stretch bg-black/90 text-white rounded-2xl overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
-            <div className={clsx("flex flex-col items-center justify-center px-4 min-w-[100px]", isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
+        <div className="absolute top-12 left-12 h-[128px] flex items-stretch bg-slate-950/90 text-white rounded-2xl overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
+            <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
                 {match.showTournamentLogo !== false && match.tournamentLogo ? (
-                    <div className="relative w-16 h-16 mb-2">
+                    <div className="relative w-14 h-14 mb-1">
                         <Image
                             src={match.tournamentLogo}
                             alt="Tournament Logo"
@@ -44,15 +44,15 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                         />
                     </div>
                 ) : (
-                    isLive ? <Activity size={32} className="text-white" /> : <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{match.status || 'OFF'}</span>
+                    isLive ? <Activity size={28} className="text-white" /> : <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{match.status || 'OFF'}</span>
                 )}
-                {(match.status === 'break') && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-1">BREAK</span>}
+                {(match.status === 'break') && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
             </div>
 
-            <div className="flex flex-col divide-y divide-white/10">
+            <div className="flex flex-col h-full divide-y divide-white/10">
                 {/* Player 1 */}
-                <div className="flex items-center justify-between min-w-[400px] px-8 py-5 gap-8 relative overflow-hidden">
-                    <div className="flex items-center gap-4">
+                <div className="flex-1 flex items-center justify-between min-w-[380px] px-7 gap-6 relative overflow-hidden">
+                    <div className="flex items-center gap-3.5">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
                             p1Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
@@ -66,14 +66,14 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <span className="text-5xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
+                    <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
                         {p1Score}
                     </span>
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex items-center justify-between min-w-[400px] px-8 py-5 gap-8 relative overflow-hidden">
-                    <div className="flex items-center gap-4">
+                <div className="flex-1 flex items-center justify-between min-w-[380px] px-7 gap-6 relative overflow-hidden">
+                    <div className="flex items-center gap-3.5">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
                             p2Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
@@ -87,16 +87,16 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <span className="text-5xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
+                    <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
                         {p2Score}
                     </span>
                 </div>
             </div>
 
             {/* Timer Section */}
-            <div className="flex flex-col items-center justify-center px-8 bg-white/5 border-l border-white/10 min-w-[120px]">
-                <Clock size={16} className="text-white/40 mb-2" />
-                <span className="text-3xl font-mono font-black tracking-tight text-white/90">{formatTime(elapsedDisplay)}</span>
+            <div className="flex flex-col items-center justify-center px-7 bg-white/5 border-l border-white/10 min-w-[110px]">
+                <Clock size={16} className="text-white/40 mb-1" />
+                <span className="text-2xl font-mono font-black tracking-tight text-white/90">{formatTime(elapsedDisplay)}</span>
             </div>
         </div>
     );
