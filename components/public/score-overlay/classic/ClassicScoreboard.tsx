@@ -61,8 +61,8 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
             {/* Middle Player Rows (Dark Carbon Bars) */}
             <div className="flex flex-col divide-y divide-white/10 bg-[#1E293B] border-y border-white/10">
                 {/* Player 1 Row */}
-                <div className="flex-1 flex items-center justify-between min-w-[380px] px-6 gap-6 relative">
-                    <div className="flex items-center gap-3.5">
+                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative">
+                    <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3.5 h-3.5 rounded-full transition-all duration-300",
                             p1Serving ? "bg-red-500 shadow-[0_0_12px_#EF4444] scale-110" : "bg-white/10 scale-75"
@@ -74,28 +74,31 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                             {p1Name}
                         </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                         {gameScores.map((box) => (
                             <div
                                 key={box.gameNumber}
                                 className={clsx(
-                                    "px-3 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[44px] transition-all",
+                                    "shadow-md flex items-center justify-center transition-all",
                                     box.isCurrent
-                                        ? "bg-red-600 text-white font-black ring-2 ring-red-400"
+                                        ? "px-3 py-1 rounded-xl min-w-[44px] bg-red-600 text-white font-black ring-2 ring-red-400"
                                         : box.p1Winner
-                                        ? "bg-white text-slate-900 font-bold"
-                                        : "bg-white/10 text-white/40"
+                                        ? "px-2 py-0.5 rounded-lg min-w-[34px] bg-amber-400 text-slate-950 font-black ring-1 ring-amber-300 shadow-sm"
+                                        : "px-2 py-0.5 rounded-lg min-w-[34px] bg-white/10 text-white/35 font-medium"
                                 )}
                             >
-                                <span className="text-2xl font-black tabular-nums">{formatScore(box.p1Score)}</span>
+                                <span className={clsx(
+                                    "tabular-nums",
+                                    box.isCurrent ? "text-2xl font-black text-white" : box.p1Winner ? "text-base font-black text-slate-950" : "text-base font-medium text-white/35"
+                                )}>{formatScore(box.p1Score)}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Player 2 Row */}
-                <div className="flex-1 flex items-center justify-between min-w-[380px] px-6 gap-6 relative">
-                    <div className="flex items-center gap-3.5">
+                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative">
+                    <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3.5 h-3.5 rounded-full transition-all duration-300",
                             p2Serving ? "bg-red-500 shadow-[0_0_12px_#EF4444] scale-110" : "bg-white/10 scale-75"
@@ -107,20 +110,23 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                             {p2Name}
                         </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                         {gameScores.map((box) => (
                             <div
                                 key={box.gameNumber}
                                 className={clsx(
-                                    "px-3 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[44px] transition-all",
+                                    "shadow-md flex items-center justify-center transition-all",
                                     box.isCurrent
-                                        ? "bg-red-600 text-white font-black ring-2 ring-red-400"
+                                        ? "px-3 py-1 rounded-xl min-w-[44px] bg-red-600 text-white font-black ring-2 ring-red-400"
                                         : box.p2Winner
-                                        ? "bg-white text-slate-900 font-bold"
-                                        : "bg-white/10 text-white/40"
+                                        ? "px-2 py-0.5 rounded-lg min-w-[34px] bg-amber-400 text-slate-950 font-black ring-1 ring-amber-300 shadow-sm"
+                                        : "px-2 py-0.5 rounded-lg min-w-[34px] bg-white/10 text-white/35 font-medium"
                                 )}
                             >
-                                <span className="text-2xl font-black tabular-nums">{formatScore(box.p2Score)}</span>
+                                <span className={clsx(
+                                    "tabular-nums",
+                                    box.isCurrent ? "text-2xl font-black text-white" : box.p2Winner ? "text-base font-black text-slate-950" : "text-base font-medium text-white/35"
+                                )}>{formatScore(box.p2Score)}</span>
                             </div>
                         ))}
                     </div>

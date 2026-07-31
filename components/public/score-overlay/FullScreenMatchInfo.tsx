@@ -78,21 +78,24 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2">
                             {gameScores.map((box) => (
                                 <div
                                     key={box.gameNumber}
                                     className={clsx(
-                                        "min-w-[64px] h-20 rounded-2xl flex flex-col items-center justify-center px-3 shadow-lg border transition-all",
+                                        "flex flex-col items-center justify-center shadow-lg border transition-all",
                                         box.isCurrent
-                                            ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
+                                            ? "min-w-[64px] h-20 rounded-2xl px-3 bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
                                             : box.p1Winner
-                                            ? "bg-white/15 border-white/20"
-                                            : "bg-white/5 border-white/5 opacity-50"
+                                            ? "min-w-[50px] h-16 rounded-xl px-2 bg-amber-500/25 border-amber-400/60 text-amber-300 shadow-md"
+                                            : "min-w-[50px] h-16 rounded-xl px-2 bg-white/5 border-white/5 opacity-60"
                                     )}
                                 >
-                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
-                                    <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p1Score}</span>
+                                    <span className="text-[9px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>
+                                    <span className={clsx(
+                                        "tabular-nums drop-shadow-md",
+                                        box.isCurrent ? "text-3xl font-black text-white" : box.p1Winner ? "text-xl font-black text-amber-300" : "text-xl font-medium text-white/40"
+                                    )}>{box.p1Score}</span>
                                 </div>
                             ))}
                         </div>
@@ -105,21 +108,24 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
 
                     {/* Player 2 Side */}
                     <div className="flex-1 flex items-center justify-between px-10 bg-gradient-to-bl from-white/5 to-transparent">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2">
                             {gameScores.map((box) => (
                                 <div
                                     key={box.gameNumber}
                                     className={clsx(
-                                        "min-w-[64px] h-20 rounded-2xl flex flex-col items-center justify-center px-3 shadow-lg border transition-all",
+                                        "flex flex-col items-center justify-center shadow-lg border transition-all",
                                         box.isCurrent
-                                            ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
+                                            ? "min-w-[64px] h-20 rounded-2xl px-3 bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
                                             : box.p2Winner
-                                            ? "bg-white/15 border-white/20"
-                                            : "bg-white/5 border-white/5 opacity-50"
+                                            ? "min-w-[50px] h-16 rounded-xl px-2 bg-amber-500/25 border-amber-400/60 text-amber-300 shadow-md"
+                                            : "min-w-[50px] h-16 rounded-xl px-2 bg-white/5 border-white/5 opacity-60"
                                     )}
                                 >
-                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
-                                    <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p2Score}</span>
+                                    <span className="text-[9px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>
+                                    <span className={clsx(
+                                        "tabular-nums drop-shadow-md",
+                                        box.isCurrent ? "text-3xl font-black text-white" : box.p2Winner ? "text-xl font-black text-amber-300" : "text-xl font-medium text-white/40"
+                                    )}>{box.p2Score}</span>
                                 </div>
                             ))}
                         </div>

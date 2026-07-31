@@ -11,6 +11,7 @@ import SponsorBreakDisplay from "./score-overlay/SponsorBreakDisplay";
 import SponsorTickler from "./score-overlay/SponsorTickler";
 import MatchInfoDisplay from "./score-overlay/MatchInfoDisplay";
 import FullScreenMatchInfo from "./score-overlay/FullScreenMatchInfo";
+import ResolutionWrapper from "./score-overlay/ResolutionWrapper";
 
 // Classic Components
 import ClassicScoreboard from "./score-overlay/classic/ClassicScoreboard";
@@ -96,6 +97,8 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                 .filter(s => s.status === true)
                 .sort((a, b) => (a.priority || 99) - (b.priority || 99));
             setSponsors(activeSponsors);
+        }, (err) => {
+            console.error("Sponsors Firestore listener error:", err);
         });
 
         return () => unsubscribe();
@@ -119,83 +122,85 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const isBwf = match.overlayTemplate === 'bwf';
 
     return (
-        <div className="relative w-screen h-screen overflow-hidden p-6 md:p-12 pointer-events-none font-instrument transition-opacity duration-500">
-            <SponsorBreakDisplay
-                sponsors={sponsors}
-                currentSponsorIndex={currentSponsorIndex}
-                match={match}
-            />
+        <ResolutionWrapper baseWidth={1920} baseHeight={1080}>
+            <div className="relative w-full h-full overflow-hidden p-6 md:p-12 pointer-events-none font-instrument transition-opacity duration-500">
+                <SponsorBreakDisplay
+                    sponsors={sponsors}
+                    currentSponsorIndex={currentSponsorIndex}
+                    match={match}
+                />
 
-            {isBwf ? (
-                <>
-                    {!match.showFullScreenMatchDetails && (
-                        <>
-                            <BwfSponsorTickler
-                                sponsors={sponsors}
-                                currentSponsorIndex={currentSponsorIndex}
-                                match={match}
-                            />
-                            <BwfScoreboard
-                                match={match}
-                                elapsedDisplay={elapsedDisplay}
-                            />
-                        </>
-                    )}
-                    <BwfFullScreenMatchInfo
-                        match={match}
-                        sponsors={sponsors}
-                        currentSponsorIndex={currentSponsorIndex}
-                    />
-                </>
-            ) : isClassic ? (
-                <>
-                    {!match.showFullScreenMatchDetails && (
-                        <>
-                            <ClassicSponsorTickler
-                                sponsors={sponsors}
-                                currentSponsorIndex={currentSponsorIndex}
-                                match={match}
-                            />
-                            <ClassicScoreboard
-                                match={match}
-                                elapsedDisplay={elapsedDisplay}
-                            />
-                            <ClassicMatchInfoDisplay
-                                match={match}
-                            />
-                        </>
-                    )}
-                    <ClassicFullScreenMatchInfo
-                        match={match}
-                        sponsors={sponsors}
-                        currentSponsorIndex={currentSponsorIndex}
-                    />
-                </>
-            ) : (
-                <>
-                    {!match.showFullScreenMatchDetails && (
-                        <>
-                            <SponsorTickler
-                                sponsors={sponsors}
-                                currentSponsorIndex={currentSponsorIndex}
-                                match={match}
-                            />
-                            <Scoreboard
-                                match={match}
-                                elapsedDisplay={elapsedDisplay}
-                            />
-                            <MatchInfoDisplay
-                                match={match}
-                            />
-                        </>
-                    )}
-                    <FullScreenMatchInfo
-                        match={match}
-                        sponsors={sponsors}
-                        currentSponsorIndex={currentSponsorIndex}
-                    />
-                </>
-            )}
-        </div>
+                {isBwf ? (
+                    <>
+                        {!match.showFullScreenMatchDetails && (
+                            <>
+                                <BwfSponsorTickler
+                                    sponsors={sponsors}
+                                    currentSponsorIndex={currentSponsorIndex}
+                                    match={match}
+                                />
+                                <BwfScoreboard
+                                    match={match}
+                                    elapsedDisplay={elapsedDisplay}
+                                />
+                            </>
+                        )}
+                        <BwfFullScreenMatchInfo
+                            match={match}
+                            sponsors={sponsors}
+                            currentSponsorIndex={currentSponsorIndex}
+                        />
+                    </>
+                ) : isClassic ? (
+                    <>
+                        {!match.showFullScreenMatchDetails && (
+                            <>
+                                <ClassicSponsorTickler
+                                    sponsors={sponsors}
+                                    currentSponsorIndex={currentSponsorIndex}
+                                    match={match}
+                                />
+                                <ClassicScoreboard
+                                    match={match}
+                                    elapsedDisplay={elapsedDisplay}
+                                />
+                                <ClassicMatchInfoDisplay
+                                    match={match}
+                                />
+                            </>
+                        )}
+                        <ClassicFullScreenMatchInfo
+                            match={match}
+                            sponsors={sponsors}
+                            currentSponsorIndex={currentSponsorIndex}
+                        />
+                    </>
+                ) : (
+                    <>
+                        {!match.showFullScreenMatchDetails && (
+                            <>
+                                <SponsorTickler
+                                    sponsors={sponsors}
+                                    currentSponsorIndex={currentSponsorIndex}
+                                    match={match}
+                                />
+                                <Scoreboard
+                                    match={match}
+                                    elapsedDisplay={elapsedDisplay}
+                                />
+                                <MatchInfoDisplay
+                                    match={match}
+                                />
+                            </>
+                        )}
+                        <FullScreenMatchInfo
+                            match={match}
+                            sponsors={sponsors}
+                            currentSponsorIndex={currentSponsorIndex}
+                        />
+                    </>
+                )}
+            </div>
+        </ResolutionWrapper>
     );
 }
