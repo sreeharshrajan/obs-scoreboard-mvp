@@ -2,13 +2,13 @@ import React from 'react';
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
 
-interface SponsorTicklerProps {
+interface ClassicSponsorTicklerProps {
     sponsors: { id: string, advertUrl: string, name: string }[];
     currentSponsorIndex: number;
     match: MatchState;
 }
 
-export default function SponsorTickler({ sponsors, currentSponsorIndex, match }: SponsorTicklerProps) {
+export default function ClassicSponsorTickler({ sponsors, currentSponsorIndex, match }: ClassicSponsorTicklerProps) {
     const isBreak = match.status === 'break';
     const showSponsorCard = !isBreak && match.isSponsorsOverlayActive && sponsors.length > 0;
 
@@ -18,9 +18,9 @@ export default function SponsorTickler({ sponsors, currentSponsorIndex, match }:
             showSponsorCard ? "translate-y-0 opacity-100 scale-100" : "translate-y-24 opacity-0 scale-95"
         )}>
             {sponsors.length > 0 && (
-                <div className="bg-slate-950/90 text-white p-4 pr-8 rounded-2xl shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl flex items-center gap-6 min-w-[340px]">
+                <div className="bg-white text-slate-900 p-4 pr-8 rounded-2xl shadow-2xl border border-white/40 flex items-center gap-6 min-w-[340px]">
                     {/* Sponsor Image Container */}
-                    <div className="h-16 w-auto min-w-[90px] flex items-center justify-center rounded-xl bg-white/5 p-2 border border-white/10 shadow-inner">
+                    <div className="h-16 w-auto min-w-[90px] flex items-center justify-center rounded-xl bg-slate-50 p-2 border border-slate-200 shadow-inner">
                         <img
                             src={sponsors[currentSponsorIndex]?.advertUrl}
                             alt="Sponsor"
@@ -29,8 +29,8 @@ export default function SponsorTickler({ sponsors, currentSponsorIndex, match }:
                     </div>
 
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-[10px] font-black text-[#FF5A09] uppercase tracking-[0.2em]">Proudly Sponsored By</span>
-                        <span className="text-xl font-black text-white leading-tight tracking-tight line-clamp-1">
+                        <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em]">Proudly Sponsored By</span>
+                        <span className="text-xl font-black text-slate-900 leading-tight tracking-tight line-clamp-1">
                             {sponsors[currentSponsorIndex]?.name}
                         </span>
                     </div>
@@ -39,4 +39,3 @@ export default function SponsorTickler({ sponsors, currentSponsorIndex, match }:
         </div>
     );
 }
-

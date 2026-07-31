@@ -36,7 +36,9 @@ export interface MatchState {
 
     serverNumber?: 1 | 2;
     overlayScale?: number;
+    overlayTemplate?: 'default' | 'classic' | 'bwf';
     streamerLogo?: string;
+    showFullScreenMatchDetails?: boolean;
 }
 
 export interface Match extends MatchState {

@@ -5,13 +5,21 @@ import { db } from "@/lib/firebase/client";
 import { collectionGroup, query, onSnapshot, collection } from "firebase/firestore";
 import { MatchState } from "@/types/match";
 
-// Components
+// Modern Components
 import Scoreboard from "./score-overlay/Scoreboard";
 import SponsorBreakDisplay from "./score-overlay/SponsorBreakDisplay";
 import SponsorTickler from "./score-overlay/SponsorTickler";
 import MatchInfoDisplay from "./score-overlay/MatchInfoDisplay";
 
-import ResolutionWrapper from "./score-overlay/ResolutionWrapper";
+// Classic Components
+import ClassicScoreboard from "./score-overlay/classic/ClassicScoreboard";
+import ClassicMatchInfoDisplay from "./score-overlay/classic/ClassicMatchInfoDisplay";
+import ClassicSponsorTickler from "./score-overlay/classic/ClassicSponsorTickler";
+
+// BWF Pro Components
+import BwfScoreboard from "./score-overlay/bwf/BwfScoreboard";
+import BwfSponsorTickler from "./score-overlay/bwf/BwfSponsorTickler";
+import BwfFullScreenMatchInfo from "./score-overlay/bwf/BwfFullScreenMatchInfo";
 
 export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const [match, setMatch] = useState<MatchState | null>(null);
@@ -79,12 +87,12 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         const shouldFetch = match?.isSponsorsOverlayActive || match?.status === 'break';
         if (!tournamentId || !shouldFetch) return;
 
-        const q = query(collection(db, "tournaments", tournamentId, "sponsors")); // Consider filtering by status here if possible or client side
+        const q = query(collection(db, "tournaments", tournamentId, "sponsors"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const activeSponsors = snapshot.docs
                 .map(d => ({ id: d.id, ...d.data() } as any))
                 .filter(s => s.status === true)
-                .sort((a, b) => (a.priority || 99) - (b.priority || 99)); // Basic sort
+                .sort((a, b) => (a.priority || 99) - (b.priority || 99));
             setSponsors(activeSponsors);
         });
 
@@ -98,40 +106,80 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
 
         const interval = setInterval(() => {
             setCurrentSponsorIndex(prev => (prev + 1) % sponsors.length);
-        }, 8000); // 8 seconds per slide
+        }, 8000);
 
         return () => clearInterval(interval);
     }, [match?.isSponsorsOverlayActive, match?.status, sponsors.length]);
 
-    if (loading || error || !match) return null; // Keep OBS clean on error/loading
+    if (loading || error || !match) return null;
+
+    const isClassic = match.overlayTemplate === 'classic';
+    const isBwf = match.overlayTemplate === 'bwf';
 
     return (
-        <ResolutionWrapper>
-            <div
-                className="w-full h-full p-12 pointer-events-none font-instrument transition-opacity duration-500"
-                style={{ transform: `scale(${match.overlayScale || 1})`, transformOrigin: 'top left' }}
-            >
-                <SponsorBreakDisplay
-                    sponsors={sponsors}
-                    currentSponsorIndex={currentSponsorIndex}
-                    match={match}
-                />
+        <div className="relative w-screen h-screen overflow-hidden p-6 md:p-12 pointer-events-none font-instrument transition-opacity duration-500">
+            <SponsorBreakDisplay
+                sponsors={sponsors}
+                currentSponsorIndex={currentSponsorIndex}
+                match={match}
+            />
 
-                <SponsorTickler
-                    sponsors={sponsors}
-                    currentSponsorIndex={currentSponsorIndex}
-                    match={match}
-                />
+            {isBwf ? (
+                <>
+                    {!match.showFullScreenMatchDetails && (
+                        <>
+                            <BwfSponsorTickler
+                                sponsors={sponsors}
+                                currentSponsorIndex={currentSponsorIndex}
+                                match={match}
+                            />
+                            <BwfScoreboard
+                                match={match}
+                                elapsedDisplay={elapsedDisplay}
+                            />
+                        </>
+                    )}
+                    <BwfFullScreenMatchInfo
+                        match={match}
+                        sponsors={sponsors}
+                        currentSponsorIndex={currentSponsorIndex}
+                    />
+                </>
+            ) : isClassic ? (
+                <>
+                    <ClassicSponsorTickler
+                        sponsors={sponsors}
+                        currentSponsorIndex={currentSponsorIndex}
+                        match={match}
+                    />
 
-                <Scoreboard
-                    match={match}
-                    elapsedDisplay={elapsedDisplay}
-                />
+                    <ClassicScoreboard
+                        match={match}
+                        elapsedDisplay={elapsedDisplay}
+                    />
 
-                <MatchInfoDisplay
-                    match={match}
-                />
-            </div>
-        </ResolutionWrapper>
+                    <ClassicMatchInfoDisplay
+                        match={match}
+                    />
+                </>
+            ) : (
+                <>
+                    <SponsorTickler
+                        sponsors={sponsors}
+                        currentSponsorIndex={currentSponsorIndex}
+                        match={match}
+                    />
+
+                    <Scoreboard
+                        match={match}
+                        elapsedDisplay={elapsedDisplay}
+                    />
+
+                    <MatchInfoDisplay
+                        match={match}
+                    />
+                </>
+            )}
+        </div>
     );
 }

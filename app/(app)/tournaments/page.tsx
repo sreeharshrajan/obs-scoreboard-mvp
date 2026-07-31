@@ -32,10 +32,7 @@ export default function TournamentListing() {
                 let q;
 
                 if (roles.isAdmin) {
-                    q = query(
-                        collection(db, "tournaments"),
-                        orderBy("createdAt", "desc")
-                    );
+                    q = query(collection(db, "tournaments"));
 
                     // Fetch users to get display names
                     try {
@@ -58,17 +55,27 @@ export default function TournamentListing() {
                 } else {
                     q = query(
                         collection(db, "tournaments"),
-                        where("ownerId", "==", user.uid),
-                        orderBy("createdAt", "desc")
+                        where("ownerId", "==", user.uid)
                     );
                 }
 
                 const snapshot = await getDocs(q);
 
-                const list = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
+                const list = snapshot.docs
+                    .map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }))
+                    .sort((a: any, b: any) => {
+                        const getTs = (val: any) => {
+                            if (!val) return 0;
+                            if (typeof val.toDate === "function") return val.toDate().getTime();
+                            if (val.seconds) return val.seconds * 1000;
+                            const parsed = new Date(val).getTime();
+                            return isNaN(parsed) ? 0 : parsed;
+                        };
+                        return getTs(b.createdAt) - getTs(a.createdAt);
+                    });
 
                 setTournaments(list);
             } catch (error) {

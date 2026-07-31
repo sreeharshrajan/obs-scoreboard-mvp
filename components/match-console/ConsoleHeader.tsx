@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, ZoomIn, ZoomOut, Info, LayoutTemplate } from 'lucide-react';
+import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, Info, LayoutTemplate } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
@@ -138,22 +138,49 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                                 <ToggleItem icon={<ImageIcon size={16} />} label="Tournament Logo" active={match.showTournamentLogo !== false} onClick={() => toggleSetting('showTournamentLogo')} />
                                 <ToggleItem icon={<Users size={16} />} label="Streamer Branding" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
                                 <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
+                                <ToggleItem icon={<Monitor size={16} />} label="Full Screen Details" active={!!match.showFullScreenMatchDetails} onClick={() => toggleSetting('showFullScreenMatchDetails')} />
+                            </div>
 
-                                <div className="mx-2 mt-4 mb-2 p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-white/5">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overlay Zoom</span>
-                                        <span className="text-xs font-black text-[#FF5A09] px-2 py-0.5 bg-orange-500/10 rounded-lg">{Math.round((match.overlayScale || 1) * 100)}%</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <ZoomOut size={14} className="text-slate-400" />
-                                        <input
-                                            type="range" min="0.5" max="1.5" step="0.05"
-                                            value={match.overlayScale || 1}
-                                            onChange={(e) => onUpdateMatch({ overlayScale: parseFloat(e.target.value) })}
-                                            className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-[#FF5A09]"
-                                        />
-                                        <ZoomIn size={14} className="text-slate-400" />
-                                    </div>
+                            {/* Template Selector */}
+                            <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Overlay Theme</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => onUpdateMatch({ overlayTemplate: 'default' })}
+                                        className={clsx(
+                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                            (match.overlayTemplate || 'default') === 'default'
+                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                        )}
+                                    >
+                                        Modern
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onUpdateMatch({ overlayTemplate: 'classic' })}
+                                        className={clsx(
+                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                            match.overlayTemplate === 'classic'
+                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                        )}
+                                    >
+                                        Classic
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onUpdateMatch({ overlayTemplate: 'bwf' })}
+                                        className={clsx(
+                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                            match.overlayTemplate === 'bwf'
+                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                        )}
+                                    >
+                                        BWF Pro
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -6,18 +6,20 @@ interface ResolutionWrapperProps {
     children: ReactNode;
     baseWidth?: number;
     baseHeight?: number;
+    maxScale?: number;
     className?: string;
 }
 
 /**
  * ResolutionWrapper ensures that the overlay is designed for a specific base resolution
- * (defaulting to 1080p) and scales perfectly to fit any browser window/OBS source size
- * while maintaining the correct internal coordinate system.
+ * (defaulting to 1080p) and scales to fit browser windows/OBS sources
+ * while preserving item positions and shrinking naturally when zoomed out.
  */
 export default function ResolutionWrapper({
     children,
     baseWidth = 1920,
     baseHeight = 1080,
+    maxScale = 1,
     className = ""
 }: ResolutionWrapperProps) {
     const [scale, setScale] = useState(1);
@@ -28,15 +30,16 @@ export default function ResolutionWrapper({
         const handleResize = () => {
             const scaleX = window.innerWidth / baseWidth;
             const scaleY = window.innerHeight / baseHeight;
-            // Use the smaller scale to ensure everything fits, or just use X if filling a standard 16:9
-            const newScale = Math.min(scaleX, scaleY);
+            const fitScale = Math.min(scaleX, scaleY);
+            // Cap scale at maxScale (1) so zooming out shrinks the screen like higher resolution
+            const newScale = Math.min(maxScale, fitScale);
             setScale(newScale);
         };
 
         handleResize();
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, [baseWidth, baseHeight]);
+    }, [baseWidth, baseHeight, maxScale]);
 
     if (!isMounted) return null;
 
