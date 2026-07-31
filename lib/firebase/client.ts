@@ -13,8 +13,16 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+if (!firebaseConfig.apiKey) {
+  console.error(
+    "[Firebase Client Error] NEXT_PUBLIC_FIREBASE_API_KEY is not defined. " +
+    "Please make sure your .env file contains valid Firebase configuration and restart your dev server (`npm run dev`)."
+  );
+}
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app); 
+export const storage = getStorage(app);
+ 
