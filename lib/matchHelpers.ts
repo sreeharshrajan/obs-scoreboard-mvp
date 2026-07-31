@@ -1,4 +1,5 @@
-import { MatchState } from "@/types/match";
+import { MatchState, GameResult } from "@/types/match";
+import { getRuleSet } from "@/lib/scoring/rules";
 
 export interface Sponsor {
     id: string;
@@ -34,6 +35,11 @@ export interface MatchDetailsData {
     p2Score: number;
     p1Serving: boolean;
     p2Serving: boolean;
+    p1GamesWon: number;
+    p2GamesWon: number;
+    currentGame: number;
+    totalGames: number;
+    gameHistory: GameResult[];
     tournamentName: string;
     matchCategory: string;
     courtName: string;
@@ -70,6 +76,9 @@ export function getMatchDetails(
         !!match.isSponsorsOverlayActive
     );
 
+    const { currentGame, totalGames, p1GamesWon, p2GamesWon, gameHistory } =
+        getGameStructure(match);
+
     return {
         p1Name,
         p1Name2,
@@ -79,10 +88,41 @@ export function getMatchDetails(
         p2Score,
         p1Serving,
         p2Serving,
+        p1GamesWon,
+        p2GamesWon,
+        currentGame,
+        totalGames,
+        gameHistory,
         tournamentName,
         matchCategory,
         courtName,
         matchType,
         activeSponsor,
+    };
+}
+
+// ── Game Structure Helper (read-only, for display) ──
+
+/**
+ * Derives game structure info from match state.
+ * currentGame is derived from gameHistory length — never stored.
+ * Safe for legacy documents that lack gameHistory or gamesWon fields.
+ */
+export function getGameStructure(match: MatchState): {
+    currentGame: number;
+    totalGames: number;
+    p1GamesWon: number;
+    p2GamesWon: number;
+    gameHistory: GameResult[];
+} {
+    const gameHistory = match.gameHistory ?? [];
+    const rules = getRuleSet(match.sport, match.scoringType);
+
+    return {
+        currentGame: gameHistory.length + 1,
+        totalGames: rules.bestOf,
+        p1GamesWon: match.player1?.gamesWon ?? 0,
+        p2GamesWon: match.player2?.gamesWon ?? 0,
+        gameHistory,
     };
 }

@@ -27,6 +27,7 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
         matchCategory,
         courtName,
         activeSponsor,
+        gameHistory,
     } = getMatchDetails(match, sponsors, currentSponsorIndex);
 
     const formatScore = (score: number) => {
@@ -126,6 +127,21 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                         </div>
                     </div>
                 </div>
+
+                {/* Set History Row */}
+                {gameHistory.length > 0 && (
+                    <div className="flex items-center justify-center gap-4 py-3 px-8 bg-slate-900/80 border-t border-white/10">
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">Sets</span>
+                        {gameHistory.map((g) => (
+                            <span
+                                key={g.gameNumber}
+                                className="px-2.5 py-1 rounded-lg bg-white/5 text-[10px] font-bold text-slate-300 tabular-nums border border-white/5"
+                            >
+                                G{g.gameNumber} {g.player1Score}–{g.player2Score}
+                            </span>
+                        ))}
+                    </div>
+                )}
 
                 {/* Classic Sponsor Footer */}
                 {activeSponsor && (

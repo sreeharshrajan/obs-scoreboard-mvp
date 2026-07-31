@@ -11,6 +11,8 @@ interface PlayerCardProps {
     onScoreChange: (delta: number) => void;
     onToggleServer: () => void;
     matchType: MatchState['matchType'];
+    gamesWon?: number;
+    totalGames?: number;
 }
 
 export default memo(function PlayerCard({
@@ -20,8 +22,11 @@ export default memo(function PlayerCard({
     isCompleted,
     onScoreChange,
     onToggleServer,
-    matchType
+    matchType,
+    gamesWon = 0,
+    totalGames = 3,
 }: PlayerCardProps) {
+    const gamesNeeded = Math.ceil(totalGames / 2);
     return (
         <div className={clsx(
             "w-full h-30 lg:h-[400px] lg:col-span-4 rounded-[2rem] border-2 transition-all duration-500 p-6 lg:p-8 relative overflow-hidden flex flex-row lg:flex-col items-center lg:items-stretch",
@@ -42,6 +47,20 @@ export default memo(function PlayerCard({
                         {teamLabel}
                     </span>
                     {isServing && <div className="lg:hidden w-1.5 h-1.5 bg-[#FF5A09] rounded-full animate-pulse" />}
+                    {/* Games Won Dots */}
+                    <div className="flex items-center gap-1 ml-auto">
+                        {Array.from({ length: gamesNeeded }).map((_, i) => (
+                            <div
+                                key={i}
+                                className={clsx(
+                                    "w-2 h-2 lg:w-2.5 lg:h-2.5 rounded-full transition-all duration-300",
+                                    i < gamesWon
+                                        ? "bg-[#FF5A09] shadow-[0_0_6px_rgba(255,90,9,0.4)]"
+                                        : "bg-slate-200 dark:bg-white/10"
+                                )}
+                            />
+                        ))}
+                    </div>
                 </div>
 
                 <div className="flex flex-col">

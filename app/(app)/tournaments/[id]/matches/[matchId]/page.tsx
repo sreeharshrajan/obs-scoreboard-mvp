@@ -3,7 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { MatchState } from '@/types/match';
+import { MatchState, GameResult } from '@/types/match';
+import { getRuleSet } from '@/lib/scoring/rules';
+import { processScoringPipeline } from '@/lib/scoring/engine';
+import { validateState } from '@/lib/scoring/validation';
+import { getGameStructure } from '@/lib/matchHelpers';
 import { auth } from '@/lib/firebase/client';
 import { User } from 'firebase/auth';
 import { MatchConsoleSkeleton } from "@/components/dashboard/skeletons";
@@ -307,14 +311,38 @@ export default function MatchConsole() {
 
     const handleScore = useCallback((team: 'player1' | 'player2', delta: number) => {
         if (!safeMatch) return;
-        const currentScore = safeMatch[team]?.score || 0;
-        const newScore = Math.max(0, currentScore + delta);
 
-        // Optimistic Update immediately
-        const updates = { [team]: { ...safeMatch[team], score: newScore } };
+        const rules = getRuleSet(safeMatch.sport, safeMatch.scoringType);
+
+        // Validate: don't allow scoring on completed matches
+        const { valid } = validateState(safeMatch, rules);
+        if (!valid) return;
+
+        // Run scoring pipeline (pure — returns new state)
+        const newState = processScoringPipeline(safeMatch, team, delta, rules);
+
+        // Build diff for optimistic update
+        const updates: Partial<MatchState> = {};
+        if (newState.player1.score !== safeMatch.player1.score ||
+            newState.player1.isServing !== safeMatch.player1.isServing ||
+            newState.player1.gamesWon !== (safeMatch.player1.gamesWon ?? 0)) {
+            updates.player1 = newState.player1;
+        }
+        if (newState.player2.score !== safeMatch.player2.score ||
+            newState.player2.isServing !== safeMatch.player2.isServing ||
+            newState.player2.gamesWon !== (safeMatch.player2.gamesWon ?? 0)) {
+            updates.player2 = newState.player2;
+        }
+        if (JSON.stringify(newState.gameHistory ?? []) !== JSON.stringify(safeMatch.gameHistory ?? [])) {
+            updates.gameHistory = newState.gameHistory;
+        }
+        if (newState.status !== safeMatch.status) {
+            updates.status = newState.status;
+        }
+
+        if (Object.keys(updates).length === 0) return;
+
         optimisticUpdate(updates);
-
-        // Debounced Server Update
         debouncedMutate(updates);
     }, [safeMatch, optimisticUpdate, debouncedMutate]);
 
@@ -383,6 +411,15 @@ export default function MatchConsole() {
         });
     }, [safeMatch, mutation]);
 
+    const handleResetGame = useCallback(() => {
+        if (!safeMatch) return;
+        if (!confirm('Reset current game scores to 0-0?')) return;
+        mutation.mutate({
+            player1: { ...safeMatch.player1, score: 0 },
+            player2: { ...safeMatch.player2, score: 0 },
+        });
+    }, [safeMatch, mutation]);
+
     /* 
     // Reset Not used in UI currently but kept for reference or future use
     const resetMatch = () => {
@@ -407,6 +444,8 @@ export default function MatchConsole() {
     }
 
     const isCompleted = safeMatch.status === 'completed';
+    const { currentGame, totalGames, p1GamesWon, p2GamesWon, gameHistory: matchGameHistory } =
+        getGameStructure(safeMatch);
 
     return (
         <div
@@ -435,6 +474,8 @@ export default function MatchConsole() {
                     onScoreChange={(delta) => handleScore('player1', delta)}
                     onToggleServer={() => toggleServer('player1')}
                     matchType={safeMatch.matchType}
+                    gamesWon={p1GamesWon}
+                    totalGames={totalGames}
                 />
 
                 {/* Center Control Column */}
@@ -449,12 +490,17 @@ export default function MatchConsole() {
                         matchStatus={safeMatch.status}
                         isBreak={safeMatch.status === 'break'}
                         onToggleBreak={handleToggleBreak}
+                        currentGame={currentGame}
+                        totalGames={totalGames}
+                        gameHistory={matchGameHistory}
                     />
 
                     <QuickActions
                         onSwap={swapSides}
                         onEndMatch={handleEndMatch}
+                        onResetGame={handleResetGame}
                         isCompleted={isCompleted}
+                        currentGame={currentGame}
                     />
                 </div>
 
@@ -467,6 +513,8 @@ export default function MatchConsole() {
                     onScoreChange={(delta) => handleScore('player2', delta)}
                     onToggleServer={() => toggleServer('player2')}
                     matchType={safeMatch.matchType}
+                    gamesWon={p2GamesWon}
+                    totalGames={totalGames}
                 />
 
             </div>

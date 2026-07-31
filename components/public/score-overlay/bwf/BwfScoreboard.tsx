@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity } from "lucide-react";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import { getGameStructure } from "@/lib/matchHelpers";
 import Image from "next/image";
 
 interface BwfScoreboardProps {
@@ -41,6 +42,9 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
     // BWF style green gradient for the scores
     const scoreBgGradient = "bg-gradient-to-b from-[#56ba87] via-[#3fa675] to-[#287e54]";
 
+    const { p1GamesWon, p2GamesWon, totalGames } = getGameStructure(match);
+    const gamesNeeded = Math.ceil(totalGames / 2);
+
     return (
         <div className="absolute top-12 left-12 flex flex-row items-stretch shadow-2xl rounded-lg overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700 font-sans border border-white/20">
             {/* Logo - Vertically Centered Across Entire Scoreboard */}
@@ -68,6 +72,21 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                         )}
                     </div>
 
+                    {/* Games Won Dots */}
+                    {totalGames > 1 && (
+                        <div className="flex items-center gap-1 px-2 border-l border-slate-300">
+                            {Array.from({ length: gamesNeeded }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={clsx(
+                                        "w-1.5 h-1.5 rounded-full",
+                                        i < p1GamesWon ? "bg-[#3aa372]" : "bg-slate-400/30"
+                                    )}
+                                />
+                            ))}
+                        </div>
+                    )}
+
                     {/* Score */}
                     <div className={clsx("w-14 flex items-center justify-center border-l border-black/10 shadow-inner", scoreBgGradient)}>
                         <span className="text-2xl font-medium text-white drop-shadow-sm">{p1Score}</span>
@@ -88,6 +107,21 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                             </div>
                         )}
                     </div>
+
+                    {/* Games Won Dots */}
+                    {totalGames > 1 && (
+                        <div className="flex items-center gap-1 px-2 border-l border-slate-300">
+                            {Array.from({ length: gamesNeeded }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={clsx(
+                                        "w-1.5 h-1.5 rounded-full",
+                                        i < p2GamesWon ? "bg-[#3aa372]" : "bg-slate-400/30"
+                                    )}
+                                />
+                            ))}
+                        </div>
+                    )}
 
                     {/* Score */}
                     <div className={clsx("w-14 flex items-center justify-center border-l border-black/10 border-t border-white/20 shadow-inner", scoreBgGradient)}>

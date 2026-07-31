@@ -1,7 +1,7 @@
 import { Clock, Pause, Play, Coffee, Info, MapPin, Hash, Trophy } from 'lucide-react';
 import clsx from 'clsx';
 import { memo } from 'react';
-import { MatchState } from '@/types/match';
+import { MatchState, GameResult } from '@/types/match';
 
 interface MatchTimerProps {
     matchDetails: MatchState;
@@ -13,6 +13,9 @@ interface MatchTimerProps {
     matchStatus: string;
     isBreak: boolean;
     onToggleBreak: () => void;
+    currentGame?: number;
+    totalGames?: number;
+    gameHistory?: GameResult[];
 }
 
 export default memo(function MatchTimer({
@@ -24,7 +27,10 @@ export default memo(function MatchTimer({
     formatTime,
     matchStatus,
     isBreak,
-    onToggleBreak
+    onToggleBreak,
+    currentGame = 1,
+    totalGames = 3,
+    gameHistory = [],
 }: MatchTimerProps) {
     return (
         <div className={clsx(
@@ -44,6 +50,27 @@ export default memo(function MatchTimer({
                     <Trophy size={14} />
                     <div className="h-[1px] w-8 bg-current opacity-20" />
                 </div>
+                {/* Game Indicator */}
+                {totalGames > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                            Game {currentGame > totalGames ? totalGames : currentGame} of {totalGames}
+                        </span>
+                    </div>
+                )}
+                {/* Set History Chips */}
+                {gameHistory.length > 0 && (
+                    <div className="flex items-center justify-center gap-2 mt-1.5">
+                        {gameHistory.map((g) => (
+                            <span
+                                key={g.gameNumber}
+                                className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-white/5 text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums"
+                            >
+                                G{g.gameNumber} {g.player1Score}–{g.player2Score}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Match Metadata Grid */}

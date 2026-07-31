@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity, Clock } from "lucide-react";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import { getGameStructure } from "@/lib/matchHelpers";
 import Image from "next/image";
 
 interface ClassicScoreboardProps {
@@ -22,6 +23,9 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
     const p2Serving = match.player2?.isServing ?? false;
 
     const isLive = match.status === "live" || match.isTimerRunning;
+
+    const { p1GamesWon, p2GamesWon, totalGames, currentGame } = getGameStructure(match);
+    const gamesNeeded = Math.ceil(totalGames / 2);
 
     const formatTime = (seconds: number) => {
         const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
@@ -67,9 +71,25 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                             {p1Name}
                         </span>
                     </div>
-                    {/* Score Pill */}
-                    <div className="bg-white text-slate-900 px-3.5 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[48px]">
-                        <span className="text-2xl font-black tabular-nums">{formatScore(p1Score)}</span>
+                    <div className="flex items-center gap-2">
+                        {/* Games Won Dots */}
+                        {totalGames > 1 && (
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: gamesNeeded }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={clsx(
+                                            "w-1.5 h-1.5 rounded-full",
+                                            i < p1GamesWon ? "bg-red-500" : "bg-white/20"
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        {/* Score Pill */}
+                        <div className="bg-white text-slate-900 px-3.5 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[48px]">
+                            <span className="text-2xl font-black tabular-nums">{formatScore(p1Score)}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -87,9 +107,25 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                             {p2Name}
                         </span>
                     </div>
-                    {/* Score Pill */}
-                    <div className="bg-white text-slate-900 px-3.5 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[48px]">
-                        <span className="text-2xl font-black tabular-nums">{formatScore(p2Score)}</span>
+                    <div className="flex items-center gap-2">
+                        {/* Games Won Dots */}
+                        {totalGames > 1 && (
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: gamesNeeded }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={clsx(
+                                            "w-1.5 h-1.5 rounded-full",
+                                            i < p2GamesWon ? "bg-red-500" : "bg-white/20"
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        {/* Score Pill */}
+                        <div className="bg-white text-slate-900 px-3.5 py-1 rounded-xl shadow-md flex items-center justify-center min-w-[48px]">
+                            <span className="text-2xl font-black tabular-nums">{formatScore(p2Score)}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -98,6 +134,9 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
             <div className="flex flex-col items-center justify-center px-6 bg-gradient-to-b from-red-600 to-red-700 text-white rounded-r-2xl border-y border-r border-red-500/30 min-w-[100px]">
                 <Clock size={16} className="text-red-200 mb-1" />
                 <span className="text-xl font-mono font-black tracking-tight text-white">{formatTime(elapsedDisplay)}</span>
+                {totalGames > 1 && (
+                    <span className="text-[9px] font-black uppercase text-red-200/70 mt-1 tracking-widest">G{currentGame > totalGames ? totalGames : currentGame}</span>
+                )}
             </div>
         </div>
     );

@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity, Clock } from "lucide-react";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import { getGameStructure } from "@/lib/matchHelpers";
 import Image from "next/image";
 
 interface ScoreboardProps {
@@ -23,6 +24,9 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     const p2Serving = match.player2?.isServing ?? false;
 
     const isLive = match.status === "live" || match.isTimerRunning;
+
+    const { p1GamesWon, p2GamesWon, totalGames, currentGame } = getGameStructure(match);
+    const gamesNeeded = Math.ceil(totalGames / 2);
 
     const formatTime = (seconds: number) => {
         const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
@@ -64,9 +68,27 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
-                        {p1Score}
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                        {/* Games Won Dots */}
+                        {totalGames > 1 && (
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: gamesNeeded }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={clsx(
+                                            "w-2 h-2 rounded-full",
+                                            i < p1GamesWon
+                                                ? "bg-[#FF5A09] shadow-[0_0_6px_rgba(255,90,9,0.5)]"
+                                                : "bg-white/15"
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
+                            {p1Score}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Player 2 */}
@@ -85,9 +107,27 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
-                        {p2Score}
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                        {/* Games Won Dots */}
+                        {totalGames > 1 && (
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: gamesNeeded }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={clsx(
+                                            "w-2 h-2 rounded-full",
+                                            i < p2GamesWon
+                                                ? "bg-[#FF5A09] shadow-[0_0_6px_rgba(255,90,9,0.5)]"
+                                                : "bg-white/15"
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
+                            {p2Score}
+                        </span>
+                    </div>
                 </div>
             </div>
 
