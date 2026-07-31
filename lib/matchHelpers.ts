@@ -132,10 +132,14 @@ export function getGameStructure(match: MatchState): {
 } {
     const gameHistory = match.gameHistory ?? [];
     const rules = getRuleSet(match.sport, match.scoringType);
+    const totalGames = rules.bestOf;
+
+    const rawCurrentGame = gameHistory.length + 1;
+    const currentGame = Math.min(rawCurrentGame, totalGames);
 
     return {
-        currentGame: gameHistory.length + 1,
-        totalGames: rules.bestOf,
+        currentGame,
+        totalGames,
         p1GamesWon: match.player1?.gamesWon ?? 0,
         p2GamesWon: match.player2?.gamesWon ?? 0,
         gameHistory,

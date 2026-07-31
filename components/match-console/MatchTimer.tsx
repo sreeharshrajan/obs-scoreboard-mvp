@@ -8,6 +8,7 @@ interface MatchTimerProps {
     elapsedDisplay: number;
     isTimerRunning: boolean;
     isCompleted: boolean;
+    isMatchWon?: boolean;
     onToggleTimer: () => void;
     formatTime: (s: number) => string;
     matchStatus: string;
@@ -23,6 +24,7 @@ export default memo(function MatchTimer({
     elapsedDisplay,
     isTimerRunning,
     isCompleted,
+    isMatchWon = false,
     onToggleTimer,
     formatTime,
     matchStatus,
@@ -75,7 +77,7 @@ export default memo(function MatchTimer({
 
             {/* Match Metadata Grid */}
             {isCompleted && (
-                < div className="grid grid-cols-2 gap-x-8 gap-y-2 my-4">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2 my-4">
                     <div className="flex items-center gap-2">
                         <MapPin size={12} className="text-slate-400" />
                         <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 capitalize">
@@ -109,20 +111,24 @@ export default memo(function MatchTimer({
                     "flex items-center gap-2 mb-2 px-4 py-1 rounded-full transition-colors",
                     isCompleted
                         ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold"
+                        : isMatchWon
+                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
                         : isBreak
                         ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
                         : isTimerRunning
                         ? "bg-emerald-500/10 text-emerald-500"
                         : "bg-slate-100 dark:bg-white/5 text-slate-500"
                 )}>
-                    {isCompleted ? (
-                        <Trophy size={14} className="text-emerald-500" />
+                    {isCompleted || isMatchWon ? (
+                        <Trophy size={14} className={isCompleted ? "text-emerald-500" : "text-amber-500"} />
                     ) : (
                         <Clock size={14} className={clsx(isTimerRunning && "animate-pulse")} />
                     )}
                     <span className="text-[10px] font-black uppercase tracking-widest">
                         {isCompleted
                             ? "Match Completed"
+                            : isMatchWon
+                            ? "Match Won (Pending Confirmation)"
                             : isBreak
                             ? "Break Time"
                             : isTimerRunning

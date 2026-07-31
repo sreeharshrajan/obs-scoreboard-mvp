@@ -23,6 +23,41 @@ export interface ScoringContext {
 export function applyScore(ctx: ScoringContext): ScoringContext {
     const { state, team, delta } = ctx;
     const currentScore = state[team]?.score ?? 0;
+
+    // Handle score reduction (delta < 0) immediately after a game was archived into gameHistory
+    if (delta < 0 && currentScore === 0 && (state.gameHistory?.length ?? 0) > 0) {
+        const gameHistory = state.gameHistory ?? [];
+        const lastGame = gameHistory[gameHistory.length - 1];
+        const newHistory = gameHistory.slice(0, -1);
+        const winner = lastGame.winner;
+
+        const p1GamesWon = Math.max(0, (state.player1?.gamesWon ?? 0) - (winner === 'player1' ? 1 : 0));
+        const p2GamesWon = Math.max(0, (state.player2?.gamesWon ?? 0) - (winner === 'player2' ? 1 : 0));
+
+        const restoredP1 = team === 'player1' ? Math.max(0, lastGame.player1Score + delta) : lastGame.player1Score;
+        const restoredP2 = team === 'player2' ? Math.max(0, lastGame.player2Score + delta) : lastGame.player2Score;
+
+        return {
+            ...ctx,
+            state: {
+                ...state,
+                isTimerRunning: false,
+                timerStartTime: null,
+                player1: {
+                    ...state.player1,
+                    score: restoredP1,
+                    gamesWon: p1GamesWon,
+                },
+                player2: {
+                    ...state.player2,
+                    score: restoredP2,
+                    gamesWon: p2GamesWon,
+                },
+                gameHistory: newHistory,
+            },
+        };
+    }
+
     const newScore = Math.max(0, currentScore + delta);
 
     return {
@@ -198,11 +233,9 @@ export function applyMatchRule(ctx: ScoringContext): ScoringContext {
         ...ctx,
         state: {
             ...state,
-            status: 'completed',
             isTimerRunning: false,
             timerStartTime: null,
             timerElapsed: (state.timerElapsed || 0) + additionalSeconds,
-            completedAt: now,
         },
     };
 }
@@ -336,6 +369,51 @@ export function toggleBreakState(state: MatchState): MatchState {
     return {
         ...state,
         status: newStatus,
+        version: (state.version ?? 0) + 1,
+    };
+}
+
+/**
+ * Undoes the last finished game from history, restoring scores and gamesWon count.
+ */
+export function undoLastGame(state: MatchState): MatchState {
+    const gameHistory = state.gameHistory ?? [];
+    if (gameHistory.length === 0) {
+        return {
+            ...state,
+            player1: { ...state.player1, score: 0 },
+            player2: { ...state.player2, score: 0 },
+            version: (state.version ?? 0) + 1,
+        };
+    }
+
+    const lastGame = gameHistory[gameHistory.length - 1];
+    const newHistory = gameHistory.slice(0, -1);
+    const winner = lastGame.winner;
+
+    const p1GamesWon = Math.max(0, (state.player1?.gamesWon ?? 0) - (winner === 'player1' ? 1 : 0));
+    const p2GamesWon = Math.max(0, (state.player2?.gamesWon ?? 0) - (winner === 'player2' ? 1 : 0));
+
+    // Restore rally scores to point before winning point
+    const restoredP1Score = winner === 'player1' ? Math.max(0, lastGame.player1Score - 1) : lastGame.player1Score;
+    const restoredP2Score = winner === 'player2' ? Math.max(0, lastGame.player2Score - 1) : lastGame.player2Score;
+
+    return {
+        ...state,
+        status: state.status === 'completed' ? 'live' : state.status,
+        isTimerRunning: false,
+        timerStartTime: null,
+        player1: {
+            ...state.player1,
+            score: restoredP1Score,
+            gamesWon: p1GamesWon,
+        },
+        player2: {
+            ...state.player2,
+            score: restoredP2Score,
+            gamesWon: p2GamesWon,
+        },
+        gameHistory: newHistory,
         version: (state.version ?? 0) + 1,
     };
 }

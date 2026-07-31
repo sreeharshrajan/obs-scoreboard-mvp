@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MatchState } from '@/types/match';
 import { getRuleSet } from './rules';
-import { processScoringPipeline, resetMatchState, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState } from './engine';
+import { processScoringPipeline, resetMatchState, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, undoLastGame } from './engine';
 import { validateState } from './validation';
 
 function createInitialState(): MatchState {
@@ -91,7 +91,7 @@ describe('Badminton Scoring Engine', () => {
         });
     });
 
-    it('Scenario 5: GamesWon = 1 -> Win second game -> status = completed', () => {
+    it('Scenario 5: GamesWon = 1 -> Win second game -> auto-pauses clock for Pending Confirmation', () => {
         let state = createInitialState();
         state.isTimerRunning = true;
         state.timerStartTime = Date.now() - 60000;
@@ -106,10 +106,21 @@ describe('Badminton Scoring Engine', () => {
 
         expect(nextState.player1.gamesWon).toBe(2);
         expect(nextState.gameHistory?.length).toBe(2);
-        expect(nextState.status).toBe('completed');
-        expect(nextState.completedAt).toBeDefined();
         expect(nextState.isTimerRunning).toBe(false);
         expect(nextState.timerStartTime).toBeNull();
+        expect(nextState.status).toBe('live'); // Pending operator confirmation
+
+        // Operator confirms -> completeMatch
+        const finalizedState = completeMatch(nextState);
+        expect(finalizedState.status).toBe('completed');
+        expect(finalizedState.completedAt).toBeDefined();
+
+        // Operator undoes last point -> undoLastGame
+        const undoneState = undoLastGame(nextState);
+        expect(undoneState.player1.gamesWon).toBe(1);
+        expect(undoneState.gameHistory?.length).toBe(1);
+        expect(undoneState.player1.score).toBe(20);
+        expect(undoneState.player2.score).toBe(15);
     });
 
     it('Scenario 6: Game 1 win -> Game 2 transition & event sequencing', () => {
@@ -213,5 +224,28 @@ describe('Badminton Scoring Engine', () => {
         const pausedState = pauseMatchTimer(startedState);
         expect(pausedState.isTimerRunning).toBe(false);
         expect(pausedState.timerElapsed).toBeGreaterThanOrEqual(100);
+    });
+
+    it('Scenario 12: minus button (-1) on winning team immediately after match point reduces score back to 20-10', () => {
+        let state = createInitialState();
+        state.player1.gamesWon = 1;
+        state.player1.score = 20;
+        state.player2.score = 10;
+        state.gameHistory = [
+            { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' }
+        ];
+
+        // Player 1 scores point 21 -> Match Point reached
+        const matchWonState = processScoringPipeline(state, 'player1', 1, rules);
+        expect(matchWonState.player1.gamesWon).toBe(2);
+        expect(matchWonState.gameHistory?.length).toBe(2);
+        expect(matchWonState.player1.score).toBe(0);
+
+        // Operator clicks (-) on Player 1's card (-1 delta)
+        const correctedState = processScoringPipeline(matchWonState, 'player1', -1, rules);
+        expect(correctedState.player1.gamesWon).toBe(1);
+        expect(correctedState.gameHistory?.length).toBe(1);
+        expect(correctedState.player1.score).toBe(20);
+        expect(correctedState.player2.score).toBe(10);
     });
 });
