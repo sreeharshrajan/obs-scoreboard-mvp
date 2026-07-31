@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity } from "lucide-react";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import { getGameStructure, getPerGameScores } from "@/lib/matchHelpers";
 import Image from "next/image";
 
 interface BwfScoreboardProps {
@@ -33,26 +34,26 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
     const p2Name = match.player2?.name2
         ? `${match.player2.name} / ${match.player2.name2}`
         : match.player2?.name || "Player 2";
-    const p1Score = match.player1?.score || 0;
-    const p2Score = match.player2?.score || 0;
-    const p1Serving = match.player1?.isServing ?? false;
-    const p2Serving = match.player2?.isServing ?? false;
 
-    // BWF style green gradient for the scores
+    const currentServer = match.currentServer ?? (match.player1?.isServing ? 'player1' : 'player2');
+    const p1Serving = currentServer === 'player1';
+    const p2Serving = currentServer === 'player2';
+
+    // BWF style green gradient for the active score
     const scoreBgGradient = "bg-gradient-to-b from-[#56ba87] via-[#3fa675] to-[#287e54]";
+
+    const gameScores = getPerGameScores(match);
 
     return (
         <div className="absolute top-12 left-12 flex flex-row items-stretch shadow-2xl rounded-lg overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700 font-sans border border-white/20">
             {/* Logo - Vertically Centered Across Entire Scoreboard */}
-            <div className="w-14 bg-white flex items-center justify-center p-2 border-r border-slate-300 self-stretch">
-                {match.tournamentLogo ? (
+            {match.showTournamentLogo !== false && match.tournamentLogo && (
+                <div className="w-14 bg-white flex items-center justify-center p-2 border-r border-slate-300 self-stretch">
                     <div className="relative w-10 h-10">
                         <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain" />
                     </div>
-                ) : (
-                    <Activity size={24} className="text-slate-400" />
-                )}
-            </div>
+                </div>
+            )}
 
             <div className="flex flex-col flex-1 relative">
                 {/* Player 1 Row */}
@@ -70,9 +71,25 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                         )}
                     </div>
 
-                    {/* Score */}
-                    <div className={clsx("w-14 flex items-center justify-center border-l border-black/10 shadow-inner", scoreBgGradient)}>
-                        <span className="text-2xl font-medium text-white drop-shadow-sm">{p1Score}</span>
+                    {/* Per-game Score Columns */}
+                    <div className="flex items-stretch">
+                        {gameScores.map((box) => (
+                            <div
+                                key={box.gameNumber}
+                                className={clsx(
+                                    "w-12 flex items-center justify-center border-l border-black/10 transition-all",
+                                    box.isCurrent
+                                        ? scoreBgGradient
+                                        : box.isCompleted
+                                        ? "bg-slate-300 text-slate-900 font-bold"
+                                        : "bg-slate-200 text-slate-400"
+                                )}
+                            >
+                                <span className={clsx("text-2xl font-medium", box.isCurrent ? "text-white drop-shadow-sm" : "text-slate-800")}>
+                                    {box.p1Score}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -91,16 +108,37 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                         )}
                     </div>
 
-                    {/* Score */}
-                    <div className={clsx("w-14 flex items-center justify-center border-l border-black/10 border-t border-white/20 shadow-inner", scoreBgGradient)}>
-                        <span className="text-2xl font-medium text-white drop-shadow-sm">{p2Score}</span>
+                    {/* Per-game Score Columns */}
+                    <div className="flex items-stretch">
+                        {gameScores.map((box) => (
+                            <div
+                                key={box.gameNumber}
+                                className={clsx(
+                                    "w-12 flex items-center justify-center border-l border-black/10 transition-all",
+                                    box.isCurrent
+                                        ? scoreBgGradient
+                                        : box.isCompleted
+                                        ? "bg-slate-300 text-slate-900 font-bold"
+                                        : "bg-slate-200 text-slate-400"
+                                )}
+                            >
+                                <span className={clsx("text-2xl font-medium", box.isCurrent ? "text-white drop-shadow-sm" : "text-slate-800")}>
+                                    {box.p2Score}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Match Status / Break */}
+                {/* Match Status / Break / Completed */}
                 {match.status === 'break' && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
                         <span className="text-lg font-medium uppercase text-white animate-pulse tracking-widest">BREAK</span>
+                    </div>
+                )}
+                {match.status === 'completed' && (
+                    <div className="absolute inset-0 bg-slate-950/85 flex items-center justify-center backdrop-blur-sm border border-emerald-500/50">
+                        <span className="text-lg font-black uppercase text-emerald-400 tracking-widest">MATCH COMPLETED</span>
                     </div>
                 )}
             </div>

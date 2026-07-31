@@ -75,8 +75,9 @@ export default function NewMatch({ params }: { params: Promise<{ id: string }> }
                 },
                 body: JSON.stringify({
                     ...values,
-                    player1: { ...values.player1, score: 0, isServing: true },
-                    player2: { ...values.player2, score: 0, isServing: false },
+                    player1: { ...values.player1, score: 0, isServing: true, gamesWon: 0 },
+                    player2: { ...values.player2, score: 0, isServing: false, gamesWon: 0 },
+                    gameHistory: [],
                     status: "scheduled",
                     isTimerRunning: false,
                     timerElapsed: 0,

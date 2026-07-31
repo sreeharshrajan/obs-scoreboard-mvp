@@ -1,32 +1,31 @@
 import React from 'react';
-import clsx from 'clsx';
 import { MatchState } from "@/types/match";
 import Image from "next/image";
 import { Trophy } from 'lucide-react';
+import { getMatchDetails, Sponsor } from '@/lib/matchHelpers';
+import clsx from 'clsx';
 
 interface FullScreenMatchInfoProps {
     match: MatchState;
-    sponsors: { id: string, advertUrl: string, name: string }[];
+    sponsors: Sponsor[];
     currentSponsorIndex: number;
 }
 
 export default function FullScreenMatchInfo({ match, sponsors, currentSponsorIndex }: FullScreenMatchInfoProps) {
     if (!match.showFullScreenMatchDetails) return null;
 
-    const p1Name = match.player1?.name || "Player 1";
-    const p1Name2 = match.player1?.name2;
-    const p2Name = match.player2?.name || "Player 2";
-    const p2Name2 = match.player2?.name2;
-    const p1Score = match.player1?.score || 0;
-    const p2Score = match.player2?.score || 0;
-
-    const tournamentName = match.tournamentName || "TOURNAMENT";
-    const matchCategory = match.matchCategory || match.category || "MATCH";
-    const courtName = match.court || "COURT 1";
-    const matchType = match.matchType || match.scoringType;
-
-    const showSponsor = sponsors && sponsors.length > 0 && match.isSponsorsOverlayActive;
-    const activeSponsor = showSponsor ? sponsors[currentSponsorIndex] : null;
+    const {
+        p1Name,
+        p1Name2,
+        p2Name,
+        p2Name2,
+        tournamentName,
+        matchCategory,
+        courtName,
+        matchType,
+        activeSponsor,
+        gameScores,
+    } = getMatchDetails(match, sponsors, currentSponsorIndex);
 
     return (
         <div className="absolute inset-x-0 bottom-16 flex justify-center z-30 pointer-events-none font-sans px-12 animate-in slide-in-from-bottom-12 fade-in duration-700">
@@ -34,13 +33,9 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                 {/* Modern Header Bar */}
                 <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-white/5 via-white/10 to-white/5 border-b border-white/10">
                     <div className="flex items-center gap-4">
-                        {match.showTournamentLogo !== false && match.tournamentLogo ? (
+                        {match.showTournamentLogo !== false && match.tournamentLogo && (
                             <div className="relative w-12 h-12">
                                 <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain" />
-                            </div>
-                        ) : (
-                            <div className="w-12 h-12 rounded-2xl bg-[#FF5A09]/20 border border-[#FF5A09]/40 flex items-center justify-center text-[#FF5A09]">
-                                <Trophy size={24} />
                             </div>
                         )}
                         <div className="flex flex-col">
@@ -50,6 +45,11 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {match.status === 'completed' && (
+                            <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-emerald-500/20">
+                                COMPLETED
+                            </span>
+                        )}
                         <span className="px-3.5 py-1.5 rounded-xl bg-white/10 text-xs font-black uppercase tracking-wider text-slate-300 border border-white/10">
                             {courtName}
                         </span>
@@ -78,8 +78,23 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center justify-center min-w-[70px] h-20 rounded-2xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] px-4 shadow-[0_0_20px_rgba(255,90,9,0.35)] border border-orange-400/30">
-                            <span className="text-4xl font-black tabular-nums text-white drop-shadow-md">{p1Score}</span>
+                        <div className="flex items-center gap-2.5">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "min-w-[64px] h-20 rounded-2xl flex flex-col items-center justify-center px-3 shadow-lg border transition-all",
+                                        box.isCurrent
+                                            ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
+                                            : box.p1Winner
+                                            ? "bg-white/15 border-white/20"
+                                            : "bg-white/5 border-white/5 opacity-50"
+                                    )}
+                                >
+                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p1Score}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -90,8 +105,23 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
 
                     {/* Player 2 Side */}
                     <div className="flex-1 flex items-center justify-between px-10 bg-gradient-to-bl from-white/5 to-transparent">
-                        <div className="flex items-center justify-center min-w-[70px] h-20 rounded-2xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] px-4 shadow-[0_0_20px_rgba(255,90,9,0.35)] border border-orange-400/30">
-                            <span className="text-4xl font-black tabular-nums text-white drop-shadow-md">{p2Score}</span>
+                        <div className="flex items-center gap-2.5">
+                            {gameScores.map((box) => (
+                                <div
+                                    key={box.gameNumber}
+                                    className={clsx(
+                                        "min-w-[64px] h-20 rounded-2xl flex flex-col items-center justify-center px-3 shadow-lg border transition-all",
+                                        box.isCurrent
+                                            ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
+                                            : box.p2Winner
+                                            ? "bg-white/15 border-white/20"
+                                            : "bg-white/5 border-white/5 opacity-50"
+                                    )}
+                                >
+                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p2Score}</span>
+                                </div>
+                            ))}
                         </div>
                         <div className="flex flex-col items-end justify-center pl-4 text-right">
                             <span className="text-3xl font-black text-white uppercase tracking-tight line-clamp-1">

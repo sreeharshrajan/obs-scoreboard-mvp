@@ -1,9 +1,10 @@
 import React from 'react';
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import { getActiveSponsor, Sponsor } from '@/lib/matchHelpers';
 
 interface SponsorTicklerProps {
-    sponsors: { id: string, advertUrl: string, name: string }[];
+    sponsors: Sponsor[];
     currentSponsorIndex: number;
     match: MatchState;
 }
@@ -27,7 +28,7 @@ export default function SponsorTickler({ sponsors, currentSponsorIndex, match }:
                 ? "h-36 max-w-[440px]"
                 : "h-20 max-w-[240px]"; // default 'md'
 
-    const currentSponsor = sponsors[currentSponsorIndex];
+    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, match.isSponsorsOverlayActive);
 
     return (
         <div className={clsx(

@@ -1,4 +1,4 @@
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Trophy } from 'lucide-react';
 import clsx from 'clsx';
 import { PlayerState, MatchState } from '@/types/match';
 import { memo } from 'react';
@@ -11,6 +11,9 @@ interface PlayerCardProps {
     onScoreChange: (delta: number) => void;
     onToggleServer: () => void;
     matchType: MatchState['matchType'];
+    gamesWon?: number;
+    totalGames?: number;
+    lastGameScore?: number;
 }
 
 export default memo(function PlayerCard({
@@ -20,19 +23,38 @@ export default memo(function PlayerCard({
     isCompleted,
     onScoreChange,
     onToggleServer,
-    matchType
+    matchType,
+    gamesWon = 0,
+    totalGames = 3,
+    lastGameScore,
 }: PlayerCardProps) {
+    const gamesNeeded = Math.ceil(totalGames / 2);
+    const isWinner = gamesWon >= gamesNeeded;
+    const isFinished = isCompleted || isWinner;
+
+    const displayScore = (isFinished || (player.score === 0 && lastGameScore !== undefined))
+        ? (lastGameScore ?? player.score)
+        : player.score;
+
     return (
         <div className={clsx(
             "w-full h-30 lg:h-[400px] lg:col-span-4 rounded-[2rem] border-2 transition-all duration-500 p-6 lg:p-8 relative overflow-hidden flex flex-row lg:flex-col items-center lg:items-stretch",
-            isServing
+            isWinner
+                ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500 shadow-2xl shadow-amber-500/10"
+                : isServing && !isFinished
                 ? "bg-white dark:bg-[#252525] border-[#FF5A09] shadow-2xl shadow-[#FF5A09]/5"
                 : "bg-slate-50/50 dark:bg-white/[0.02] border-transparent"
         )}>
-            {isServing && (
+            {isServing && !isFinished && (
                 <div className="hidden lg:flex absolute top-6 right-6 items-center gap-2 bg-[#FF5A09] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest z-20 animate-in fade-in zoom-in">
                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                     Serving
+                </div>
+            )}
+            {isWinner && (
+                <div className="absolute top-6 right-6 flex items-center gap-1.5 bg-amber-500 text-slate-950 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest z-20 shadow-md">
+                    <Trophy size={12} className="text-slate-950" />
+                    Winner
                 </div>
             )}
 
@@ -41,7 +63,13 @@ export default memo(function PlayerCard({
                     <span className="text-[10px] lg:text-xs font-black text-[#FF5A09] uppercase tracking-[0.2em] block">
                         {teamLabel}
                     </span>
-                    {isServing && <div className="lg:hidden w-1.5 h-1.5 bg-[#FF5A09] rounded-full animate-pulse" />}
+                    {isServing && !isFinished && <div className="lg:hidden w-1.5 h-1.5 bg-[#FF5A09] rounded-full animate-pulse" />}
+                    {/* Games Won Badge */}
+                    <div className="flex items-center gap-1.5 ml-auto">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                            Sets: {gamesWon}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="flex flex-col">
@@ -55,7 +83,7 @@ export default memo(function PlayerCard({
                     )}
                 </div>
 
-                {!isCompleted && (
+                {!isFinished && (
                     <button 
                         onClick={onToggleServer}
                         className={clsx(
@@ -70,29 +98,33 @@ export default memo(function PlayerCard({
 
             <div className="flex flex-row lg:flex-col items-center justify-center gap-4 lg:gap-2 lg:flex-1">
                 <span className="text-5xl lg:text-8xl lg:mb-5 leading-none font-instrument font-light tracking-tighter text-slate-900 dark:text-white tabular-nums">
-                    {player.score}
+                    {displayScore}
                 </span>
 
                 {!isCompleted && (
                     <div className="flex items-center gap-2 lg:gap-4">
                         <button 
                             onClick={() => onScoreChange(-1)} 
-                            className="w-12 h-12 rounded-xl lg:rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:bg-white dark:hover:bg-white/5 transition-all"
+                            className="w-12 h-12 rounded-xl lg:rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer active:scale-95"
+                            title="Reduce score / Undo point"
                         >
                             <Minus size={20} />
                         </button>
                         
-                        <button 
-                            onClick={() => onScoreChange(1)} 
-                            className="w-12 h-12 lg:w-20 lg:h-20 rounded-xl lg:rounded-[2rem] bg-[#FF5A09] text-white shadow-lg shadow-[#FF5A09]/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
-                        >
-                            <Plus size={24} className="lg:w-8 lg:h-8" />
-                        </button>
+                        {!isWinner && (
+                            <button 
+                                onClick={() => onScoreChange(1)} 
+                                className="w-12 h-12 lg:w-20 lg:h-20 rounded-xl lg:rounded-[2rem] bg-[#FF5A09] text-white shadow-lg shadow-[#FF5A09]/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                                title="Add point"
+                            >
+                                <Plus size={24} className="lg:w-8 lg:h-8" />
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
 
-            {!isCompleted && (
+            {!isFinished && (
                 <button
                     onClick={onToggleServer}
                     className={clsx(

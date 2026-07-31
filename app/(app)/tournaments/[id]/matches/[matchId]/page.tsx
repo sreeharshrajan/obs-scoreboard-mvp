@@ -3,11 +3,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { MatchState } from '@/types/match';
+import { MatchState, GameResult } from '@/types/match';
+import { getRuleSet } from '@/lib/scoring/rules';
+import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, undoLastGame } from '@/lib/scoring/engine';
+import { validateState } from '@/lib/scoring/validation';
+import { getGameStructure } from '@/lib/matchHelpers';
 import { auth } from '@/lib/firebase/client';
 import { User } from 'firebase/auth';
 import { MatchConsoleSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
+import { toast } from "sonner";
 
 // Components
 import ConsoleHeader from '@/components/match-console/ConsoleHeader';
@@ -191,6 +196,7 @@ export default function MatchConsole() {
             if (context?.previous) {
                 queryClient.setQueryData(['match', matchId], context.previous);
             }
+            toast.error("Unable to save score. Changes have been reverted.");
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['match', matchId] });
@@ -239,7 +245,7 @@ export default function MatchConsole() {
     // 5. Timer & Clock Logic
     useEffect(() => {
         if (!match) return;
-        if (!match.isTimerRunning) {
+        if (!match.isTimerRunning || match.status === 'completed') {
             setElapsedDisplay(match.timerElapsed || 0);
             return;
         }
@@ -253,7 +259,7 @@ export default function MatchConsole() {
             setElapsedDisplay(calculateTime());
         }, 100);
         return () => clearInterval(timerInterval);
-    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed]);
+    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match?.status]);
 
     // Fullscreen Logic
     const toggleFullscreen = useCallback(() => {
@@ -299,32 +305,34 @@ export default function MatchConsole() {
         if (!match) return null;
         return {
             ...match,
-            player1: match.player1 || { name: 'Player 1', score: 0, isServing: true },
-            player2: match.player2 || { name: 'Player 2', score: 0, isServing: false }
+            currentServer: match.currentServer ?? 'player1',
+            player1: match.player1 || { name: 'Player 1', score: 0 },
+            player2: match.player2 || { name: 'Player 2', score: 0 }
         };
     }, [match]);
 
 
     const handleScore = useCallback((team: 'player1' | 'player2', delta: number) => {
         if (!safeMatch) return;
-        const currentScore = safeMatch[team]?.score || 0;
-        const newScore = Math.max(0, currentScore + delta);
 
-        // Optimistic Update immediately
-        const updates = { [team]: { ...safeMatch[team], score: newScore } };
-        optimisticUpdate(updates);
+        const rules = getRuleSet(safeMatch.sport, safeMatch.scoringType);
 
-        // Debounced Server Update
-        debouncedMutate(updates);
+        // Validate: don't allow scoring on completed matches
+        const { valid } = validateState(safeMatch, rules);
+        if (!valid) return;
+
+        // Run scoring pipeline (pure — returns new state)
+        const newState = processScoringPipeline(safeMatch, team, delta, rules);
+
+        optimisticUpdate(newState);
+        debouncedMutate(newState);
     }, [safeMatch, optimisticUpdate, debouncedMutate]);
 
 
     const toggleServer = useCallback((team: 'player1' | 'player2') => {
         if (!safeMatch) return;
         const updates: Partial<MatchState> = {
-            player1: { ...safeMatch.player1, isServing: team === 'player1' },
-            player2: { ...safeMatch.player2, isServing: team === 'player2' },
-            serverNumber: 1 as 1
+            currentServer: team,
         };
         optimisticUpdate(updates);
         debouncedMutate(updates);
@@ -332,43 +340,49 @@ export default function MatchConsole() {
 
 
     const handleStopTimer = useCallback(() => {
-        if (!safeMatch || !safeMatch.timerStartTime) return;
-        const now = Date.now();
-        const additionalSeconds = (now - safeMatch.timerStartTime) / 1000;
-        mutation.mutate({
-            isTimerRunning: false,
-            timerElapsed: (safeMatch.timerElapsed || 0) + additionalSeconds,
-            timerStartTime: null
-        });
+        if (!safeMatch) return;
+        const newState = pauseMatchTimer(safeMatch);
+        mutation.mutate(newState);
     }, [safeMatch, mutation]);
 
     const handleStartTimer = useCallback(() => {
-        mutation.mutate({
-            isTimerRunning: true,
-            timerStartTime: Date.now(),
-            status: 'live'
-        });
-    }, [mutation]);
+        if (!safeMatch) return;
+        const newState = startMatchTimer(safeMatch);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
 
     const handleToggleTimer = useCallback(() => {
         if (!safeMatch) return;
-        safeMatch.isTimerRunning ? handleStopTimer() : handleStartTimer();
-    }, [safeMatch, handleStopTimer, handleStartTimer]);
+        if (safeMatch.isTimerRunning && safeMatch.status !== 'completed') {
+            handleStopTimer();
+        } else if (safeMatch.status === 'completed') {
+            const resumedState = resumeMatch(safeMatch);
+            const startedState = startMatchTimer(resumedState);
+            mutation.mutate(startedState);
+        } else {
+            handleStartTimer();
+        }
+    }, [safeMatch, handleStopTimer, handleStartTimer, mutation]);
 
     const handleEndMatch = useCallback(() => {
-        if (safeMatch?.isTimerRunning) handleStopTimer();
-        mutation.mutate({
-            status: 'completed'
-        });
-    }, [safeMatch, handleStopTimer, mutation]);
+        if (!safeMatch) return;
+        const newState = completeMatch(safeMatch);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
+
+    const handleResumeMatch = useCallback(() => {
+        if (!safeMatch) return;
+        if (safeMatch.status === 'completed') {
+            if (!confirm('Are you sure you want to resume this completed match?')) return;
+        }
+        const newState = resumeMatch(safeMatch);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
 
     const handleToggleBreak = useCallback(() => {
         if (!safeMatch) return;
-        if (safeMatch.status === 'break') {
-            mutation.mutate({ status: 'live' });
-        } else {
-            mutation.mutate({ status: 'break' });
-        }
+        const newState = toggleBreakState(safeMatch);
+        mutation.mutate(newState);
     }, [safeMatch, mutation]);
 
     const handleUpdateMatch = useCallback((updates: Partial<MatchState>) => {
@@ -381,6 +395,32 @@ export default function MatchConsole() {
             player1: safeMatch.player2,
             player2: safeMatch.player1
         });
+    }, [safeMatch, mutation]);
+
+    const handleResetGame = useCallback(() => {
+        if (!safeMatch) return;
+        const { currentGame, p1GamesWon, p2GamesWon, gameHistory } = getGameStructure(safeMatch);
+        const p1Score = safeMatch.player1?.score ?? 0;
+        const p2Score = safeMatch.player2?.score ?? 0;
+
+        const isLastGameFinished = gameHistory.length > 0 && p1Score === 0 && p2Score === 0;
+
+        if (isLastGameFinished) {
+            const confirmMsg = `Undo/Reset finished Game ${gameHistory.length}?\n\nThis will restore rally scores back to before the winning point so you can correct the score.`;
+            if (!confirm(confirmMsg)) return;
+
+            const newState = undoLastGame(safeMatch);
+            mutation.mutate(newState);
+            toast.info(`Game ${gameHistory.length} restored for score correction.`);
+        } else {
+            const confirmMsg = `Reset Game ${currentGame} rally score to 0–0?\n\nCurrent rally score: ${p1Score}–${p2Score}\nCompleted games: ${p1GamesWon}–${p2GamesWon}\n\nThis cannot be undone.`;
+            if (!confirm(confirmMsg)) return;
+
+            mutation.mutate({
+                player1: { ...safeMatch.player1, score: 0 },
+                player2: { ...safeMatch.player2, score: 0 },
+            });
+        }
     }, [safeMatch, mutation]);
 
     /* 
@@ -407,6 +447,12 @@ export default function MatchConsole() {
     }
 
     const isCompleted = safeMatch.status === 'completed';
+    const { currentGame, totalGames, p1GamesWon, p2GamesWon, gameHistory: matchGameHistory } =
+        getGameStructure(safeMatch);
+
+    const gamesNeeded = Math.ceil(totalGames / 2);
+    const isMatchWon = p1GamesWon >= gamesNeeded || p2GamesWon >= gamesNeeded;
+    const lastGame = matchGameHistory && matchGameHistory.length > 0 ? matchGameHistory[matchGameHistory.length - 1] : undefined;
 
     return (
         <div
@@ -430,11 +476,14 @@ export default function MatchConsole() {
                 <PlayerCard
                     player={safeMatch.player1}
                     teamLabel="Team One"
-                    isServing={safeMatch.player1.isServing}
+                    isServing={safeMatch.currentServer === 'player1'}
                     isCompleted={isCompleted}
                     onScoreChange={(delta) => handleScore('player1', delta)}
                     onToggleServer={() => toggleServer('player1')}
                     matchType={safeMatch.matchType}
+                    gamesWon={p1GamesWon}
+                    totalGames={totalGames}
+                    lastGameScore={lastGame?.player1Score}
                 />
 
                 {/* Center Control Column */}
@@ -444,17 +493,25 @@ export default function MatchConsole() {
                         elapsedDisplay={elapsedDisplay}
                         isTimerRunning={safeMatch.isTimerRunning}
                         isCompleted={isCompleted}
+                        isMatchWon={isMatchWon}
                         onToggleTimer={handleToggleTimer}
                         formatTime={formatTime}
                         matchStatus={safeMatch.status}
                         isBreak={safeMatch.status === 'break'}
                         onToggleBreak={handleToggleBreak}
+                        currentGame={currentGame}
+                        totalGames={totalGames}
+                        gameHistory={matchGameHistory}
                     />
 
                     <QuickActions
                         onSwap={swapSides}
                         onEndMatch={handleEndMatch}
+                        onResumeMatch={handleResumeMatch}
+                        onResetGame={handleResetGame}
                         isCompleted={isCompleted}
+                        isMatchWon={isMatchWon}
+                        currentGame={currentGame}
                     />
                 </div>
 
@@ -462,11 +519,14 @@ export default function MatchConsole() {
                 <PlayerCard
                     player={safeMatch.player2}
                     teamLabel="Team Two"
-                    isServing={safeMatch.player2.isServing}
+                    isServing={safeMatch.currentServer === 'player2'}
                     isCompleted={isCompleted}
                     onScoreChange={(delta) => handleScore('player2', delta)}
                     onToggleServer={() => toggleServer('player2')}
                     matchType={safeMatch.matchType}
+                    gamesWon={p2GamesWon}
+                    totalGames={totalGames}
+                    lastGameScore={lastGame?.player2Score}
                 />
 
             </div>

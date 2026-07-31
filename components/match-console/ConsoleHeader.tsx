@@ -65,8 +65,11 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
                         <div className={clsx(
-                            "flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider",
-                            match.status === 'live' ? "bg-red-500 text-white" : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
+                            "flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider",
+                            match.status === 'live' ? "bg-red-500 text-white" :
+                            match.status === 'completed' ? "bg-emerald-600 text-white font-extrabold shadow-sm" :
+                            match.status === 'break' ? "bg-indigo-600 text-white" :
+                            "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
                         )}>
                             {match.status === 'live' && <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
                             {match.status || 'Scheduled'}
@@ -144,84 +147,32 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                             {/* Sponsor Config Options */}
                             {match.isSponsorsOverlayActive && (
                                 <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2 space-y-2.5">
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Sponsor Style</p>
-                                        <div className="grid grid-cols-2 gap-1.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => onUpdateMatch({ sponsorDisplayMode: 'card' })}
-                                                className={clsx(
-                                                    "px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
-                                                    (match.sponsorDisplayMode || 'card') === 'card'
-                                                        ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                        : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                                                )}
-                                            >
-                                                Full Card
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => onUpdateMatch({ sponsorDisplayMode: 'logoOnly' })}
-                                                className={clsx(
-                                                    "px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
-                                                    match.sponsorDisplayMode === 'logoOnly'
-                                                        ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                        : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                                                )}
-                                            >
-                                                Logo Only
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <OptionSelector
+                                        title="Sponsor Style"
+                                        options={SPONSOR_DISPLAY_MODES}
+                                        selectedValue={match.sponsorDisplayMode || 'card'}
+                                        onSelect={(sponsorDisplayMode) => onUpdateMatch({ sponsorDisplayMode })}
+                                        gridCols={2}
+                                    />
 
                                     {match.overlayTemplate !== 'bwf' && (
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Sponsor Position</p>
-                                            <div className="grid grid-cols-3 gap-1.5">
-                                                {(['left', 'center', 'right'] as const).map((pos) => (
-                                                    <button
-                                                        key={pos}
-                                                        type="button"
-                                                        onClick={() => onUpdateMatch({ sponsorPosition: pos })}
-                                                        className={clsx(
-                                                            "px-2 py-1.5 rounded-xl text-[11px] font-bold capitalize transition-all border text-center cursor-pointer",
-                                                            (match.sponsorPosition || 'center') === pos
-                                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                                                        )}
-                                                    >
-                                                        {pos}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+                                        <OptionSelector
+                                            title="Sponsor Position"
+                                            options={SPONSOR_POSITIONS}
+                                            selectedValue={match.sponsorPosition || 'center'}
+                                            onSelect={(sponsorPosition) => onUpdateMatch({ sponsorPosition })}
+                                            gridCols={3}
+                                            capitalize
+                                        />
                                     )}
 
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Logo Size</p>
-                                        <div className="grid grid-cols-4 gap-1">
-                                            {[
-                                                { id: 'sm', label: 'S' },
-                                                { id: 'md', label: 'M' },
-                                                { id: 'lg', label: 'L' },
-                                                { id: 'xl', label: 'XL' },
-                                            ].map((sizeItem) => (
-                                                <button
-                                                    key={sizeItem.id}
-                                                    type="button"
-                                                    onClick={() => onUpdateMatch({ sponsorLogoSize: sizeItem.id as any })}
-                                                    className={clsx(
-                                                        "px-2 py-1.5 rounded-xl text-[11px] font-bold uppercase transition-all border text-center cursor-pointer",
-                                                        (match.sponsorLogoSize || 'md') === sizeItem.id
-                                                            ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                            : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                                                    )}
-                                                >
-                                                    {sizeItem.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <OptionSelector
+                                        title="Logo Size"
+                                        options={SPONSOR_LOGO_SIZES}
+                                        selectedValue={match.sponsorLogoSize || 'md'}
+                                        onSelect={(sponsorLogoSize) => onUpdateMatch({ sponsorLogoSize })}
+                                        gridCols={4}
+                                    />
                                 </div>
                             )}
 
@@ -308,5 +259,73 @@ function ToggleItem({ icon, label, active, onClick }: { icon: React.ReactNode, l
                 )} />
             </div>
         </button>
+    );
+}
+
+const SPONSOR_DISPLAY_MODES = [
+    { id: 'card', label: 'Full Card' },
+    { id: 'logoOnly', label: 'Logo Only' },
+] as const;
+
+const SPONSOR_POSITIONS = [
+    { id: 'left', label: 'Left' },
+    { id: 'center', label: 'Center' },
+    { id: 'right', label: 'Right' },
+] as const;
+
+const SPONSOR_LOGO_SIZES = [
+    { id: 'sm', label: 'S' },
+    { id: 'md', label: 'M' },
+    { id: 'lg', label: 'L' },
+    { id: 'xl', label: 'XL' },
+] as const;
+
+interface OptionItem<T extends string> {
+    id: T;
+    label: string;
+}
+
+function OptionSelector<T extends string>({
+    title,
+    options,
+    selectedValue,
+    onSelect,
+    gridCols = 2,
+    capitalize = false,
+}: {
+    title: string;
+    options: readonly OptionItem<T>[];
+    selectedValue: T;
+    onSelect: (val: T) => void;
+    gridCols?: number;
+    capitalize?: boolean;
+}) {
+    return (
+        <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">{title}</p>
+            <div className={clsx(
+                "grid gap-1.5",
+                gridCols === 2 && "grid-cols-2",
+                gridCols === 3 && "grid-cols-3",
+                gridCols === 4 && "grid-cols-4 gap-1"
+            )}>
+                {options.map((item) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => onSelect(item.id)}
+                        className={clsx(
+                            "px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                            capitalize ? "capitalize" : "uppercase",
+                            selectedValue === item.id
+                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                        )}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+        </div>
     );
 }

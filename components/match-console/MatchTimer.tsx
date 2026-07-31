@@ -1,18 +1,22 @@
 import { Clock, Pause, Play, Coffee, Info, MapPin, Hash, Trophy } from 'lucide-react';
 import clsx from 'clsx';
 import { memo } from 'react';
-import { MatchState } from '@/types/match';
+import { MatchState, GameResult } from '@/types/match';
 
 interface MatchTimerProps {
     matchDetails: MatchState;
     elapsedDisplay: number;
     isTimerRunning: boolean;
     isCompleted: boolean;
+    isMatchWon?: boolean;
     onToggleTimer: () => void;
     formatTime: (s: number) => string;
     matchStatus: string;
     isBreak: boolean;
     onToggleBreak: () => void;
+    currentGame?: number;
+    totalGames?: number;
+    gameHistory?: GameResult[];
 }
 
 export default memo(function MatchTimer({
@@ -20,11 +24,15 @@ export default memo(function MatchTimer({
     elapsedDisplay,
     isTimerRunning,
     isCompleted,
+    isMatchWon = false,
     onToggleTimer,
     formatTime,
     matchStatus,
     isBreak,
-    onToggleBreak
+    onToggleBreak,
+    currentGame = 1,
+    totalGames = 3,
+    gameHistory = [],
 }: MatchTimerProps) {
     return (
         <div className={clsx(
@@ -44,11 +52,32 @@ export default memo(function MatchTimer({
                     <Trophy size={14} />
                     <div className="h-[1px] w-8 bg-current opacity-20" />
                 </div>
+                {/* Game Indicator */}
+                {totalGames > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                            Game {currentGame > totalGames ? totalGames : currentGame} of {totalGames}
+                        </span>
+                    </div>
+                )}
+                {/* Set History Chips */}
+                {gameHistory.length > 0 && (
+                    <div className="flex items-center justify-center gap-2 mt-1.5">
+                        {gameHistory.map((g) => (
+                            <span
+                                key={g.gameNumber}
+                                className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-white/5 text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums"
+                            >
+                                G{g.gameNumber} {g.player1Score}–{g.player2Score}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Match Metadata Grid */}
             {isCompleted && (
-                < div className="grid grid-cols-2 gap-x-8 gap-y-2 my-4">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2 my-4">
                     <div className="flex items-center gap-2">
                         <MapPin size={12} className="text-slate-400" />
                         <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 capitalize">
@@ -77,59 +106,108 @@ export default memo(function MatchTimer({
             )}
 
             {/* Main Timer Group */}
-            < div className="flex flex-col items-center" >
+            <div className="flex flex-col items-center">
                 <div className={clsx(
-                    "flex items-center gap-2 mb-1 px-4 py-1 rounded-full transition-colors mb-2",
-                    isTimerRunning ? "bg-emerald-500/10 text-emerald-500" : "bg-slate-100 dark:bg-white/5 text-slate-500"
+                    "flex items-center gap-2 mb-2 px-4 py-1 rounded-full transition-colors",
+                    isCompleted
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold"
+                        : isMatchWon
+                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
+                        : isBreak
+                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
+                        : isTimerRunning
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : "bg-slate-100 dark:bg-white/5 text-slate-500"
                 )}>
-                    <Clock size={14} className={clsx(isTimerRunning && "animate-pulse")} />
+                    {isCompleted || isMatchWon ? (
+                        <Trophy size={14} className={isCompleted ? "text-emerald-500" : "text-amber-500"} />
+                    ) : (
+                        <Clock size={14} className={clsx(isTimerRunning && "animate-pulse")} />
+                    )}
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                        {isBreak ? "Break Time" : "Match Clock"}
+                        {isCompleted
+                            ? "Match Completed"
+                            : isMatchWon
+                            ? "Match Won (Pending Confirmation)"
+                            : isBreak
+                            ? "Break Time"
+                            : isTimerRunning
+                            ? "Match Clock"
+                            : "Match Paused"}
                     </span>
                 </div>
 
                 <div className={clsx(
                     "text-6xl font-bold tabular-nums tracking-tighter transition-all duration-300",
-                    isTimerRunning ? "text-slate-900 dark:text-white scale-110" : "text-slate-300 dark:text-slate-600"
+                    isTimerRunning ? "text-slate-900 dark:text-white scale-110" : "text-slate-700 dark:text-slate-200"
                 )}>
                     {formatTime(elapsedDisplay)}
                 </div>
-            </div >
+                {isCompleted && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
+                        Final Duration
+                    </span>
+                )}
+            </div>
 
             {/* Action Buttons */}
-            {!isCompleted && (
-                <div className="flex gap-3 w-full max-w-[320px] mt-6">
+            <div className="flex gap-3 w-full max-w-[320px] mt-6">
+                {!isCompleted ? (
+                    <>
+                        <button
+                            onClick={onToggleTimer}
+                            className={clsx(
+                                "flex-[2] py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg",
+                                isTimerRunning
+                                    ? "bg-red-500 text-white shadow-red-500/20"
+                                    : "bg-orange-500 text-white shadow-orange-500/20"
+                            )}
+                        >
+                            {isTimerRunning ? (
+                                <Pause size={16} fill="white" />
+                            ) : (
+                                <Play size={16} fill="white" />
+                            )}
+                            {isTimerRunning ? "Pause Match" : "Start Match"}
+                        </button>
+
+                        <button
+                            onClick={onToggleBreak}
+                            className={clsx(
+                                "flex-1 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border",
+                                isBreak
+                                    ? "bg-indigo-600 text-white border-transparent"
+                                    : "bg-transparent border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
+                            )}
+                        >
+                            <Coffee size={16} />
+                            <span>{isBreak ? "Resume" : "Break"}</span>
+                        </button>
+                    </>
+                ) : (
                     <button
                         onClick={onToggleTimer}
                         className={clsx(
-                            "flex-[2] py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg",
+                            "w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg border",
                             isTimerRunning
                                 ? "bg-red-500 text-white shadow-red-500/20"
-                                : "bg-orange-500 text-white shadow-orange-500/20"
+                                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20"
                         )}
                     >
                         {isTimerRunning ? (
-                            <Pause size={16} fill="white" />
+                            <>
+                                <Pause size={16} fill="white" />
+                                <span>Stop Clock</span>
+                            </>
                         ) : (
-                            <Play size={16} fill="white" />
+                            <>
+                                <Play size={16} fill="white" />
+                                <span>Resume & Start Clock</span>
+                            </>
                         )}
-                        {isTimerRunning ? "Pause Match" : "Start Match"}
                     </button>
-
-                    <button
-                        onClick={onToggleBreak}
-                        className={clsx(
-                            "flex-1 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border",
-                            isBreak
-                                ? "bg-indigo-600 text-white border-transparent"
-                                : "bg-transparent border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
-                        )}
-                    >
-                        <Coffee size={16} />
-                        <span>{isBreak ? "Resume" : "Break"}</span>
-                    </button>
-                </div>
-            )}
+                )}
+            </div>
         </div >
     );
 });

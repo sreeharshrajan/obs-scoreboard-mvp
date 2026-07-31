@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity, Clock } from "lucide-react";
 import clsx from 'clsx';
 import { MatchState } from "@/types/match";
+import { getGameStructure, getPerGameScores } from "@/lib/matchHelpers";
 import Image from "next/image";
 
 interface ScoreboardProps {
@@ -17,12 +18,13 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     const p2Name = match.player2?.name2
         ? `${match.player2.name} / ${match.player2.name2}`
         : match.player2?.name || "Player 2";
-    const p1Score = match.player1?.score || 0;
-    const p2Score = match.player2?.score || 0;
-    const p1Serving = match.player1?.isServing ?? false;
-    const p2Serving = match.player2?.isServing ?? false;
+
+    const currentServer = match.currentServer ?? (match.player1?.isServing ? 'player1' : 'player2');
+    const p1Serving = currentServer === 'player1';
+    const p2Serving = currentServer === 'player2';
 
     const isLive = match.status === "live" || match.isTimerRunning;
+    const gameScores = getPerGameScores(match);
 
     const formatTime = (seconds: number) => {
         const safeSeconds = isNaN(seconds) ? 0 : Math.max(0, seconds);
@@ -33,8 +35,8 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
 
     return (
         <div className="absolute top-12 left-12 h-[128px] flex items-stretch bg-slate-950/90 text-white rounded-2xl overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
-            <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
-                {match.showTournamentLogo !== false && match.tournamentLogo ? (
+            {match.showTournamentLogo !== false && match.tournamentLogo && (
+                <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", match.status === 'completed' ? 'bg-emerald-600' : isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
                     <div className="relative w-14 h-14 mb-1">
                         <Image
                             src={match.tournamentLogo}
@@ -43,15 +45,14 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             className="object-contain"
                         />
                     </div>
-                ) : (
-                    isLive ? <Activity size={28} className="text-white" /> : <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{match.status || 'OFF'}</span>
-                )}
-                {(match.status === 'break') && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
-            </div>
+                    {match.status === 'completed' && <span className="text-[10px] font-black uppercase text-white tracking-widest mt-0.5">FINAL</span>}
+                    {match.status === 'break' && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
+                </div>
+            )}
 
             <div className="flex flex-col h-full divide-y divide-white/10">
                 {/* Player 1 */}
-                <div className="flex-1 flex items-center justify-between min-w-[380px] px-7 gap-6 relative overflow-hidden">
+                <div className="flex-1 flex items-center justify-between min-w-[400px] px-7 gap-6 relative overflow-hidden">
                     <div className="flex items-center gap-3.5">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
@@ -66,13 +67,27 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
-                        {p1Score}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        {gameScores.map((box) => (
+                            <div
+                                key={box.gameNumber}
+                                className={clsx(
+                                    "min-w-[46px] h-11 px-2.5 rounded-xl flex items-center justify-center transition-all border",
+                                    box.isCurrent
+                                        ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
+                                        : box.p1Winner
+                                        ? "bg-white/15 text-white border-white/20 font-bold"
+                                        : "bg-white/5 text-white/30 border-white/5"
+                                )}
+                            >
+                                <span className="text-3xl font-black tabular-nums">{box.p1Score}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex-1 flex items-center justify-between min-w-[380px] px-7 gap-6 relative overflow-hidden">
+                <div className="flex-1 flex items-center justify-between min-w-[400px] px-7 gap-6 relative overflow-hidden">
                     <div className="flex items-center gap-3.5">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
@@ -87,9 +102,23 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <span className="text-4xl font-black tabular-nums text-[#FF5A09] drop-shadow-[0_0_8px_rgba(255,90,9,0.3)]">
-                        {p2Score}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        {gameScores.map((box) => (
+                            <div
+                                key={box.gameNumber}
+                                className={clsx(
+                                    "min-w-[46px] h-11 px-2.5 rounded-xl flex items-center justify-center transition-all border",
+                                    box.isCurrent
+                                        ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
+                                        : box.p2Winner
+                                        ? "bg-white/15 text-white border-white/20 font-bold"
+                                        : "bg-white/5 text-white/30 border-white/5"
+                                )}
+                            >
+                                <span className="text-3xl font-black tabular-nums">{box.p2Score}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -97,6 +126,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
             <div className="flex flex-col items-center justify-center px-7 bg-white/5 border-l border-white/10 min-w-[110px]">
                 <Clock size={16} className="text-white/40 mb-1" />
                 <span className="text-2xl font-mono font-black tracking-tight text-white/90">{formatTime(elapsedDisplay)}</span>
+                {match.status === 'completed' && <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 mt-1">FINAL</span>}
             </div>
         </div>
     );
