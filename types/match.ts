@@ -36,6 +36,7 @@ export interface MatchState {
 
     serverNumber?: 1 | 2;
     overlayScale?: number;
+    overlayTemplate?: 'default' | 'classic';
     streamerLogo?: string;
 }
 
