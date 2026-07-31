@@ -71,21 +71,21 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             {gameScores.map((box) => (
                                 <div
                                     key={box.gameNumber}
                                     className={clsx(
-                                        "w-14 h-16 rounded flex flex-col items-center justify-center border shadow-inner transition-all",
+                                        "rounded flex flex-col items-center justify-center border shadow-inner transition-all",
                                         box.isCurrent
-                                            ? "bg-[#38b77a] text-white border-[#2e9c67]"
+                                            ? "w-14 h-16 bg-[#38b77a] text-white border-[#2e9c67]"
                                             : box.p1Winner
-                                            ? "bg-slate-300 text-slate-900 border-slate-400 font-bold"
-                                            : "bg-slate-200 text-slate-400 border-slate-300"
+                                            ? "w-11 h-14 bg-amber-400 text-slate-950 border-amber-500 font-black shadow-md"
+                                            : "w-11 h-14 bg-slate-200 text-slate-500 border-slate-300 opacity-60 font-medium"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Set {box.gameNumber}</span>
-                                    <span className="text-2xl font-black">{box.p1Score}</span>
+                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-70">Set {box.gameNumber}</span>
+                                    <span className={clsx("tabular-nums", box.isCurrent ? "text-2xl font-black" : box.p1Winner ? "text-lg font-black text-slate-950" : "text-lg font-medium text-slate-500")}>{box.p1Score}</span>
                                 </div>
                             ))}
                         </div>
@@ -98,21 +98,21 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
 
                     {/* Player 2 */}
                     <div className="flex-1 flex items-center justify-between px-8">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             {gameScores.map((box) => (
                                 <div
                                     key={box.gameNumber}
                                     className={clsx(
-                                        "w-14 h-16 rounded flex flex-col items-center justify-center border shadow-inner transition-all",
+                                        "rounded flex flex-col items-center justify-center border shadow-inner transition-all",
                                         box.isCurrent
-                                            ? "bg-[#38b77a] text-white border-[#2e9c67]"
+                                            ? "w-14 h-16 bg-[#38b77a] text-white border-[#2e9c67]"
                                             : box.p2Winner
-                                            ? "bg-slate-300 text-slate-900 border-slate-400 font-bold"
-                                            : "bg-slate-200 text-slate-400 border-slate-300"
+                                            ? "w-11 h-14 bg-amber-400 text-slate-950 border-amber-500 font-black shadow-md"
+                                            : "w-11 h-14 bg-slate-200 text-slate-500 border-slate-300 opacity-60 font-medium"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Set {box.gameNumber}</span>
-                                    <span className="text-2xl font-black">{box.p2Score}</span>
+                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-70">Set {box.gameNumber}</span>
+                                    <span className={clsx("tabular-nums", box.isCurrent ? "text-2xl font-black" : box.p2Winner ? "text-lg font-black text-slate-950" : "text-lg font-medium text-slate-500")}>{box.p2Score}</span>
                                 </div>
                             ))}
                         </div>

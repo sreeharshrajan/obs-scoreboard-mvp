@@ -60,7 +60,7 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                 <div className="flex items-stretch h-[44px] bg-[#e6e7e8] border-b border-slate-300">
 
                     {/* Name */}
-                    <div className="flex-1 flex items-center px-4 min-w-75 relative">
+                    <div className="flex-1 flex items-center px-4 min-w-56 relative">
                         <span className="text-lg font-medium text-slate-800 uppercase tracking-tight line-clamp-1">{p1Name}</span>
 
                         {/* Serving Indicator */}
@@ -77,15 +77,18 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                             <div
                                 key={box.gameNumber}
                                 className={clsx(
-                                    "w-12 flex items-center justify-center border-l border-black/10 transition-all",
+                                    "flex items-center justify-center border-l border-black/10 transition-all",
                                     box.isCurrent
-                                        ? scoreBgGradient
-                                        : box.isCompleted
-                                        ? "bg-slate-300 text-slate-900 font-bold"
-                                        : "bg-slate-200 text-slate-400"
+                                        ? clsx("w-12", scoreBgGradient)
+                                        : box.p1Winner
+                                        ? "w-10 bg-amber-400 text-slate-950 font-black shadow-inner"
+                                        : "w-10 bg-slate-300/80 text-slate-600 font-medium"
                                 )}
                             >
-                                <span className={clsx("text-2xl font-medium", box.isCurrent ? "text-white drop-shadow-sm" : "text-slate-800")}>
+                                <span className={clsx(
+                                    "tabular-nums",
+                                    box.isCurrent ? "text-2xl font-black text-white drop-shadow-sm" : box.p1Winner ? "text-base font-black text-slate-950" : "text-base font-medium text-slate-500"
+                                )}>
                                     {box.p1Score}
                                 </span>
                             </div>
@@ -97,7 +100,7 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                 <div className="flex items-stretch h-[44px] bg-[#e6e7e8]">
 
                     {/* Name */}
-                    <div className="flex-1 flex items-center px-4 min-w-75 relative">
+                    <div className="flex-1 flex items-center px-4 min-w-56 relative">
                         <span className="text-lg font-medium text-slate-800 uppercase tracking-tight line-clamp-1">{p2Name}</span>
 
                         {/* Serving Indicator */}
@@ -114,15 +117,18 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                             <div
                                 key={box.gameNumber}
                                 className={clsx(
-                                    "w-12 flex items-center justify-center border-l border-black/10 transition-all",
+                                    "flex items-center justify-center border-l border-black/10 transition-all",
                                     box.isCurrent
-                                        ? scoreBgGradient
-                                        : box.isCompleted
-                                        ? "bg-slate-300 text-slate-900 font-bold"
-                                        : "bg-slate-200 text-slate-400"
+                                        ? clsx("w-12", scoreBgGradient)
+                                        : box.p2Winner
+                                        ? "w-10 bg-amber-400 text-slate-950 font-black shadow-inner"
+                                        : "w-10 bg-slate-300/80 text-slate-600 font-medium"
                                 )}
                             >
-                                <span className={clsx("text-2xl font-medium", box.isCurrent ? "text-white drop-shadow-sm" : "text-slate-800")}>
+                                <span className={clsx(
+                                    "tabular-nums",
+                                    box.isCurrent ? "text-2xl font-black text-white drop-shadow-sm" : box.p2Winner ? "text-base font-black text-slate-950" : "text-base font-medium text-slate-500"
+                                )}>
                                     {box.p2Score}
                                 </span>
                             </div>

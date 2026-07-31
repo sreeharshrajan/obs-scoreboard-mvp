@@ -94,21 +94,24 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                             </div>
                         </div>
                         {/* Classic Per-Game Score Pills */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             {gameScores.map((box) => (
                                 <div
                                     key={box.gameNumber}
                                     className={clsx(
-                                        "px-4 py-2 rounded-2xl shadow-xl border flex flex-col items-center justify-center min-w-[60px] transition-all",
+                                        "shadow-xl border flex flex-col items-center justify-center transition-all",
                                         box.isCurrent
-                                            ? "bg-red-600 text-white border-red-400 font-black"
+                                            ? "px-4 py-2 rounded-2xl min-w-[60px] bg-red-600 text-white border-red-400 font-black"
                                             : box.p1Winner
-                                            ? "bg-white text-slate-900 border-slate-200 font-bold"
-                                            : "bg-white/10 text-white/40 border-white/5"
+                                            ? "px-3 py-1 rounded-xl min-w-[48px] bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md"
+                                            : "px-3 py-1 rounded-xl min-w-[48px] bg-white/10 text-white/35 border-white/5 opacity-60"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Set {box.gameNumber}</span>
-                                    <span className="text-3xl font-black tabular-nums">{formatScore(box.p1Score)}</span>
+                                    <span className="text-[8px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>
+                                    <span className={clsx(
+                                        "tabular-nums",
+                                        box.isCurrent ? "text-3xl font-black text-white" : box.p1Winner ? "text-xl font-black text-slate-950" : "text-xl font-medium text-white/40"
+                                    )}>{formatScore(box.p1Score)}</span>
                                 </div>
                             ))}
                         </div>
@@ -122,21 +125,24 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                     {/* Player 2 Side */}
                     <div className="flex-1 flex items-center justify-between px-10">
                         {/* Classic Per-Game Score Pills */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             {gameScores.map((box) => (
                                 <div
                                     key={box.gameNumber}
                                     className={clsx(
-                                        "px-4 py-2 rounded-2xl shadow-xl border flex flex-col items-center justify-center min-w-[60px] transition-all",
+                                        "shadow-xl border flex flex-col items-center justify-center transition-all",
                                         box.isCurrent
-                                            ? "bg-red-600 text-white border-red-400 font-black"
+                                            ? "px-4 py-2 rounded-2xl min-w-[60px] bg-red-600 text-white border-red-400 font-black"
                                             : box.p2Winner
-                                            ? "bg-white text-slate-900 border-slate-200 font-bold"
-                                            : "bg-white/10 text-white/40 border-white/5"
+                                            ? "px-3 py-1 rounded-xl min-w-[48px] bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md"
+                                            : "px-3 py-1 rounded-xl min-w-[48px] bg-white/10 text-white/35 border-white/5 opacity-60"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Set {box.gameNumber}</span>
-                                    <span className="text-3xl font-black tabular-nums">{formatScore(box.p2Score)}</span>
+                                    <span className="text-[8px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>
+                                    <span className={clsx(
+                                        "tabular-nums",
+                                        box.isCurrent ? "text-3xl font-black text-white" : box.p2Winner ? "text-xl font-black text-slate-950" : "text-xl font-medium text-white/40"
+                                    )}>{formatScore(box.p2Score)}</span>
                                 </div>
                             ))}
                         </div>

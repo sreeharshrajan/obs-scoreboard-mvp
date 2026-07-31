@@ -52,8 +52,8 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
 
             <div className="flex flex-col h-full divide-y divide-white/10">
                 {/* Player 1 */}
-                <div className="flex-1 flex items-center justify-between min-w-[400px] px-7 gap-6 relative overflow-hidden">
-                    <div className="flex items-center gap-3.5">
+                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative overflow-hidden">
+                    <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
                             p1Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
@@ -67,28 +67,31 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                         {gameScores.map((box) => (
                             <div
                                 key={box.gameNumber}
                                 className={clsx(
-                                    "min-w-[46px] h-11 px-2.5 rounded-xl flex items-center justify-center transition-all border",
+                                    "flex items-center justify-center transition-all border",
                                     box.isCurrent
-                                        ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
+                                        ? "min-w-[46px] h-11 px-2.5 rounded-xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
                                         : box.p1Winner
-                                        ? "bg-white/15 text-white border-white/20 font-bold"
-                                        : "bg-white/5 text-white/30 border-white/5"
+                                        ? "min-w-[36px] h-9 px-2 rounded-lg bg-amber-500/25 text-amber-300 border-amber-400/50 shadow-sm"
+                                        : "min-w-[36px] h-9 px-2 rounded-lg bg-white/5 text-white/35 border-white/5"
                                 )}
                             >
-                                <span className="text-3xl font-black tabular-nums">{box.p1Score}</span>
+                                <span className={clsx(
+                                    "tabular-nums",
+                                    box.isCurrent ? "text-3xl font-black text-white" : box.p1Winner ? "text-lg font-black text-amber-300" : "text-lg font-bold text-white/40"
+                                )}>{box.p1Score}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex-1 flex items-center justify-between min-w-[400px] px-7 gap-6 relative overflow-hidden">
-                    <div className="flex items-center gap-3.5">
+                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative overflow-hidden">
+                    <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
                             p2Serving ? "bg-[#FF5A09] shadow-[0_0_12px_#FF5A09] scale-110" : "bg-white/5 scale-75"
@@ -102,20 +105,23 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             </span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                         {gameScores.map((box) => (
                             <div
                                 key={box.gameNumber}
                                 className={clsx(
-                                    "min-w-[46px] h-11 px-2.5 rounded-xl flex items-center justify-center transition-all border",
+                                    "flex items-center justify-center transition-all border",
                                     box.isCurrent
-                                        ? "bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
+                                        ? "min-w-[46px] h-11 px-2.5 rounded-xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
                                         : box.p2Winner
-                                        ? "bg-white/15 text-white border-white/20 font-bold"
-                                        : "bg-white/5 text-white/30 border-white/5"
+                                        ? "min-w-[36px] h-9 px-2 rounded-lg bg-amber-500/25 text-amber-300 border-amber-400/50 shadow-sm"
+                                        : "min-w-[36px] h-9 px-2 rounded-lg bg-white/5 text-white/35 border-white/5"
                                 )}
                             >
-                                <span className="text-3xl font-black tabular-nums">{box.p2Score}</span>
+                                <span className={clsx(
+                                    "tabular-nums",
+                                    box.isCurrent ? "text-3xl font-black text-white" : box.p2Winner ? "text-lg font-black text-amber-300" : "text-lg font-bold text-white/40"
+                                )}>{box.p2Score}</span>
                             </div>
                         ))}
                     </div>
