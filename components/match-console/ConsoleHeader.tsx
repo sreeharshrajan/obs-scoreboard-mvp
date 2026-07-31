@@ -138,35 +138,48 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                                 <ToggleItem icon={<ImageIcon size={16} />} label="Tournament Logo" active={match.showTournamentLogo !== false} onClick={() => toggleSetting('showTournamentLogo')} />
                                 <ToggleItem icon={<Users size={16} />} label="Streamer Branding" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
                                 <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
+                                <ToggleItem icon={<Monitor size={16} />} label="Full Screen Details" active={!!match.showFullScreenMatchDetails} onClick={() => toggleSetting('showFullScreenMatchDetails')} />
                             </div>
 
                             {/* Template Selector */}
                             <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Overlay Theme</p>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-3 gap-2">
                                     <button
                                         type="button"
                                         onClick={() => onUpdateMatch({ overlayTemplate: 'default' })}
                                         className={clsx(
-                                            "px-3 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
                                             (match.overlayTemplate || 'default') === 'default'
                                                 ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
                                                 : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
                                         )}
                                     >
-                                        Modern Glass
+                                        Modern
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => onUpdateMatch({ overlayTemplate: 'classic' })}
                                         className={clsx(
-                                            "px-3 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
                                             match.overlayTemplate === 'classic'
                                                 ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
                                                 : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
                                         )}
                                     >
-                                        Classic Series
+                                        Classic
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onUpdateMatch({ overlayTemplate: 'bwf' })}
+                                        className={clsx(
+                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                            match.overlayTemplate === 'bwf'
+                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                        )}
+                                    >
+                                        BWF Pro
                                     </button>
                                 </div>
                             </div>

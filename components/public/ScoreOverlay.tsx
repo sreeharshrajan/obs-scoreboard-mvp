@@ -16,6 +16,11 @@ import ClassicScoreboard from "./score-overlay/classic/ClassicScoreboard";
 import ClassicMatchInfoDisplay from "./score-overlay/classic/ClassicMatchInfoDisplay";
 import ClassicSponsorTickler from "./score-overlay/classic/ClassicSponsorTickler";
 
+// BWF Pro Components
+import BwfScoreboard from "./score-overlay/bwf/BwfScoreboard";
+import BwfSponsorTickler from "./score-overlay/bwf/BwfSponsorTickler";
+import BwfFullScreenMatchInfo from "./score-overlay/bwf/BwfFullScreenMatchInfo";
+
 export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const [match, setMatch] = useState<MatchState | null>(null);
     const [loading, setLoading] = useState(true);
@@ -109,6 +114,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     if (loading || error || !match) return null;
 
     const isClassic = match.overlayTemplate === 'classic';
+    const isBwf = match.overlayTemplate === 'bwf';
 
     return (
         <div className="relative w-screen h-screen overflow-hidden p-6 md:p-12 pointer-events-none font-instrument transition-opacity duration-500">
@@ -118,7 +124,28 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                 match={match}
             />
 
-            {isClassic ? (
+            {isBwf ? (
+                <>
+                    {!match.showFullScreenMatchDetails && (
+                        <>
+                            <BwfSponsorTickler
+                                sponsors={sponsors}
+                                currentSponsorIndex={currentSponsorIndex}
+                                match={match}
+                            />
+                            <BwfScoreboard
+                                match={match}
+                                elapsedDisplay={elapsedDisplay}
+                            />
+                        </>
+                    )}
+                    <BwfFullScreenMatchInfo
+                        match={match}
+                        sponsors={sponsors}
+                        currentSponsorIndex={currentSponsorIndex}
+                    />
+                </>
+            ) : isClassic ? (
                 <>
                     <ClassicSponsorTickler
                         sponsors={sponsors}
