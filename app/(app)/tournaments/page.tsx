@@ -27,19 +27,16 @@ export default function TournamentListing() {
             }
 
             try {
+                const token = await user.getIdToken();
+                const headers = { Authorization: `Bearer ${token}` };
+
                 const roles = resolveRoles(user.email);
                 setIsAdmin(roles.isAdmin);
-                let q;
 
                 if (roles.isAdmin) {
-                    q = query(collection(db, "tournaments"));
-
                     // Fetch users to get display names
                     try {
-                        const token = await user.getIdToken();
-                        const res = await fetch("/api/users", {
-                            headers: { Authorization: `Bearer ${token}` },
-                        });
+                        const res = await fetch("/api/users", { headers });
                         if (res.ok) {
                             const usersData = await res.json();
                             const map: Record<string, string> = {};
@@ -51,33 +48,13 @@ export default function TournamentListing() {
                     } catch (err) {
                         console.error("Failed to fetch users for mapping", err);
                     }
-
-                } else {
-                    q = query(
-                        collection(db, "tournaments"),
-                        where("ownerId", "==", user.uid)
-                    );
                 }
 
-                const snapshot = await getDocs(q);
-
-                const list = snapshot.docs
-                    .map(doc => ({
-                        id: doc.id,
-                        ...doc.data(),
-                    }))
-                    .sort((a: any, b: any) => {
-                        const getTs = (val: any) => {
-                            if (!val) return 0;
-                            if (typeof val.toDate === "function") return val.toDate().getTime();
-                            if (val.seconds) return val.seconds * 1000;
-                            const parsed = new Date(val).getTime();
-                            return isNaN(parsed) ? 0 : parsed;
-                        };
-                        return getTs(b.createdAt) - getTs(a.createdAt);
-                    });
-
-                setTournaments(list);
+                const res = await fetch("/api/tournaments", { headers });
+                if (res.ok) {
+                    const list = await res.json();
+                    setTournaments(list);
+                }
             } catch (error) {
                 console.error("Error fetching tournaments:", error);
             } finally {

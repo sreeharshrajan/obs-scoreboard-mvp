@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase/client";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { resolveRoles } from "@/lib/auth/roles";
 import { AdminStats, ApiResponse } from "@/lib/types/admin";
@@ -25,7 +26,12 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const endpoint = isAdmin ? "/api/admin/stats" : "/api/stats";
-        const res = await fetch(endpoint);
+        const headers: Record<string, string> = {};
+        if (auth.currentUser) {
+          const token = await auth.currentUser.getIdToken();
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        const res = await fetch(endpoint, { headers });
         if (res.ok) {
           const json: ApiResponse<AdminStats> = await res.json();
           if (json.data) setMetrics(json.data);

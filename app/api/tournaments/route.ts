@@ -5,15 +5,33 @@ import { FieldValue } from "firebase-admin/firestore";
 
 export async function GET(request: Request) {
   try {
+    let auth;
     try {
-      await verifyRequest(request);
+      auth = await verifyRequest(request);
     } catch {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const snapshot = await adminDb.collection("tournaments").get();
+    let docs = snapshot.docs;
 
-    const tournaments = snapshot.docs
+    // Filter for staff users — only show tournaments they own or are assigned to
+    if (auth.roles.isStaff && !auth.roles.isOrganizer && !auth.roles.isSuperAdmin) {
+      const assignmentsSnap = await adminDb
+        .collection("match_assignments")
+        .where("userId", "==", auth.uid)
+        .get();
+
+      const assignedTournamentIds = new Set(
+        assignmentsSnap.docs.map((doc) => doc.data().tournamentId)
+      );
+
+      docs = docs.filter(
+        (doc) => doc.data().ownerId === auth.uid || assignedTournamentIds.has(doc.id)
+      );
+    }
+
+    const tournaments = docs
       .map((doc) => {
         const data = doc.data();
         return {
@@ -23,6 +41,8 @@ export async function GET(request: Request) {
           startDate: data.startDate || "",
           endDate: data.endDate || "",
           type: data.type || data.category || "Individual",
+          category: data.category || data.type || "Individual",
+          scoringType: data.scoringType || "Badminton",
           logo: data.logo || "",
           status: data.status || "Upcoming",
           ownerId: data.ownerId || "",
