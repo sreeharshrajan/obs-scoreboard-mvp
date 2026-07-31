@@ -36,7 +36,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     return (
         <div className="absolute top-12 left-12 h-[128px] flex items-stretch bg-slate-950/90 text-white rounded-2xl overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
             {match.showTournamentLogo !== false && match.tournamentLogo && (
-                <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
+                <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", match.status === 'completed' ? 'bg-emerald-600' : isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
                     <div className="relative w-14 h-14 mb-1">
                         <Image
                             src={match.tournamentLogo}
@@ -45,7 +45,8 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             className="object-contain"
                         />
                     </div>
-                    {(match.status === 'break') && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
+                    {match.status === 'completed' && <span className="text-[10px] font-black uppercase text-white tracking-widest mt-0.5">FINAL</span>}
+                    {match.status === 'break' && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
                 </div>
             )}
 
@@ -125,6 +126,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
             <div className="flex flex-col items-center justify-center px-7 bg-white/5 border-l border-white/10 min-w-[110px]">
                 <Clock size={16} className="text-white/40 mb-1" />
                 <span className="text-2xl font-mono font-black tracking-tight text-white/90">{formatTime(elapsedDisplay)}</span>
+                {match.status === 'completed' && <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 mt-1">FINAL</span>}
             </div>
         </div>
     );

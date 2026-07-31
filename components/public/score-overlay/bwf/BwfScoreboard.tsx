@@ -130,10 +130,15 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
                     </div>
                 </div>
 
-                {/* Match Status / Break */}
+                {/* Match Status / Break / Completed */}
                 {match.status === 'break' && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
                         <span className="text-lg font-medium uppercase text-white animate-pulse tracking-widest">BREAK</span>
+                    </div>
+                )}
+                {match.status === 'completed' && (
+                    <div className="absolute inset-0 bg-slate-950/85 flex items-center justify-center backdrop-blur-sm border border-emerald-500/50">
+                        <span className="text-lg font-black uppercase text-emerald-400 tracking-widest">MATCH COMPLETED</span>
                     </div>
                 )}
             </div>

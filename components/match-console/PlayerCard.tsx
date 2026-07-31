@@ -1,4 +1,4 @@
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Trophy } from 'lucide-react';
 import clsx from 'clsx';
 import { PlayerState, MatchState } from '@/types/match';
 import { memo } from 'react';
@@ -27,17 +27,26 @@ export default memo(function PlayerCard({
     totalGames = 3,
 }: PlayerCardProps) {
     const gamesNeeded = Math.ceil(totalGames / 2);
+    const isWinner = isCompleted && gamesWon >= gamesNeeded;
     return (
         <div className={clsx(
             "w-full h-30 lg:h-[400px] lg:col-span-4 rounded-[2rem] border-2 transition-all duration-500 p-6 lg:p-8 relative overflow-hidden flex flex-row lg:flex-col items-center lg:items-stretch",
-            isServing
+            isWinner
+                ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500 shadow-2xl shadow-amber-500/10"
+                : isServing && !isCompleted
                 ? "bg-white dark:bg-[#252525] border-[#FF5A09] shadow-2xl shadow-[#FF5A09]/5"
                 : "bg-slate-50/50 dark:bg-white/[0.02] border-transparent"
         )}>
-            {isServing && (
+            {isServing && !isCompleted && (
                 <div className="hidden lg:flex absolute top-6 right-6 items-center gap-2 bg-[#FF5A09] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest z-20 animate-in fade-in zoom-in">
                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                     Serving
+                </div>
+            )}
+            {isWinner && (
+                <div className="absolute top-6 right-6 flex items-center gap-1.5 bg-amber-500 text-slate-950 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest z-20 shadow-md">
+                    <Trophy size={12} className="text-slate-950" />
+                    Winner
                 </div>
             )}
 

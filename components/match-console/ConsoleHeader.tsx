@@ -65,8 +65,11 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
                         <div className={clsx(
-                            "flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider",
-                            match.status === 'live' ? "bg-red-500 text-white" : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
+                            "flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider",
+                            match.status === 'live' ? "bg-red-500 text-white" :
+                            match.status === 'completed' ? "bg-emerald-600 text-white font-extrabold shadow-sm" :
+                            match.status === 'break' ? "bg-indigo-600 text-white" :
+                            "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400"
                         )}>
                             {match.status === 'live' && <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
                             {match.status || 'Scheduled'}

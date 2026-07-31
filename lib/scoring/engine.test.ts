@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { MatchState } from '@/types/match';
 import { getRuleSet } from './rules';
-import { processScoringPipeline, resetMatchState } from './engine';
+import { processScoringPipeline, resetMatchState, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState } from './engine';
+import { validateState } from './validation';
 
 function createInitialState(): MatchState {
     return {
@@ -92,6 +93,8 @@ describe('Badminton Scoring Engine', () => {
 
     it('Scenario 5: GamesWon = 1 -> Win second game -> status = completed', () => {
         let state = createInitialState();
+        state.isTimerRunning = true;
+        state.timerStartTime = Date.now() - 60000;
         state.player1.gamesWon = 1;
         state.player1.score = 20;
         state.player2.score = 15;
@@ -105,6 +108,8 @@ describe('Badminton Scoring Engine', () => {
         expect(nextState.gameHistory?.length).toBe(2);
         expect(nextState.status).toBe('completed');
         expect(nextState.completedAt).toBeDefined();
+        expect(nextState.isTimerRunning).toBe(false);
+        expect(nextState.timerStartTime).toBeNull();
     });
 
     it('Scenario 6: Game 1 win -> Game 2 transition & event sequencing', () => {
@@ -162,5 +167,51 @@ describe('Badminton Scoring Engine', () => {
         expect(resetState.status).toBe('scheduled');
         expect(resetState.tournamentName).toBe('Championship 2026');
         expect(resetState.court).toBe('Court 3');
+    });
+
+    it('Scenario 8: completeMatch cleanly stops timer and sets status completed', () => {
+        let state = createInitialState();
+        state = startMatchTimer(state);
+        expect(state.isTimerRunning).toBe(true);
+
+        const completedState = completeMatch(state);
+        expect(completedState.status).toBe('completed');
+        expect(completedState.isTimerRunning).toBe(false);
+        expect(completedState.timerStartTime).toBeNull();
+        expect(completedState.completedAt).toBeDefined();
+    });
+
+    it('Scenario 9: resumeMatch transitions completed match to live', () => {
+        let state = createInitialState();
+        state.status = 'completed';
+
+        const resumedState = resumeMatch(state);
+        expect(resumedState.status).toBe('live');
+
+        // Verify startMatchTimer works on resumed match
+        const startedState = startMatchTimer(resumedState);
+        expect(startedState.isTimerRunning).toBe(true);
+        expect(startedState.status).toBe('live');
+    });
+
+    it('Scenario 10: validateState rejects score mutations on completed matches', () => {
+        let state = createInitialState();
+        state.status = 'completed';
+
+        const validation = validateState(state, rules);
+        expect(validation.valid).toBe(false);
+        expect(validation.errors).toContain('Cannot modify score on a completed match');
+    });
+
+    it('Scenario 11: timer pause and resume accumulates elapsed time without reset', () => {
+        let state = createInitialState();
+        state.timerElapsed = 100;
+
+        const startedState = startMatchTimer(state);
+        expect(startedState.isTimerRunning).toBe(true);
+
+        const pausedState = pauseMatchTimer(startedState);
+        expect(pausedState.isTimerRunning).toBe(false);
+        expect(pausedState.timerElapsed).toBeGreaterThanOrEqual(100);
     });
 });

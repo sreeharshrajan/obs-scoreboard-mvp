@@ -5,13 +5,14 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { MatchState, GameResult } from '@/types/match';
 import { getRuleSet } from '@/lib/scoring/rules';
-import { processScoringPipeline } from '@/lib/scoring/engine';
+import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState } from '@/lib/scoring/engine';
 import { validateState } from '@/lib/scoring/validation';
 import { getGameStructure } from '@/lib/matchHelpers';
 import { auth } from '@/lib/firebase/client';
 import { User } from 'firebase/auth';
 import { MatchConsoleSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
+import { toast } from "sonner";
 
 // Components
 import ConsoleHeader from '@/components/match-console/ConsoleHeader';
@@ -244,7 +245,7 @@ export default function MatchConsole() {
     // 5. Timer & Clock Logic
     useEffect(() => {
         if (!match) return;
-        if (!match.isTimerRunning) {
+        if (!match.isTimerRunning || match.status === 'completed') {
             setElapsedDisplay(match.timerElapsed || 0);
             return;
         }
@@ -258,7 +259,7 @@ export default function MatchConsole() {
             setElapsedDisplay(calculateTime());
         }, 100);
         return () => clearInterval(timerInterval);
-    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed]);
+    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match?.status]);
 
     // Fullscreen Logic
     const toggleFullscreen = useCallback(() => {
@@ -339,43 +340,49 @@ export default function MatchConsole() {
 
 
     const handleStopTimer = useCallback(() => {
-        if (!safeMatch || !safeMatch.timerStartTime) return;
-        const now = Date.now();
-        const additionalSeconds = (now - safeMatch.timerStartTime) / 1000;
-        mutation.mutate({
-            isTimerRunning: false,
-            timerElapsed: (safeMatch.timerElapsed || 0) + additionalSeconds,
-            timerStartTime: null
-        });
+        if (!safeMatch) return;
+        const newState = pauseMatchTimer(safeMatch);
+        mutation.mutate(newState);
     }, [safeMatch, mutation]);
 
     const handleStartTimer = useCallback(() => {
-        mutation.mutate({
-            isTimerRunning: true,
-            timerStartTime: Date.now(),
-            status: 'live'
-        });
-    }, [mutation]);
+        if (!safeMatch) return;
+        const newState = startMatchTimer(safeMatch);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
 
     const handleToggleTimer = useCallback(() => {
         if (!safeMatch) return;
-        safeMatch.isTimerRunning ? handleStopTimer() : handleStartTimer();
-    }, [safeMatch, handleStopTimer, handleStartTimer]);
+        if (safeMatch.isTimerRunning && safeMatch.status !== 'completed') {
+            handleStopTimer();
+        } else if (safeMatch.status === 'completed') {
+            const resumedState = resumeMatch(safeMatch);
+            const startedState = startMatchTimer(resumedState);
+            mutation.mutate(startedState);
+        } else {
+            handleStartTimer();
+        }
+    }, [safeMatch, handleStopTimer, handleStartTimer, mutation]);
 
     const handleEndMatch = useCallback(() => {
-        if (safeMatch?.isTimerRunning) handleStopTimer();
-        mutation.mutate({
-            status: 'completed'
-        });
-    }, [safeMatch, handleStopTimer, mutation]);
+        if (!safeMatch) return;
+        const newState = completeMatch(safeMatch);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
+
+    const handleResumeMatch = useCallback(() => {
+        if (!safeMatch) return;
+        if (safeMatch.status === 'completed') {
+            if (!confirm('Are you sure you want to resume this completed match?')) return;
+        }
+        const newState = resumeMatch(safeMatch);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
 
     const handleToggleBreak = useCallback(() => {
         if (!safeMatch) return;
-        if (safeMatch.status === 'break') {
-            mutation.mutate({ status: 'live' });
-        } else {
-            mutation.mutate({ status: 'break' });
-        }
+        const newState = toggleBreakState(safeMatch);
+        mutation.mutate(newState);
     }, [safeMatch, mutation]);
 
     const handleUpdateMatch = useCallback((updates: Partial<MatchState>) => {
@@ -483,6 +490,7 @@ export default function MatchConsole() {
                     <QuickActions
                         onSwap={swapSides}
                         onEndMatch={handleEndMatch}
+                        onResumeMatch={handleResumeMatch}
                         onResetGame={handleResetGame}
                         isCompleted={isCompleted}
                         currentGame={currentGame}

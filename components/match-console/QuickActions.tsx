@@ -6,6 +6,7 @@ import { memo } from 'react';
 interface QuickActionsProps {
     onSwap: () => void;
     onEndMatch: () => void;
+    onResumeMatch?: () => void;
     onResetGame: () => void;
     isCompleted: boolean;
     currentGame?: number;
@@ -14,6 +15,7 @@ interface QuickActionsProps {
 export default memo(function QuickActions({
     onSwap,
     onEndMatch,
+    onResumeMatch,
     onResetGame,
     isCompleted,
     currentGame = 1,
@@ -38,15 +40,25 @@ export default memo(function QuickActions({
                     <RotateCcw size={20} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Reset G{currentGame}</span>
                 </button>
-                <button
-                    onClick={onEndMatch}
-                    disabled={isCompleted}
-                    className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-red-500/30 transition-all group disabled:opacity-50"
-                    title="End Match"
-                >
-                    <Trophy size={20} className="text-slate-400 group-hover:text-red-500 transition-colors" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">End Match</span>
-                </button>
+                {!isCompleted ? (
+                    <button
+                        onClick={onEndMatch}
+                        className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-red-500/30 transition-all group"
+                        title="End Match"
+                    >
+                        <Trophy size={20} className="text-slate-400 group-hover:text-red-500 transition-colors" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">End Match</span>
+                    </button>
+                ) : (
+                    <button
+                        onClick={onResumeMatch || onEndMatch}
+                        className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500 transition-all group cursor-pointer"
+                        title="Resume / Reopen Match"
+                    >
+                        <RotateCcw size={20} className="text-emerald-500 group-hover:rotate-[-45deg] transition-transform" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Resume</span>
+                    </button>
+                )}
             </div>
         </>
     );

@@ -53,6 +53,7 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                             className="object-contain filter drop-shadow-md"
                         />
                     </div>
+                    {match.status === 'completed' && <span className="text-[9px] font-black uppercase text-white mt-0.5">FINAL</span>}
                     {match.status === 'break' && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
                 </div>
             )}
@@ -130,8 +131,12 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
             <div className="flex flex-col items-center justify-center px-6 bg-gradient-to-b from-red-600 to-red-700 text-white rounded-r-2xl border-y border-r border-red-500/30 min-w-[100px]">
                 <Clock size={16} className="text-red-200 mb-1" />
                 <span className="text-xl font-mono font-black tracking-tight text-white">{formatTime(elapsedDisplay)}</span>
-                {totalGames > 1 && (
-                    <span className="text-[9px] font-black uppercase text-red-200/70 mt-1 tracking-widest">G{currentGame > totalGames ? totalGames : currentGame}</span>
+                {match.status === 'completed' ? (
+                    <span className="text-[9px] font-black uppercase text-red-200 tracking-widest mt-1">FINAL</span>
+                ) : (
+                    totalGames > 1 && (
+                        <span className="text-[9px] font-black uppercase text-red-200/70 mt-1 tracking-widest">G{currentGame > totalGames ? totalGames : currentGame}</span>
+                    )
                 )}
             </div>
         </div>

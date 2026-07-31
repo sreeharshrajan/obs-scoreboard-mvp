@@ -45,6 +45,11 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {match.status === 'completed' && (
+                            <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-emerald-500/20">
+                                COMPLETED
+                            </span>
+                        )}
                         <span className="px-3.5 py-1.5 rounded-xl bg-white/10 text-xs font-black uppercase tracking-wider text-slate-300 border border-white/10">
                             {courtName}
                         </span>

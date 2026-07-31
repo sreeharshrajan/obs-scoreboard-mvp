@@ -189,12 +189,20 @@ export function applyMatchRule(ctx: ScoringContext): ScoringContext {
         return ctx;
     }
 
+    const now = Date.now();
+    const additionalSeconds = (state.isTimerRunning && state.timerStartTime)
+        ? (now - state.timerStartTime) / 1000
+        : 0;
+
     return {
         ...ctx,
         state: {
             ...state,
             status: 'completed',
-            completedAt: Date.now(),
+            isTimerRunning: false,
+            timerStartTime: null,
+            timerElapsed: (state.timerElapsed || 0) + additionalSeconds,
+            completedAt: now,
         },
     };
 }
@@ -238,6 +246,98 @@ export function processScoringPipeline(
     finalState.version = (state.version ?? 0) + 1;
 
     return finalState;
+}
+
+// ── Domain State Transitions (Pure Functions) ──
+
+/**
+ * Starts the match timer and transitions scheduled/break status to 'live'.
+ */
+export function startMatchTimer(state: MatchState): MatchState {
+    if (state.status === 'completed') {
+        return state; // Cannot start timer directly on completed match without resuming
+    }
+
+    if (state.isTimerRunning) {
+        return state; // Already running
+    }
+
+    const now = Date.now();
+    const newStatus = (state.status === 'scheduled' || state.status === 'break') ? 'live' : state.status;
+
+    return {
+        ...state,
+        isTimerRunning: true,
+        timerStartTime: now,
+        status: newStatus,
+        version: (state.version ?? 0) + 1,
+    };
+}
+
+/**
+ * Pauses the match timer and accumulates elapsed time.
+ */
+export function pauseMatchTimer(state: MatchState): MatchState {
+    if (!state.isTimerRunning || !state.timerStartTime) {
+        return state;
+    }
+
+    const now = Date.now();
+    const additionalSeconds = (now - state.timerStartTime) / 1000;
+
+    return {
+        ...state,
+        isTimerRunning: false,
+        timerStartTime: null,
+        timerElapsed: (state.timerElapsed || 0) + additionalSeconds,
+        version: (state.version ?? 0) + 1,
+    };
+}
+
+/**
+ * Completes a match, cleanly stopping timer if running and recording completedAt.
+ */
+export function completeMatch(state: MatchState): MatchState {
+    let newState = state.isTimerRunning ? pauseMatchTimer(state) : state;
+    const now = Date.now();
+
+    return {
+        ...newState,
+        status: 'completed',
+        isTimerRunning: false,
+        timerStartTime: null,
+        completedAt: newState.completedAt || now,
+        version: (newState.version ?? 0) + 1,
+    };
+}
+
+/**
+ * Resumes a completed or paused match back to 'live'.
+ */
+export function resumeMatch(state: MatchState): MatchState {
+    if (state.status !== 'completed' && state.status !== 'break') {
+        return state;
+    }
+
+    return {
+        ...state,
+        status: 'live',
+        version: (state.version ?? 0) + 1,
+    };
+}
+
+/**
+ * Toggles break status.
+ */
+export function toggleBreakState(state: MatchState): MatchState {
+    if (state.status === 'completed') return state;
+
+    const newStatus = state.status === 'break' ? 'live' : 'break';
+    return {
+        ...state,
+        status: newStatus,
+        version: (state.version ?? 0) + 1,
+    };
 }
 
 // ── Shared Administrative Reset Helper ──

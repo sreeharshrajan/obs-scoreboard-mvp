@@ -104,59 +104,104 @@ export default memo(function MatchTimer({
             )}
 
             {/* Main Timer Group */}
-            < div className="flex flex-col items-center" >
+            <div className="flex flex-col items-center">
                 <div className={clsx(
-                    "flex items-center gap-2 mb-1 px-4 py-1 rounded-full transition-colors mb-2",
-                    isTimerRunning ? "bg-emerald-500/10 text-emerald-500" : "bg-slate-100 dark:bg-white/5 text-slate-500"
+                    "flex items-center gap-2 mb-2 px-4 py-1 rounded-full transition-colors",
+                    isCompleted
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold"
+                        : isBreak
+                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
+                        : isTimerRunning
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : "bg-slate-100 dark:bg-white/5 text-slate-500"
                 )}>
-                    <Clock size={14} className={clsx(isTimerRunning && "animate-pulse")} />
+                    {isCompleted ? (
+                        <Trophy size={14} className="text-emerald-500" />
+                    ) : (
+                        <Clock size={14} className={clsx(isTimerRunning && "animate-pulse")} />
+                    )}
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                        {isBreak ? "Break Time" : "Match Clock"}
+                        {isCompleted
+                            ? "Match Completed"
+                            : isBreak
+                            ? "Break Time"
+                            : isTimerRunning
+                            ? "Match Clock"
+                            : "Match Paused"}
                     </span>
                 </div>
 
                 <div className={clsx(
                     "text-6xl font-bold tabular-nums tracking-tighter transition-all duration-300",
-                    isTimerRunning ? "text-slate-900 dark:text-white scale-110" : "text-slate-300 dark:text-slate-600"
+                    isTimerRunning ? "text-slate-900 dark:text-white scale-110" : "text-slate-700 dark:text-slate-200"
                 )}>
                     {formatTime(elapsedDisplay)}
                 </div>
-            </div >
+                {isCompleted && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
+                        Final Duration
+                    </span>
+                )}
+            </div>
 
             {/* Action Buttons */}
-            {!isCompleted && (
-                <div className="flex gap-3 w-full max-w-[320px] mt-6">
+            <div className="flex gap-3 w-full max-w-[320px] mt-6">
+                {!isCompleted ? (
+                    <>
+                        <button
+                            onClick={onToggleTimer}
+                            className={clsx(
+                                "flex-[2] py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg",
+                                isTimerRunning
+                                    ? "bg-red-500 text-white shadow-red-500/20"
+                                    : "bg-orange-500 text-white shadow-orange-500/20"
+                            )}
+                        >
+                            {isTimerRunning ? (
+                                <Pause size={16} fill="white" />
+                            ) : (
+                                <Play size={16} fill="white" />
+                            )}
+                            {isTimerRunning ? "Pause Match" : "Start Match"}
+                        </button>
+
+                        <button
+                            onClick={onToggleBreak}
+                            className={clsx(
+                                "flex-1 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border",
+                                isBreak
+                                    ? "bg-indigo-600 text-white border-transparent"
+                                    : "bg-transparent border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
+                            )}
+                        >
+                            <Coffee size={16} />
+                            <span>{isBreak ? "Resume" : "Break"}</span>
+                        </button>
+                    </>
+                ) : (
                     <button
                         onClick={onToggleTimer}
                         className={clsx(
-                            "flex-[2] py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg",
+                            "w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg border",
                             isTimerRunning
                                 ? "bg-red-500 text-white shadow-red-500/20"
-                                : "bg-orange-500 text-white shadow-orange-500/20"
+                                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20"
                         )}
                     >
                         {isTimerRunning ? (
-                            <Pause size={16} fill="white" />
+                            <>
+                                <Pause size={16} fill="white" />
+                                <span>Stop Clock</span>
+                            </>
                         ) : (
-                            <Play size={16} fill="white" />
+                            <>
+                                <Play size={16} fill="white" />
+                                <span>Resume & Start Clock</span>
+                            </>
                         )}
-                        {isTimerRunning ? "Pause Match" : "Start Match"}
                     </button>
-
-                    <button
-                        onClick={onToggleBreak}
-                        className={clsx(
-                            "flex-1 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border",
-                            isBreak
-                                ? "bg-indigo-600 text-white border-transparent"
-                                : "bg-transparent border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
-                        )}
-                    >
-                        <Coffee size={16} />
-                        <span>{isBreak ? "Resume" : "Break"}</span>
-                    </button>
-                </div>
-            )}
+                )}
+            </div>
         </div >
     );
 });
