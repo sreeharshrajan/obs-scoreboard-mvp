@@ -141,6 +141,88 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                                 <ToggleItem icon={<Monitor size={16} />} label="Full Screen Details" active={!!match.showFullScreenMatchDetails} onClick={() => toggleSetting('showFullScreenMatchDetails')} />
                             </div>
 
+                            {/* Sponsor Config Options */}
+                            {match.isSponsorsOverlayActive && (
+                                <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2 space-y-2.5">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Sponsor Style</p>
+                                        <div className="grid grid-cols-2 gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => onUpdateMatch({ sponsorDisplayMode: 'card' })}
+                                                className={clsx(
+                                                    "px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                                    (match.sponsorDisplayMode || 'card') === 'card'
+                                                        ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                        : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                                )}
+                                            >
+                                                Full Card
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => onUpdateMatch({ sponsorDisplayMode: 'logoOnly' })}
+                                                className={clsx(
+                                                    "px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                                    match.sponsorDisplayMode === 'logoOnly'
+                                                        ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                        : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                                )}
+                                            >
+                                                Logo Only
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Sponsor Position</p>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            {(['left', 'center', 'right'] as const).map((pos) => (
+                                                <button
+                                                    key={pos}
+                                                    type="button"
+                                                    onClick={() => onUpdateMatch({ sponsorPosition: pos })}
+                                                    className={clsx(
+                                                        "px-2 py-1.5 rounded-xl text-[11px] font-bold capitalize transition-all border text-center cursor-pointer",
+                                                        (match.sponsorPosition || 'center') === pos
+                                                            ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                            : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                                    )}
+                                                >
+                                                    {pos}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Logo Size</p>
+                                        <div className="grid grid-cols-4 gap-1">
+                                            {[
+                                                { id: 'sm', label: 'S' },
+                                                { id: 'md', label: 'M' },
+                                                { id: 'lg', label: 'L' },
+                                                { id: 'xl', label: 'XL' },
+                                            ].map((sizeItem) => (
+                                                <button
+                                                    key={sizeItem.id}
+                                                    type="button"
+                                                    onClick={() => onUpdateMatch({ sponsorLogoSize: sizeItem.id as any })}
+                                                    className={clsx(
+                                                        "px-2 py-1.5 rounded-xl text-[11px] font-bold uppercase transition-all border text-center cursor-pointer",
+                                                        (match.sponsorLogoSize || 'md') === sizeItem.id
+                                                            ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                            : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                                    )}
+                                                >
+                                                    {sizeItem.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Template Selector */}
                             <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Overlay Theme</p>
