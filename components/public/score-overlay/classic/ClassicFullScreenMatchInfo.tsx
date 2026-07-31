@@ -1,8 +1,9 @@
 import React from 'react';
 import { MatchState } from "@/types/match";
 import Image from "next/image";
-import { Shield } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { getMatchDetails, Sponsor } from '@/lib/matchHelpers';
+import clsx from 'clsx';
 
 interface ClassicFullScreenMatchInfoProps {
     match: MatchState;
@@ -20,91 +21,124 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
         p2Name2,
         p1Score,
         p2Score,
+        p1Serving,
+        p2Serving,
         tournamentName,
         matchCategory,
         courtName,
         activeSponsor,
     } = getMatchDetails(match, sponsors, currentSponsorIndex);
 
+    const formatScore = (score: number) => {
+        return score < 10 ? `0${score}` : `${score}`;
+    };
+
     return (
-        <div className="absolute inset-x-0 bottom-16 flex justify-center z-30 pointer-events-none font-serif px-12 animate-in slide-in-from-bottom-12 fade-in duration-700">
-            <div className="w-full max-w-5xl flex flex-col bg-slate-900 text-white rounded-lg overflow-hidden shadow-2xl border-2 border-amber-400/80">
-                {/* Classic Header */}
-                <div className="flex items-center justify-between px-8 py-4 bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 border-b border-amber-400/40">
+        <div className="absolute inset-x-0 bottom-16 flex justify-center z-30 pointer-events-none font-sans px-12 animate-in slide-in-from-bottom-12 fade-in duration-700">
+            <div className="w-full max-w-5xl flex flex-col bg-[#1E293B] text-white rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                {/* Red Header Bar (Matches Classic Red Badge & Timer) */}
+                <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-red-600 via-red-700 to-red-600 border-b border-red-500/40 text-white">
                     <div className="flex items-center gap-4">
                         {match.showTournamentLogo !== false && match.tournamentLogo ? (
                             <div className="relative w-12 h-12">
-                                <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain" />
+                                <Image
+                                    src={match.tournamentLogo}
+                                    alt="Logo"
+                                    fill
+                                    className="object-contain filter drop-shadow-md"
+                                />
                             </div>
                         ) : (
-                            <div className="w-10 h-10 rounded bg-amber-400/20 border border-amber-400/50 flex items-center justify-center text-amber-400 font-sans">
-                                <Shield size={22} />
+                            <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-300">
+                                <Activity size={26} />
                             </div>
                         )}
-                        <div className="flex flex-col font-sans">
-                            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Match Details</span>
-                            <h2 className="text-xl font-black text-white uppercase tracking-wider">{tournamentName}</h2>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-amber-300 uppercase tracking-[0.2em]">Match Overview</span>
+                            <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight">{tournamentName}</h2>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 font-sans">
-                        <span className="px-3 py-1 bg-slate-800 text-xs font-bold text-amber-300 border border-amber-400/30 rounded uppercase">
+                    <div className="flex items-center gap-3">
+                        <span className="px-3.5 py-1.5 rounded-xl bg-black/20 text-xs font-black uppercase tracking-wider text-white border border-white/10">
                             {courtName}
                         </span>
-                        <span className="px-3 py-1 bg-amber-500 text-xs font-black text-slate-950 rounded uppercase tracking-wider">
+                        <span className="px-3.5 py-1.5 rounded-xl bg-white text-red-700 text-xs font-black uppercase tracking-wider shadow-md">
                             {matchCategory}
                         </span>
                     </div>
                 </div>
 
-                {/* Score Section */}
-                <div className="flex items-stretch h-36 font-sans bg-slate-950 divide-x border-b border-slate-800">
-                    {/* Player 1 */}
-                    <div className="flex-1 flex items-center justify-between px-10 bg-slate-900/90">
-                        <div className="flex flex-col items-start pr-4">
-                            <span className="text-3xl font-black text-white uppercase tracking-wide line-clamp-1">
-                                {p1Name}
-                            </span>
-                            {p1Name2 && (
-                                <span className="text-xl font-bold text-amber-200 uppercase tracking-wide line-clamp-1 mt-1">
-                                    {p1Name2}
+                {/* Score Grid (Dark Carbon Bar with White Score Pills) */}
+                <div className="flex items-stretch h-36 bg-[#1E293B] divide-x divide-white/10 border-b border-white/10">
+                    {/* Player 1 Side */}
+                    <div className="flex-1 flex items-center justify-between px-10">
+                        <div className="flex items-center gap-4 pr-4">
+                            <div className={clsx(
+                                "w-4 h-4 rounded-full transition-all duration-300 flex-shrink-0",
+                                p1Serving ? "bg-red-500 shadow-[0_0_12px_#EF4444] scale-110" : "bg-white/10 scale-75"
+                            )} />
+                            <div className="flex flex-col items-start justify-center">
+                                <span className={clsx(
+                                    "text-3xl font-black uppercase tracking-tight line-clamp-1 transition-colors",
+                                    p1Serving ? "text-white" : "text-slate-300"
+                                )}>
+                                    {p1Name}
                                 </span>
-                            )}
+                                {p1Name2 && (
+                                    <span className="text-2xl font-bold text-slate-400 uppercase tracking-tight line-clamp-1 mt-0.5">
+                                        {p1Name2}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <div className="w-20 h-20 bg-amber-500 rounded border border-amber-300 flex items-center justify-center shadow-lg">
-                            <span className="text-4xl font-black text-slate-950 tabular-nums">{p1Score}</span>
+                        {/* White Classic Score Pill */}
+                        <div className="bg-white text-slate-900 px-5 py-2.5 rounded-2xl shadow-xl border border-slate-200 min-w-[76px] flex items-center justify-center">
+                            <span className="text-4xl font-black tabular-nums">{formatScore(p1Score)}</span>
                         </div>
                     </div>
 
-                    {/* VS */}
-                    <div className="w-16 flex items-center justify-center bg-slate-800">
-                        <span className="text-xl font-black text-amber-400 italic">VS</span>
+                    {/* Red VS Divider */}
+                    <div className="w-20 flex items-center justify-center bg-gradient-to-b from-red-600 to-red-700 shadow-inner">
+                        <span className="text-2xl font-black italic text-white tracking-widest drop-shadow-md">VS</span>
                     </div>
 
-                    {/* Player 2 */}
-                    <div className="flex-1 flex items-center justify-between px-10 bg-slate-900/90">
-                        <div className="w-20 h-20 bg-amber-500 rounded border border-amber-300 flex items-center justify-center shadow-lg">
-                            <span className="text-4xl font-black text-slate-950 tabular-nums">{p2Score}</span>
+                    {/* Player 2 Side */}
+                    <div className="flex-1 flex items-center justify-between px-10">
+                        {/* White Classic Score Pill */}
+                        <div className="bg-white text-slate-900 px-5 py-2.5 rounded-2xl shadow-xl border border-slate-200 min-w-[76px] flex items-center justify-center">
+                            <span className="text-4xl font-black tabular-nums">{formatScore(p2Score)}</span>
                         </div>
-                        <div className="flex flex-col items-end pl-4 text-right">
-                            <span className="text-3xl font-black text-white uppercase tracking-wide line-clamp-1">
-                                {p2Name}
-                            </span>
-                            {p2Name2 && (
-                                <span className="text-xl font-bold text-amber-200 uppercase tracking-wide line-clamp-1 mt-1">
-                                    {p2Name2}
+                        <div className="flex items-center gap-4 pl-4 text-right">
+                            <div className="flex flex-col items-end justify-center">
+                                <span className={clsx(
+                                    "text-3xl font-black uppercase tracking-tight line-clamp-1 transition-colors",
+                                    p2Serving ? "text-white" : "text-slate-300"
+                                )}>
+                                    {p2Name}
                                 </span>
-                            )}
+                                {p2Name2 && (
+                                    <span className="text-2xl font-bold text-slate-400 uppercase tracking-tight line-clamp-1 mt-0.5">
+                                        {p2Name2}
+                                    </span>
+                                )}
+                            </div>
+                            <div className={clsx(
+                                "w-4 h-4 rounded-full transition-all duration-300 flex-shrink-0",
+                                p2Serving ? "bg-red-500 shadow-[0_0_12px_#EF4444] scale-110" : "bg-white/10 scale-75"
+                            )} />
                         </div>
                     </div>
                 </div>
 
                 {/* Classic Sponsor Footer */}
                 {activeSponsor && (
-                    <div className="py-2.5 px-8 bg-slate-950 flex items-center justify-center gap-4 font-sans border-t border-slate-800">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sponsored By</span>
-                        <img src={activeSponsor.advertUrl} alt={activeSponsor.name} className="h-6 w-auto object-contain max-w-[120px]" />
-                        <span className="text-sm font-bold text-amber-400 uppercase">{activeSponsor.name}</span>
+                    <div className="py-3 px-8 bg-slate-950 flex items-center justify-center gap-4 border-t border-white/10">
+                        <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">Proudly Sponsored By</span>
+                        <div className="h-7 relative w-28">
+                            <img src={activeSponsor.advertUrl} alt={activeSponsor.name} className="h-full w-auto object-contain max-w-[110px]" />
+                        </div>
+                        <span className="text-sm font-black text-white">{activeSponsor.name}</span>
                     </div>
                 )}
             </div>
