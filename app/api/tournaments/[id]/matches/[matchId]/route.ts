@@ -1,22 +1,46 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
-import { FieldValue } from "firebase-admin/firestore";
+import { canEditMatch, resolveMatchPermissions } from "@/lib/permissions/matchPermissions";
+import { enforceSuperAdmin } from "@/lib/permissions/superAdminPolicy";
 
 /**
- * GET: Fetch a single match by ID from a specific tournament
+ * GET: Fetch a single match by ID from a specific tournament.
+ *
+ * Access: Any authenticated user with at least one match permission
+ * (super-admin, organizer, or assigned staff).
  */
 export async function GET(
     req: Request,
-    { params }: { params: Promise<{ id: string; matchId: string }> } // id is tournamentId
+    { params }: { params: Promise<{ id: string; matchId: string }> }
 ) {
     try {
         const { id: tournamentId, matchId } = await params;
 
+        let auth;
         try {
-            await verifyRequest(req);
+            auth = await verifyRequest(req);
         } catch {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Check if user has any permission on this match
+        const { permissions, assignment } = await resolveMatchPermissions(
+            auth, tournamentId, matchId, req
+        );
+
+        // If no assignment and not an admin/organizer, deny
+        const hasAnyAccess =
+            permissions.canScore ||
+            permissions.canEditMatch ||
+            permissions.canAccessBroadcastSettings ||
+            permissions.canManageTournament;
+
+        if (!hasAnyAccess) {
+            return NextResponse.json(
+                { error: "Forbidden: No access to this match" },
+                { status: 403 }
+            );
         }
 
         const doc = await adminDb
@@ -38,7 +62,13 @@ export async function GET(
 }
 
 /**
- * PATCH: Update match details
+ * PATCH: Update match details (player names, format, court, etc.).
+ *
+ * This is the "edit match" endpoint — restricted to users with
+ * `canEditMatch` permission (organizers and super-admins).
+ *
+ * Scoring, timer, state, and broadcast changes use their own
+ * dedicated sub-endpoints.
  */
 export async function PATCH(
     req: Request,
@@ -48,10 +78,19 @@ export async function PATCH(
         const { id: tournamentId, matchId } = await params;
         const body = await req.json();
 
+        let auth;
         try {
-            await verifyRequest(req);
+            auth = await verifyRequest(req);
         } catch {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const hasPermission = await canEditMatch(auth, tournamentId, matchId, req);
+        if (!hasPermission) {
+            return NextResponse.json(
+                { error: "Forbidden: Edit match permission required" },
+                { status: 403 }
+            );
         }
 
         const matchRef = adminDb
@@ -79,7 +118,8 @@ export async function PATCH(
 }
 
 /**
- * DELETE: Remove a match
+ * DELETE: Remove a match.
+ * Restricted to super-admins only.
  */
 export async function DELETE(
     req: Request,
@@ -88,11 +128,15 @@ export async function DELETE(
     try {
         const { id: tournamentId, matchId } = await params;
 
+        let auth;
         try {
-            await verifyRequest(req);
+            auth = await verifyRequest(req);
         } catch {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const superAdminError = enforceSuperAdmin(auth);
+        if (superAdminError) return superAdminError;
 
         await adminDb
             .collection("tournaments")
@@ -107,3 +151,4 @@ export async function DELETE(
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
+

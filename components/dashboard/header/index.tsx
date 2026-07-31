@@ -6,22 +6,35 @@ import { useAuthStore } from "@/lib/stores/authStore";
 import { auth } from "@/lib/firebase/client";
 import { resolveRoles } from "@/lib/auth/roles";
 import Link from "next/link";
-import Image from "next/image"
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardHeader = () => {
-    const { user, loading } = useAuthStore();
+    const { user, loading, profile } = useAuthStore();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Check admin status
-    const { isAdmin } = resolveRoles(user?.email || null);
+    // Check role status
+    const resolved = resolveRoles(user?.email || null, profile?.role);
+    const isSuperAdmin = profile?.roles?.isSuperAdmin ?? resolved.isSuperAdmin;
+    const isOrganizer = profile?.roles?.isOrganizer ?? resolved.isOrganizer;
+    const isStaff = profile?.roles?.isStaff ?? resolved.isStaff;
+    const canManageUsers = isSuperAdmin || isOrganizer;
 
     const navLinks = [
-        { name: "Tournaments", href: "/tournaments", icon: Trophy, public: true },
-        { name: "Users", href: "/users", icon: Users, public: false },
+        { name: "Tournaments", href: "/tournaments", icon: Trophy, visible: true },
+        { name: "Users", href: "/users", icon: Users, visible: canManageUsers },
     ];
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+    const getRoleBadge = () => {
+        if (isSuperAdmin) return "Super Admin";
+        if (isOrganizer) return "Organizer";
+        if (isStaff) return "Staff";
+        return null;
+    };
+
+    const roleBadge = getRoleBadge();
 
     return (
         <>
@@ -48,7 +61,7 @@ const DashboardHeader = () => {
                         </>
                     ) : (
                         navLinks.map((link) => (
-                            (link.public || isAdmin) && (
+                            link.visible && (
                                 <Link
                                     key={link.href}
                                     href={link.href}
@@ -98,7 +111,7 @@ const DashboardHeader = () => {
                                 <span className="text-xs font-semibold truncate leading-none">
                                     {user?.displayName || "User"}
                                 </span>
-                                {isAdmin && <span className="text-[8px] font-bold text-[#FF5A09] uppercase mt-1">Admin</span>}
+                                {roleBadge && <span className="text-[8px] font-bold text-[#FF5A09] uppercase mt-1">{roleBadge}</span>}
                             </div>
                         </Link>
                     )}
@@ -133,7 +146,7 @@ const DashboardHeader = () => {
 
                     <nav className="fixed top-16 left-0 right-0 bg-white dark:bg-[#1A1A1A] border-b border-slate-100 dark:border-white/5 p-4 flex flex-col gap-2 shadow-xl animate-in slide-in-from-top duration-200">
                         {navLinks.map((link) => (
-                            (link.public || isAdmin) && (
+                            link.visible && (
                                 <Link
                                     key={link.href}
                                     href={link.href}

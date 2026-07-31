@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
 import { useState, useRef, useEffect, memo } from 'react';
+import type { MatchPermissions } from '@/lib/types/permissions';
 
 interface ConsoleHeaderProps {
     matchId: string;
@@ -14,11 +15,15 @@ interface ConsoleHeaderProps {
     isSyncing: boolean;
     isFullscreen: boolean;
     onToggleFullscreen: () => void;
+    permissions?: MatchPermissions;
 }
 
-export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen }: ConsoleHeaderProps) {
+export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen, permissions }: ConsoleHeaderProps) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const canEdit = permissions ? permissions.canEditMatch : true;
+    const canAccessSettings = permissions ? permissions.canAccessBroadcastSettings : true;
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -105,122 +110,126 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                         <span className="hidden md:inline">Overlay</span>
                     </Link>
 
-                    <Link
-                        title="Edit Match Info"
-                        href={`/tournaments/${tournamentId}/matches/${matchId}/edit`}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm"
-                    >
-                        <Edit size={16} />
-                    </Link>
+                    {canEdit && (
+                        <Link
+                            title="Edit Match Info"
+                            href={`/tournaments/${tournamentId}/matches/${matchId}/edit`}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm"
+                        >
+                            <Edit size={16} />
+                        </Link>
+                    )}
                 </div>
 
                 {/* Settings Toggle */}
-                <div className="relative" ref={dropdownRef}>
-                    <button
-                        onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                        className={clsx(
-                            "flex h-10 px-4 items-center gap-2 rounded-xl transition-all font-bold text-xs uppercase tracking-wide active:scale-95",
-                            isSettingsOpen
-                                ? "bg-[#FF5A09] text-white shadow-lg shadow-orange-500/30"
-                                : "bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                        )}
-                    >
-                        <Settings size={18} className={isSettingsOpen ? "animate-spin-slow" : ""} />
-                        <span className="hidden sm:inline">Settings</span>
-                    </button>
-
-                    {/* Dropdown Menu (Improved Contrast) */}
-                    {isSettingsOpen && (
-                        <div className="absolute top-full right-0 mt-3 w-72 origin-top-right overflow-hidden bg-white dark:bg-[#1A1A1A] rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-white/10 p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
-                            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 mb-2">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Graphics Configuration</p>
-                            </div>
-
-                            <div className="space-y-0.5">
-                                <ToggleItem icon={<Monitor size={16} />} label="Sponsor Cards" active={!!match.isSponsorsOverlayActive} onClick={() => toggleSetting('isSponsorsOverlayActive')} />
-                                <ToggleItem icon={<ImageIcon size={16} />} label="Tournament Logo" active={match.showTournamentLogo !== false} onClick={() => toggleSetting('showTournamentLogo')} />
-                                <ToggleItem icon={<Users size={16} />} label="Streamer Branding" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
-                                <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
-                                <ToggleItem icon={<Monitor size={16} />} label="Full Screen Details" active={!!match.showFullScreenMatchDetails} onClick={() => toggleSetting('showFullScreenMatchDetails')} />
-                            </div>
-
-                            {/* Sponsor Config Options */}
-                            {match.isSponsorsOverlayActive && (
-                                <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2 space-y-2.5">
-                                    <OptionSelector
-                                        title="Sponsor Style"
-                                        options={SPONSOR_DISPLAY_MODES}
-                                        selectedValue={match.sponsorDisplayMode || 'card'}
-                                        onSelect={(sponsorDisplayMode) => onUpdateMatch({ sponsorDisplayMode })}
-                                        gridCols={2}
-                                    />
-
-                                    {match.overlayTemplate !== 'bwf' && (
-                                        <OptionSelector
-                                            title="Sponsor Position"
-                                            options={SPONSOR_POSITIONS}
-                                            selectedValue={match.sponsorPosition || 'center'}
-                                            onSelect={(sponsorPosition) => onUpdateMatch({ sponsorPosition })}
-                                            gridCols={3}
-                                            capitalize
-                                        />
-                                    )}
-
-                                    <OptionSelector
-                                        title="Logo Size"
-                                        options={SPONSOR_LOGO_SIZES}
-                                        selectedValue={match.sponsorLogoSize || 'md'}
-                                        onSelect={(sponsorLogoSize) => onUpdateMatch({ sponsorLogoSize })}
-                                        gridCols={4}
-                                    />
-                                </div>
+                {canAccessSettings && (
+                    <div className="relative" ref={dropdownRef}>
+                        <button
+                            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                            className={clsx(
+                                "flex h-10 px-4 items-center gap-2 rounded-xl transition-all font-bold text-xs uppercase tracking-wide active:scale-95",
+                                isSettingsOpen
+                                    ? "bg-[#FF5A09] text-white shadow-lg shadow-orange-500/30"
+                                    : "bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-900 dark:hover:text-white"
                             )}
+                        >
+                            <Settings size={18} className={isSettingsOpen ? "animate-spin-slow" : ""} />
+                            <span className="hidden sm:inline">Settings</span>
+                        </button>
 
-                            {/* Template Selector */}
-                            <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Overlay Theme</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => onUpdateMatch({ overlayTemplate: 'default' })}
-                                        className={clsx(
-                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
-                                            (match.overlayTemplate || 'default') === 'default'
-                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                        {/* Dropdown Menu (Improved Contrast) */}
+                        {isSettingsOpen && (
+                            <div className="absolute top-full right-0 mt-3 w-72 origin-top-right overflow-hidden bg-white dark:bg-[#1A1A1A] rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-white/10 p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
+                                <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 mb-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Graphics Configuration</p>
+                                </div>
+
+                                <div className="space-y-0.5">
+                                    <ToggleItem icon={<Monitor size={16} />} label="Sponsor Cards" active={!!match.isSponsorsOverlayActive} onClick={() => toggleSetting('isSponsorsOverlayActive')} />
+                                    <ToggleItem icon={<ImageIcon size={16} />} label="Tournament Logo" active={match.showTournamentLogo !== false} onClick={() => toggleSetting('showTournamentLogo')} />
+                                    <ToggleItem icon={<Users size={16} />} label="Streamer Branding" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
+                                    <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
+                                    <ToggleItem icon={<Monitor size={16} />} label="Full Screen Details" active={!!match.showFullScreenMatchDetails} onClick={() => toggleSetting('showFullScreenMatchDetails')} />
+                                </div>
+
+                                {/* Sponsor Config Options */}
+                                {match.isSponsorsOverlayActive && (
+                                    <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2 space-y-2.5">
+                                        <OptionSelector
+                                            title="Sponsor Style"
+                                            options={SPONSOR_DISPLAY_MODES}
+                                            selectedValue={match.sponsorDisplayMode || 'card'}
+                                            onSelect={(sponsorDisplayMode) => onUpdateMatch({ sponsorDisplayMode })}
+                                            gridCols={2}
+                                        />
+
+                                        {match.overlayTemplate !== 'bwf' && (
+                                            <OptionSelector
+                                                title="Sponsor Position"
+                                                options={SPONSOR_POSITIONS}
+                                                selectedValue={match.sponsorPosition || 'center'}
+                                                onSelect={(sponsorPosition) => onUpdateMatch({ sponsorPosition })}
+                                                gridCols={3}
+                                                capitalize
+                                            />
                                         )}
-                                    >
-                                        Modern
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onUpdateMatch({ overlayTemplate: 'classic' })}
-                                        className={clsx(
-                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
-                                            match.overlayTemplate === 'classic'
-                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                                        )}
-                                    >
-                                        Classic
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onUpdateMatch({ overlayTemplate: 'bwf' })}
-                                        className={clsx(
-                                            "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
-                                            match.overlayTemplate === 'bwf'
-                                                ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
-                                                : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                                        )}
-                                    >
-                                        BWF Pro
-                                    </button>
+
+                                        <OptionSelector
+                                            title="Logo Size"
+                                            options={SPONSOR_LOGO_SIZES}
+                                            selectedValue={match.sponsorLogoSize || 'md'}
+                                            onSelect={(sponsorLogoSize) => onUpdateMatch({ sponsorLogoSize })}
+                                            gridCols={4}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Template Selector */}
+                                <div className="px-4 py-3 border-t border-slate-100 dark:border-white/5 mt-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Overlay Theme</p>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => onUpdateMatch({ overlayTemplate: 'default' })}
+                                            className={clsx(
+                                                "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                                (match.overlayTemplate || 'default') === 'default'
+                                                    ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                    : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                            )}
+                                        >
+                                            Modern
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => onUpdateMatch({ overlayTemplate: 'classic' })}
+                                            className={clsx(
+                                                "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                                match.overlayTemplate === 'classic'
+                                                    ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                    : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                            )}
+                                        >
+                                            Classic
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => onUpdateMatch({ overlayTemplate: 'bwf' })}
+                                            className={clsx(
+                                                "px-2 py-2 rounded-xl text-[11px] font-bold transition-all border text-center cursor-pointer",
+                                                match.overlayTemplate === 'bwf'
+                                                    ? "bg-[#FF5A09] text-white border-[#FF5A09] shadow-sm"
+                                                    : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                                            )}
+                                        >
+                                            BWF Pro
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Fullscreen Button */}
                 <button

@@ -1,11 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Mail, Search, ArrowRight, UserCircle, X, Calendar, Fingerprint, CheckCircle2, Trash2 } from "lucide-react";
+import { Mail, Search, ArrowRight, UserCircle, X, Calendar, Fingerprint, CheckCircle2, Trash2, UserPlus, KeyRound, Power } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/firebase/client";
 import { AdminGuard } from "@/components/auth/AdminGuard";
 import GridSkeleton from "@/components/dashboard/grid-skeleton";
+import { CreateUserModal } from "@/components/users/CreateUserModal";
+import { AssignmentPanel } from "@/components/users/AssignmentPanel";
+import { useAuthStore } from "@/lib/stores/authStore";
 
 // Interface (kept same as your code)
 interface User {
@@ -13,23 +16,30 @@ interface User {
     displayName: string | null;
     email: string | null;
     photoURL: string | null;
-    role?: "Admin" | "Moderator" | "User";
+    role?: "organizer" | "staff" | "viewer" | "Admin" | "User";
+    isActive?: boolean;
+    lastLoginAt?: string | null;
     createdAt?: { toDate: () => Date } | any; // Type adjustment for serializable data
 }
 
 export default function UserListing() {
+    const { profile } = useAuthStore();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentUid, setCurrentUid] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            const user = auth.currentUser;
-            if (!user) return;
-            setCurrentUid(user.uid);
+    const isSuperAdmin = profile?.roles?.isSuperAdmin ?? false;
 
+    const fetchUsers = async () => {
+        setLoading(true);
+        const user = auth.currentUser;
+        if (!user) return;
+        setCurrentUid(user.uid);
+
+        try {
             const token = await user.getIdToken();
             const res = await fetch("/api/users", {
                 headers: { Authorization: `Bearer ${token}` },
@@ -37,15 +47,20 @@ export default function UserListing() {
 
             if (res.ok) {
                 const data = await res.json();
-                // Fix date parsing from JSON
                 const parsedData = data.map((u: User) => ({
                     ...u,
                     createdAt: u.createdAt ? { toDate: () => new Date(u.createdAt) } : null
                 }));
                 setUsers(parsedData);
             }
+        } catch (err) {
+            console.error("Fetch users error:", err);
+        } finally {
             setLoading(false);
-        };
+        }
+    };
+
+    useEffect(() => {
         fetchUsers();
     }, []);
 
@@ -91,17 +106,27 @@ export default function UserListing() {
         <AdminGuard>
             <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col py-6 space-y-8 animate-in fade-in duration-500 relative">
 
+                {/* Top Action Bar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    <div className="relative w-full max-w-md">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full h-11 pl-12 pr-4 rounded-xl bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 outline-none focus:border-[#FF5A09]/50 transition-all text-sm"
+                        />
+                    </div>
 
-
-                <div className="relative w-full max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-11 pl-12 pr-4 rounded-xl bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 outline-none focus:border-[#FF5A09]/50 transition-all text-sm"
-                    />
+                    {isSuperAdmin && (
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="h-11 px-5 rounded-xl bg-[#FF5A09] text-white text-xs font-bold uppercase tracking-widest hover:shadow-lg hover:shadow-[#FF5A09]/30 transition-all flex items-center justify-center gap-2"
+                        >
+                            <UserPlus size={16} /> Create User Account
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -129,8 +154,17 @@ export default function UserListing() {
                     <UserModal
                         user={selectedUser}
                         isCurrentUser={selectedUser.id === currentUid}
+                        isSuperAdmin={isSuperAdmin}
                         onClose={() => setSelectedUser(null)}
-                        onDelete={() => handleDeleteUser(selectedUser.id)} // Pass handler
+                        onDelete={() => handleDeleteUser(selectedUser.id)}
+                        onUserUpdated={fetchUsers}
+                    />
+                )}
+
+                {isCreateModalOpen && (
+                    <CreateUserModal
+                        onClose={() => setIsCreateModalOpen(false)}
+                        onUserCreated={fetchUsers}
                     />
                 )}
             </div>
@@ -202,21 +236,91 @@ function UserCard({ user, isYou, onClick }: { user: User; isYou: boolean; onClic
 function UserModal({
     user,
     isCurrentUser,
+    isSuperAdmin,
     onClose,
-    onDelete
+    onDelete,
+    onUserUpdated
 }: {
     user: User;
     isCurrentUser: boolean;
+    isSuperAdmin: boolean;
     onClose: () => void;
     onDelete: () => void;
+    onUserUpdated: () => void;
 }) {
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isUpdatingActive, setIsUpdatingActive] = useState(false);
+    const [resetMsg, setResetMsg] = useState<string | null>(null);
 
     const handleConfirmDelete = async () => {
         setIsDeleting(true);
         await onDelete();
         setIsDeleting(false);
     };
+
+    const handleToggleActive = async () => {
+        setIsUpdatingActive(true);
+        try {
+            const authUser = auth.currentUser;
+            if (!authUser) return;
+            const token = await authUser.getIdToken();
+
+            const res = await fetch(`/api/admin/users/${user.id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ isActive: !(user.isActive !== false) })
+            });
+
+            if (res.ok) {
+                onUserUpdated();
+            } else {
+                const errData = await res.json();
+                alert(errData.error || "Failed to update account status");
+            }
+        } catch (err) {
+            console.error("Toggle active error:", err);
+        } finally {
+            setIsUpdatingActive(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        setResetMsg("Generating link...");
+        try {
+            const authUser = auth.currentUser;
+            if (!authUser) return;
+            const token = await authUser.getIdToken();
+
+            const res = await fetch(`/api/admin/users/${user.id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ resetPassword: true })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.resetLink) {
+                    alert(`Password Reset Link:\n\n${data.resetLink}`);
+                    setResetMsg("Reset link generated.");
+                } else {
+                    setResetMsg("Reset email sent.");
+                }
+            } else {
+                setResetMsg("Failed to reset password.");
+            }
+        } catch (err) {
+            console.error("Password reset error:", err);
+            setResetMsg("Failed to generate link.");
+        }
+    };
+
+    const isActive = user.isActive !== false;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
@@ -232,7 +336,7 @@ function UserModal({
                     <X size={20} />
                 </button>
 
-                <div className="p-10 flex-1 overflow-y-auto space-y-8">
+                <div className="p-10 flex-1 overflow-y-auto space-y-8 custom-scrollbar">
                     <div className="space-y-6 text-center flex flex-col items-center pt-8">
                         <div className="relative">
                             {user.photoURL ? (
@@ -244,14 +348,19 @@ function UserModal({
                                     <UserCircle size={60} className="text-slate-300" />
                                 </div>
                             )}
-                            <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-xl shadow-lg">
+                            <div className={`absolute -bottom-2 -right-2 p-2 rounded-xl shadow-lg ${isActive ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
                                 <CheckCircle2 size={16} />
                             </div>
                         </div>
 
                         <div>
-                            <div className="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest bg-[#FF5A09]/10 text-[#FF5A09] mb-3">
-                                {user.role || "Platform User"}
+                            <div className="flex justify-center gap-2 mb-3">
+                                <div className="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest bg-[#FF5A09]/10 text-[#FF5A09]">
+                                    {user.role || "Platform User"}
+                                </div>
+                                <div className={`inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${isActive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                                    {isActive ? "Active" : "Inactive"}
+                                </div>
                             </div>
                             <h2 className="text-4xl font-instrument font-medium tracking-tight italic">{user.displayName || "Anonymous"}</h2>
                             <p className="text-slate-400 text-sm mt-1">{user.email}</p>
@@ -264,8 +373,37 @@ function UserModal({
                         <ModalStat icon={<Calendar size={16} />} label="Join Date" value={user.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'Recently'} />
                     </div>
 
+                    {/* ASSIGNMENT PANEL for Super Admin view */}
+                    {isSuperAdmin && (
+                        <AssignmentPanel userId={user.id} userName={user.displayName || user.email || "User"} />
+                    )}
+
                     {!isCurrentUser && (
-                        <div className="pt-8 flex flex-col gap-3">
+                        <div className="pt-6 flex flex-col gap-3">
+                            {isSuperAdmin && (
+                                <>
+                                    <button
+                                        onClick={handleResetPassword}
+                                        className="h-12 w-full rounded-2xl border border-slate-200 dark:border-white/10 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-slate-50 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <KeyRound size={14} className="text-[#FF5A09]" />
+                                        {resetMsg || "Reset Password"}
+                                    </button>
+
+                                    <button
+                                        onClick={handleToggleActive}
+                                        disabled={isUpdatingActive}
+                                        className={`h-12 w-full rounded-2xl border font-bold text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${isActive
+                                                ? "border-amber-500/30 text-amber-500 bg-amber-500/5 hover:bg-amber-500 hover:text-white"
+                                                : "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white"
+                                            }`}
+                                    >
+                                        <Power size={14} />
+                                        {isActive ? "Deactivate Account" : "Activate Account"}
+                                    </button>
+                                </>
+                            )}
+
                             <Link
                                 href={`/users/${user.id}/edit`}
                                 className="h-14 w-full rounded-2xl bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] font-bold text-[10px] uppercase tracking-[0.2em] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center"
@@ -274,19 +412,21 @@ function UserModal({
                             </Link>
 
                             {/* DELETE BUTTON */}
-                            <button
-                                onClick={handleConfirmDelete}
-                                disabled={isDeleting}
-                                className="h-14 w-full rounded-2xl border border-red-500/20 text-red-500 bg-red-500/5 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isDeleting ? (
-                                    <span>Deleting...</span>
-                                ) : (
-                                    <>
-                                        <Trash2 size={14} /> Delete User
-                                    </>
-                                )}
-                            </button>
+                            {isSuperAdmin && (
+                                <button
+                                    onClick={handleConfirmDelete}
+                                    disabled={isDeleting}
+                                    className="h-14 w-full rounded-2xl border border-red-500/20 text-red-500 bg-red-500/5 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isDeleting ? (
+                                        <span>Deleting...</span>
+                                    ) : (
+                                        <>
+                                            <Trash2 size={14} /> Delete User
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>

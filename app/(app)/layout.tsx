@@ -9,18 +9,64 @@ import DashboardFooter from "@/components/dashboard/footer";
 import PageHeader from "@/components/dashboard/page-header";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { setUser, setLoading, user, loading } = useAuthStore();
+    const { setUser, setLoading, setUserProfile, clearProfile, user, loading, profile } = useAuthStore();
     const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (u) => {
+        const unsub = onAuthStateChanged(auth, async (u) => {
             setUser(u);
+
+            if (!u) {
+                clearProfile();
+                setLoading(false);
+                router.push("/signin");
+                return;
+            }
+
+            // Fetch user profile for role-based access
+            try {
+                const token = await u.getIdToken();
+                const res = await fetch(`/api/users/${u.uid}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Resolve roles client-side from the profile data
+                    const SUPER_ADMIN_EMAILS = new Set([
+                        "sreeharshkrajan@gmail.com",
+                        "devasishkuttamath@gmail.com",
+                    ]);
+
+                    const email = u.email || data.email || null;
+                    const dbRole = data.role || null;
+                    const isSuperAdmin = email ? SUPER_ADMIN_EMAILS.has(email) : false;
+                    const isOrganizer = isSuperAdmin || dbRole === "organizer";
+                    const isStaff = dbRole === "staff";
+
+                    setUserProfile({
+                        role: dbRole,
+                        organizationId: data.organizationId || null,
+                        isActive: data.isActive !== false,
+                        mustChangePassword: data.mustChangePassword === true,
+                        roles: {
+                            isSuperAdmin,
+                            isOrganizer,
+                            isStaff,
+                            isAdmin: isSuperAdmin || isOrganizer,
+                        },
+                    });
+                }
+            } catch (err) {
+                console.error("[Layout] Failed to fetch user profile:", err);
+            }
+
             setLoading(false);
-            if (!u) router.push("/signin");
         });
         return () => unsub();
-    }, [setUser, setLoading, router]);
+    }, [setUser, setLoading, setUserProfile, clearProfile, router]);
 
 
     // Hide PageHeader on Match Console (Live)

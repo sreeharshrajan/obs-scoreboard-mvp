@@ -13,6 +13,7 @@ import { User } from 'firebase/auth';
 import { MatchConsoleSkeleton } from "@/components/dashboard/skeletons";
 import ErrorFallback from "@/components/dashboard/error-fallback";
 import { toast } from "sonner";
+import { useMatchPermissions } from "@/lib/hooks/useMatchPermissions";
 
 // Components
 import ConsoleHeader from '@/components/match-console/ConsoleHeader';
@@ -38,7 +39,26 @@ const fetchTournament = async (tournamentId: string, token: string) => {
 };
 
 const updateMatch = async ({ tournamentId, matchId, data, token }: { tournamentId: string; matchId: string; data: Partial<MatchState>; token: string }) => {
-    const res = await fetch(`/api/tournaments/${tournamentId}/matches/${matchId}`, {
+    // Determine sub-endpoint based on fields present in data
+    let subEndpoint = "";
+    const keys = Object.keys(data);
+
+    const isScore = keys.some(k => ["player1", "player2", "currentServer", "gameHistory", "serverNumber", "scoreEvents"].includes(k));
+    const isTimer = keys.some(k => ["isTimerRunning", "timerStartTime", "timerElapsed"].includes(k));
+    const isState = keys.some(k => ["status", "completedAt"].includes(k)) && !isScore;
+    const isBroadcast = keys.some(k => ["overlayTemplate", "showTournamentLogo", "showStreamerLogo", "showMatchInfo", "isSponsorsOverlayActive", "sponsorDisplayMode", "sponsorPosition", "sponsorLogoSize", "showFullScreenMatchDetails", "tournamentLogo", "streamerLogo"].includes(k));
+
+    if (isScore) {
+        subEndpoint = "/score";
+    } else if (isTimer) {
+        subEndpoint = "/timer";
+    } else if (isState) {
+        subEndpoint = "/state";
+    } else if (isBroadcast) {
+        subEndpoint = "/broadcast-settings";
+    }
+
+    const res = await fetch(`/api/tournaments/${tournamentId}/matches/${matchId}${subEndpoint}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -106,6 +126,8 @@ export default function MatchConsole() {
     const queryClient = useQueryClient();
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const { permissions } = useMatchPermissions(tournamentId, matchId);
+
     const [elapsedDisplay, setElapsedDisplay] = useState<number>(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -128,7 +150,7 @@ export default function MatchConsole() {
     };
 
     // 1. Data Query: Match
-    const { data: match, isLoading: isMatchLoading, isError: isMatchError } = useQuery<MatchState>({
+    const { data: match, isLoading: isMatchLoading, isError: isMatchError, error: matchQueryError } = useQuery<MatchState>({
         queryKey: ['match', matchId],
         queryFn: async () => {
             const token = await getToken();
@@ -442,7 +464,7 @@ export default function MatchConsole() {
 
     if (isLoading) return <MatchConsoleSkeleton />;
     if (isError || !match || !safeMatch) {
-        if (isError) console.error(isError);
+        if (isError) console.error("Match fetch error:", matchQueryError);
         return <ErrorFallback error="Connection Lost or Match Not Found" className="text-red-500" />;
     }
 
@@ -467,6 +489,7 @@ export default function MatchConsole() {
                 tournamentId={tournamentId}
                 matchId={matchId}
                 onUpdateMatch={handleUpdateMatch}
+                permissions={permissions}
             />
 
             {/* Main Scoreboard Interface */}
