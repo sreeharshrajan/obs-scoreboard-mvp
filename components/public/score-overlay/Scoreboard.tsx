@@ -33,8 +33,8 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
 
     return (
         <div className="absolute top-12 left-12 h-[128px] flex items-stretch bg-slate-950/90 text-white rounded-2xl overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
-            <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
-                {match.showTournamentLogo !== false && match.tournamentLogo ? (
+            {match.showTournamentLogo !== false && match.tournamentLogo && (
+                <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
                     <div className="relative w-14 h-14 mb-1">
                         <Image
                             src={match.tournamentLogo}
@@ -43,11 +43,9 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                             className="object-contain"
                         />
                     </div>
-                ) : (
-                    isLive ? <Activity size={28} className="text-white" /> : <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{match.status || 'OFF'}</span>
-                )}
-                {(match.status === 'break') && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
-            </div>
+                    {(match.status === 'break') && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
+                </div>
+            )}
 
             <div className="flex flex-col h-full divide-y divide-white/10">
                 {/* Player 1 */}

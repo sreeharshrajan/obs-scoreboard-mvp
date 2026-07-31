@@ -32,13 +32,9 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
                 <div className="flex h-24 bg-gradient-to-r from-emerald-50 via-white to-emerald-50">
                     {/* Left Logo Placeholder */}
                     <div className="w-48 flex items-center justify-center p-4">
-                        {match.showTournamentLogo !== false && match.tournamentLogo ? (
+                        {match.showTournamentLogo !== false && match.tournamentLogo && (
                             <div className="relative w-full h-full">
                                 <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain" />
-                            </div>
-                        ) : (
-                            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <span className="text-emerald-500 font-bold">BWF</span>
                             </div>
                         )}
                     </div>

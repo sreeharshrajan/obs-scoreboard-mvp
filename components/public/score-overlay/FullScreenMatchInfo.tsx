@@ -33,13 +33,9 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                 {/* Modern Header Bar */}
                 <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-white/5 via-white/10 to-white/5 border-b border-white/10">
                     <div className="flex items-center gap-4">
-                        {match.showTournamentLogo !== false && match.tournamentLogo ? (
+                        {match.showTournamentLogo !== false && match.tournamentLogo && (
                             <div className="relative w-12 h-12">
                                 <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain" />
-                            </div>
-                        ) : (
-                            <div className="w-12 h-12 rounded-2xl bg-[#FF5A09]/20 border border-[#FF5A09]/40 flex items-center justify-center text-[#FF5A09]">
-                                <Trophy size={24} />
                             </div>
                         )}
                         <div className="flex flex-col">

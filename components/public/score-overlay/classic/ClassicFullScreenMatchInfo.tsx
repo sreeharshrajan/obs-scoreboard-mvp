@@ -39,7 +39,7 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                 {/* Red Header Bar (Matches Classic Red Badge & Timer) */}
                 <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-red-600 via-red-700 to-red-600 border-b border-red-500/40 text-white">
                     <div className="flex items-center gap-4">
-                        {match.showTournamentLogo !== false && match.tournamentLogo ? (
+                        {match.showTournamentLogo !== false && match.tournamentLogo && (
                             <div className="relative w-12 h-12">
                                 <Image
                                     src={match.tournamentLogo}
@@ -47,10 +47,6 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                                     fill
                                     className="object-contain filter drop-shadow-md"
                                 />
-                            </div>
-                        ) : (
-                            <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-300">
-                                <Activity size={26} />
                             </div>
                         )}
                         <div className="flex flex-col">

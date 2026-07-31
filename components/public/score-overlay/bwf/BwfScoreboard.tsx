@@ -44,15 +44,13 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
     return (
         <div className="absolute top-12 left-12 flex flex-row items-stretch shadow-2xl rounded-lg overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700 font-sans border border-white/20">
             {/* Logo - Vertically Centered Across Entire Scoreboard */}
-            <div className="w-14 bg-white flex items-center justify-center p-2 border-r border-slate-300 self-stretch">
-                {match.tournamentLogo ? (
+            {match.showTournamentLogo !== false && match.tournamentLogo && (
+                <div className="w-14 bg-white flex items-center justify-center p-2 border-r border-slate-300 self-stretch">
                     <div className="relative w-10 h-10">
                         <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain" />
                     </div>
-                ) : (
-                    <Activity size={24} className="text-slate-400" />
-                )}
-            </div>
+                </div>
+            )}
 
             <div className="flex flex-col flex-1 relative">
                 {/* Player 1 Row */}

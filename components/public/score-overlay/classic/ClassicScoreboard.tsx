@@ -37,8 +37,8 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
     return (
         <div className="absolute top-12 left-12 flex items-stretch shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700">
             {/* Left Brand Badge */}
-            <div className="flex flex-col items-center justify-center px-5 bg-gradient-to-br from-red-600 to-red-700 border-y border-l border-red-500/30 min-w-[90px] rounded-l-2xl">
-                {match.showTournamentLogo !== false && match.tournamentLogo ? (
+            {match.showTournamentLogo !== false && match.tournamentLogo && (
+                <div className="flex flex-col items-center justify-center px-5 bg-gradient-to-br from-red-600 to-red-700 border-y border-l border-red-500/30 min-w-[90px] rounded-l-2xl">
                     <div className="relative w-14 h-14">
                         <Image
                             src={match.tournamentLogo}
@@ -47,11 +47,9 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                             className="object-contain filter drop-shadow-md"
                         />
                     </div>
-                ) : (
-                    <Activity size={28} className="text-amber-300" />
-                )}
-                {match.status === 'break' && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
-            </div>
+                    {match.status === 'break' && <span className="text-[10px] font-black uppercase text-white animate-pulse mt-0.5">BREAK</span>}
+                </div>
+            )}
 
             {/* Middle Player Rows (Dark Carbon Bars) */}
             <div className="flex flex-col divide-y divide-white/10 bg-[#1E293B] border-y border-white/10">
