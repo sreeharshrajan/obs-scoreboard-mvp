@@ -1,0 +1,102 @@
+import { describe, it, expect } from 'vitest';
+import { MatchState } from '@/types/match';
+import { getPerGameScores, getMatchDetails } from './matchHelpers';
+
+function createMockMatch(overrides?: Partial<MatchState>): MatchState {
+    return {
+        sport: 'badminton',
+        scoringType: '21x3',
+        player1: { name: 'Player 1', score: 10, gamesWon: 0 },
+        player2: { name: 'Player 2', score: 8, gamesWon: 0 },
+        currentServer: 'player1',
+        isTimerRunning: true,
+        timerStartTime: Date.now(),
+        timerElapsed: 120,
+        status: 'live',
+        gameHistory: [],
+        scoreEvents: [],
+        version: 1,
+        ...overrides,
+    };
+}
+
+describe('matchHelpers - getPerGameScores', () => {
+    it('returns only current game box when match is in Game 1 and no prior games completed', () => {
+        const match = createMockMatch();
+        const scores = getPerGameScores(match);
+
+        expect(scores).toHaveLength(1);
+        expect(scores[0]).toEqual({
+            gameNumber: 1,
+            p1Score: 10,
+            p2Score: 8,
+            isCurrent: true,
+            isCompleted: false,
+        });
+    });
+
+    it('returns completed Game 1 and active Game 2 boxes, hiding unplayed Set 3', () => {
+        const match = createMockMatch({
+            player1: { name: 'Player 1', score: 5, gamesWon: 1 },
+            player2: { name: 'Player 2', score: 3, gamesWon: 0 },
+            gameHistory: [
+                { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' },
+            ],
+        });
+
+        const scores = getPerGameScores(match);
+
+        expect(scores).toHaveLength(2);
+        expect(scores[0]).toEqual({
+            gameNumber: 1,
+            p1Score: 21,
+            p2Score: 18,
+            isCurrent: false,
+            isCompleted: true,
+            p1Winner: true,
+            p2Winner: false,
+        });
+        expect(scores[1]).toEqual({
+            gameNumber: 2,
+            p1Score: 5,
+            p2Score: 3,
+            isCurrent: true,
+            isCompleted: false,
+        });
+    });
+
+    it('returns only 2 completed game boxes when match is completed 2-0, hiding unplayed Set 3', () => {
+        const match = createMockMatch({
+            status: 'completed',
+            player1: { name: 'Player 1', score: 0, gamesWon: 2 },
+            player2: { name: 'Player 2', score: 0, gamesWon: 0 },
+            gameHistory: [
+                { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' },
+                { gameNumber: 2, player1Score: 21, player2Score: 15, winner: 'player1' },
+            ],
+        });
+
+        const scores = getPerGameScores(match);
+
+        expect(scores).toHaveLength(2);
+        expect(scores[0].gameNumber).toBe(1);
+        expect(scores[1].gameNumber).toBe(2);
+    });
+
+    it('returns all 3 game boxes when all 3 sets are played', () => {
+        const match = createMockMatch({
+            status: 'completed',
+            player1: { name: 'Player 1', score: 0, gamesWon: 2 },
+            player2: { name: 'Player 2', score: 0, gamesWon: 1 },
+            gameHistory: [
+                { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' },
+                { gameNumber: 2, player1Score: 19, player2Score: 21, winner: 'player2' },
+                { gameNumber: 3, player1Score: 21, player2Score: 14, winner: 'player1' },
+            ],
+        });
+
+        const scores = getPerGameScores(match);
+
+        expect(scores).toHaveLength(3);
+    });
+});

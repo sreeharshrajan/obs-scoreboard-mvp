@@ -181,14 +181,6 @@ export function getPerGameScores(match: MatchState): GameScoreBox[] {
                 isCurrent: true,
                 isCompleted: false,
             });
-        } else {
-            boxes.push({
-                gameNumber: g,
-                p1Score: '-',
-                p2Score: '-',
-                isCurrent: false,
-                isCompleted: false,
-            });
         }
     }
 

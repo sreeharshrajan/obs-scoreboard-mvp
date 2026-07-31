@@ -84,7 +84,7 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
                                             : "bg-slate-200 text-slate-400 border-slate-300"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">G{box.gameNumber}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Set {box.gameNumber}</span>
                                     <span className="text-2xl font-black">{box.p1Score}</span>
                                 </div>
                             ))}
@@ -111,7 +111,7 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
                                             : "bg-slate-200 text-slate-400 border-slate-300"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">G{box.gameNumber}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Set {box.gameNumber}</span>
                                     <span className="text-2xl font-black">{box.p2Score}</span>
                                 </div>
                             ))}

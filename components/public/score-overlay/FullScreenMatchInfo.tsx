@@ -91,7 +91,7 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                                             : "bg-white/5 border-white/5 opacity-50"
                                     )}
                                 >
-                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">Set {box.gameNumber}</span>
                                     <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p1Score}</span>
                                 </div>
                             ))}
@@ -118,7 +118,7 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                                             : "bg-white/5 border-white/5 opacity-50"
                                     )}
                                 >
-                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">Set {box.gameNumber}</span>
                                     <span className="text-3xl font-black tabular-nums text-white drop-shadow-md">{box.p2Score}</span>
                                 </div>
                             ))}

@@ -107,7 +107,7 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                                             : "bg-white/10 text-white/40 border-white/5"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Set {box.gameNumber}</span>
                                     <span className="text-3xl font-black tabular-nums">{formatScore(box.p1Score)}</span>
                                 </div>
                             ))}
@@ -135,7 +135,7 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                                             : "bg-white/10 text-white/40 border-white/5"
                                     )}
                                 >
-                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">G{box.gameNumber}</span>
+                                    <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Set {box.gameNumber}</span>
                                     <span className="text-3xl font-black tabular-nums">{formatScore(box.p2Score)}</span>
                                 </div>
                             ))}
