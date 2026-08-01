@@ -125,7 +125,9 @@ export default memo(function MatchTimer({
                         : isMatchWon
                         ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
                         : isBreak
-                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold"
+                        ? isBreakOverTime
+                            ? "bg-red-500/20 text-red-500 font-bold animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
+                            : "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold"
                         : isTimerRunning
                         ? "bg-emerald-500/10 text-emerald-500"
                         : "bg-slate-100 dark:bg-white/5 text-slate-500"
@@ -152,11 +154,19 @@ export default memo(function MatchTimer({
 
                 {isBreak ? (
                     <div className="flex flex-col items-center">
-                        <div className="text-6xl font-bold tabular-nums tracking-tighter transition-colors duration-300 text-indigo-600 dark:text-indigo-400">
+                        <div className={clsx(
+                            "text-6xl font-bold tabular-nums tracking-tighter transition-all duration-500",
+                            isBreakOverTime
+                                ? "text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]"
+                                : "text-indigo-600 dark:text-indigo-400"
+                        )}>
                             {formatTime(Math.max(0, breakRemainingDisplay))}
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
-                            Match Clock Paused ({formatTime(elapsedDisplay)})
+                        <span className={clsx(
+                            "text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors",
+                            isBreakOverTime ? "text-red-400 font-extrabold animate-pulse" : "text-slate-400"
+                        )}>
+                            {isBreakOverTime ? "Break Time Over" : `Match Clock Paused (${formatTime(elapsedDisplay)})`}
                         </span>
 
                         {/* Break Presets */}
