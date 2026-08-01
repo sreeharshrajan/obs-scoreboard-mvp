@@ -133,9 +133,7 @@ export function getGameStructure(match: MatchState): {
     const gameHistory = match.gameHistory ?? [];
     const rules = getRuleSet(match.sport, match.scoringType);
     const totalGames = rules.bestOf;
-
-    const rawCurrentGame = gameHistory.length + 1;
-    const currentGame = Math.min(rawCurrentGame, totalGames);
+    const gamesNeeded = Math.ceil(totalGames / 2);
 
     const historyP1Won = gameHistory.filter(g => g.winner === 'player1').length;
     const historyP2Won = gameHistory.filter(g => g.winner === 'player2').length;
@@ -143,6 +141,12 @@ export function getGameStructure(match: MatchState): {
     // Use gameHistory as authoritative source when gameHistory is present to prevent stale gamesWon field from corrupting match state
     const p1GamesWon = gameHistory.length > 0 ? historyP1Won : (match.player1?.gamesWon ?? 0);
     const p2GamesWon = gameHistory.length > 0 ? historyP2Won : (match.player2?.gamesWon ?? 0);
+
+    const isMatchWon = p1GamesWon >= gamesNeeded || p2GamesWon >= gamesNeeded;
+    const rawCurrentGame = gameHistory.length + 1;
+    const currentGame = isMatchWon
+        ? Math.min(gameHistory.length, totalGames)
+        : Math.min(rawCurrentGame, totalGames);
 
     return {
         currentGame,
@@ -163,7 +167,16 @@ export function getPerGameScores(match: MatchState): GameScoreBox[] {
     const gameHistory = match.gameHistory ?? [];
     const rules = getRuleSet(match.sport, match.scoringType);
     const totalGames = rules.bestOf;
-    const isCompleted = match.status === 'completed';
+    const gamesNeeded = Math.ceil(totalGames / 2);
+
+    const historyP1Won = gameHistory.filter(g => g.winner === 'player1').length;
+    const historyP2Won = gameHistory.filter(g => g.winner === 'player2').length;
+
+    const p1GamesWon = gameHistory.length > 0 ? historyP1Won : (match.player1?.gamesWon ?? 0);
+    const p2GamesWon = gameHistory.length > 0 ? historyP2Won : (match.player2?.gamesWon ?? 0);
+
+    const isMatchWon = p1GamesWon >= gamesNeeded || p2GamesWon >= gamesNeeded;
+    const isCompleted = match.status === 'completed' || isMatchWon;
     const currentGameNumber = Math.min(gameHistory.length + 1, totalGames);
 
     const boxes: GameScoreBox[] = [];

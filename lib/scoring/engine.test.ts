@@ -211,7 +211,7 @@ describe('Badminton Scoring Engine', () => {
 
         const validation = validateState(state, rules);
         expect(validation.valid).toBe(false);
-        expect(validation.errors).toContain('Cannot modify score on a completed match');
+        expect(validation.errors).toContain('Cannot modify score on a completed or already won match');
     });
 
     it('Scenario 11: timer pause and resume accumulates elapsed time without reset', () => {

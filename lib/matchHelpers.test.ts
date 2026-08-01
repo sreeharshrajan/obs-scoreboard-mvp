@@ -113,5 +113,23 @@ describe('matchHelpers - getPerGameScores', () => {
         expect(details.p2GamesWon).toBe(1); // Derived correctly from gameHistory
         expect(details.currentGame).toBe(2);
     });
+
+    it('hides 3rd set box when a player wins 2-0 even if status is still live', () => {
+        const match = createMockMatch({
+            status: 'live',
+            player1: { name: 'Player 1', score: 0, gamesWon: 2 },
+            player2: { name: 'Player 2', score: 0, gamesWon: 0 },
+            gameHistory: [
+                { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' },
+                { gameNumber: 2, player1Score: 21, player2Score: 15, winner: 'player1' },
+            ],
+        });
+
+        const scores = getPerGameScores(match);
+        expect(scores).toHaveLength(2);
+
+        const details = getMatchDetails(match);
+        expect(details.currentGame).toBe(2);
+    });
 });
 

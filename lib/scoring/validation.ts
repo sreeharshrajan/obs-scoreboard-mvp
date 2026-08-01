@@ -41,8 +41,9 @@ export function validateState(
     }
 
     // Completed match guard
-    if (state.status === 'completed') {
-        errors.push('Cannot modify score on a completed match');
+    const isMatchWon = (p1GamesWon >= gamesNeeded || p2GamesWon >= gamesNeeded);
+    if (state.status === 'completed' || isMatchWon) {
+        errors.push('Cannot modify score on a completed or already won match');
     }
 
     return {
