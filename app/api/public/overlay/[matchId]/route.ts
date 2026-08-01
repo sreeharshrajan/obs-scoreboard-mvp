@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
-import { FieldPath } from "firebase-admin/firestore";
 import { memoryCache } from "@/lib/cache/memoryCache";
 
 export const dynamic = 'force-dynamic';
@@ -40,30 +39,18 @@ export async function GET(
         }
 
         if (!matchDoc) {
-            let snapshot = await adminDb
-                .collectionGroup("matches")
-                .where("matchId", "==", matchId)
-                .limit(1)
-                .get();
-
-            if (snapshot.empty) {
-                snapshot = await adminDb
-                    .collectionGroup("matches")
-                    .where("id", "==", matchId)
-                    .limit(1)
-                    .get();
-            }
-
-            if (snapshot.empty) {
-                snapshot = await adminDb
-                    .collectionGroup("matches")
-                    .where(FieldPath.documentId(), "==", matchId)
-                    .limit(1)
-                    .get();
-            }
-
-            if (!snapshot.empty) {
-                matchDoc = snapshot.docs[0];
+            // Find match document by ID across tournaments in parallel without needing collectionGroup indexes
+            try {
+                const tournamentsSnap = await adminDb.collection("tournaments").get();
+                const matchSnaps = await Promise.all(
+                    tournamentsSnap.docs.map(tDoc => tDoc.ref.collection("matches").doc(matchId).get())
+                );
+                const found = matchSnaps.find(snap => snap.exists);
+                if (found) {
+                    matchDoc = found;
+                }
+            } catch (err) {
+                console.error("Error finding match across tournaments:", err);
             }
         }
 
