@@ -74,10 +74,14 @@ export default function SponsorBreakDisplay({ sponsors, currentSponsorIndex, mat
                         <span className="text-white font-black uppercase tracking-[0.3em] text-lg">
                             {match.status === 'break' ? "Match Break" : "Ad Break"}
                         </span>
-                        <div className="h-5 w-[1px] bg-white/20" />
-                        <span className="text-[#FF5A09] font-black tracking-wider text-xl tabular-nums">
-                            {formatBreakTime(breakTimeRemaining)}
-                        </span>
+                        {breakTimeRemaining >= 0 && (
+                            <>
+                                <div className="h-5 w-[1px] bg-white/20" />
+                                <span className="text-[#FF5A09] font-black tracking-wider text-xl tabular-nums">
+                                    {formatBreakTime(breakTimeRemaining)}
+                                </span>
+                            </>
+                        )}
                     </div>
 
                     {/* Progress Indicator */}

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, Info, LayoutTemplate } from 'lucide-react';
+import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, Info, LayoutTemplate, Download } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
@@ -14,9 +14,10 @@ interface ConsoleHeaderProps {
     isSyncing: boolean;
     isFullscreen: boolean;
     onToggleFullscreen: () => void;
+    onExportMatch?: () => void;
 }
 
-export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen }: ConsoleHeaderProps) {
+export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen, onExportMatch }: ConsoleHeaderProps) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -112,6 +113,16 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                     >
                         <Edit size={16} />
                     </Link>
+
+                    <button
+                        type="button"
+                        title="Export Match Report"
+                        onClick={onExportMatch}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm cursor-pointer"
+                    >
+                        <Download size={16} />
+                        <span className="hidden md:inline">Export</span>
+                    </button>
                 </div>
 
                 {/* Settings Toggle */}
