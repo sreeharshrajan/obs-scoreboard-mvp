@@ -180,7 +180,9 @@ export default function MatchConsole() {
     const mutation = useMutation({
         mutationFn: async (newData: Partial<MatchState>) => {
             const token = await getToken();
-            return updateMatch({ tournamentId, matchId, data: newData, token });
+            // Sanitize undefined fields so JSON payload is clean
+            const cleanData = JSON.parse(JSON.stringify(newData));
+            return updateMatch({ tournamentId, matchId, data: cleanData, token });
         },
         onMutate: async (newData) => {
             await queryClient.cancelQueries({ queryKey: ['match', matchId] });
@@ -198,10 +200,11 @@ export default function MatchConsole() {
             return { previous };
         },
         onError: (err, newData, context) => {
+            console.error("Match update mutation error:", err);
             if (context?.previous) {
                 queryClient.setQueryData(['match', matchId], context.previous);
             }
-            toast.error("Unable to save score. Changes have been reverted.");
+            toast.error(`Unable to save score: ${err.message || 'Changes reverted'}`);
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['match', matchId] });
