@@ -123,22 +123,11 @@ export default function MatchConsole() {
     } | null>(null);
 
     // Helper to get token
-    const getToken = async () => {
+    const getToken = useCallback(async () => {
         const user = auth.currentUser;
-        if (!user) {
-            return new Promise<string>((resolve, reject) => {
-                const unsubscribe = auth.onIdTokenChanged(async (user: User | null) => {
-                    unsubscribe();
-                    if (user) {
-                        resolve(await user.getIdToken());
-                    } else {
-                        reject(new Error("Not authenticated"));
-                    }
-                });
-            });
-        }
+        if (!user) throw new Error("Not authenticated");
         return user.getIdToken();
-    };
+    }, []);
 
     // 1. Data Query: Match
     const { data: match, isLoading: isMatchLoading, isError: isMatchError } = useQuery<MatchState>({

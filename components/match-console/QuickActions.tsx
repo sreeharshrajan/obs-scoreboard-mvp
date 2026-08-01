@@ -26,6 +26,7 @@ export default memo(function QuickActions({
         <>
             <div className="grid grid-cols-3 gap-4">
                 <button
+                    type="button"
                     onClick={onSwap}
                     disabled={isCompleted || isMatchWon}
                     className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all group disabled:opacity-50 disabled:hover:border-slate-100 dark:disabled:hover:border-white/5 disabled:cursor-not-allowed"
@@ -34,6 +35,7 @@ export default memo(function QuickActions({
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Swap Sides</span>
                 </button>
                 <button
+                    type="button"
                     onClick={onResetGame}
                     disabled={isCompleted}
                     className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-amber-500/30 transition-all group disabled:opacity-50 disabled:hover:border-slate-100 dark:disabled:hover:border-white/5 disabled:cursor-not-allowed"
@@ -44,6 +46,7 @@ export default memo(function QuickActions({
                 </button>
                 {!isCompleted ? (
                     <button
+                        type="button"
                         onClick={onEndMatch}
                         className={clsx(
                             "flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] border transition-all group cursor-pointer",
@@ -58,6 +61,7 @@ export default memo(function QuickActions({
                     </button>
                 ) : (
                     <button
+                        type="button"
                         onClick={onResumeMatch || onEndMatch}
                         className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500 transition-all group cursor-pointer"
                         title="Resume / Reopen Match"
