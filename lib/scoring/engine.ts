@@ -360,15 +360,34 @@ export function resumeMatch(state: MatchState): MatchState {
 }
 
 /**
- * Toggles break status.
+ * Toggles break status and initializes/clears break timer state.
  */
-export function toggleBreakState(state: MatchState): MatchState {
+export function toggleBreakState(state: MatchState, defaultBreakDuration: number = 60): MatchState {
     if (state.status === 'completed') return state;
 
-    const newStatus = state.status === 'break' ? 'live' : 'break';
+    const isStartingBreak = state.status !== 'break';
+    const now = Date.now();
+
     return {
         ...state,
-        status: newStatus,
+        status: isStartingBreak ? 'break' : 'live',
+        breakTimerDuration: isStartingBreak ? (state.breakTimerDuration || defaultBreakDuration) : undefined,
+        breakTimerStartTime: isStartingBreak ? now : null,
+        breakTimerElapsed: isStartingBreak ? 0 : undefined,
+        version: (state.version ?? 0) + 1,
+    };
+}
+
+/**
+ * Sets custom break timer duration.
+ */
+export function setBreakDuration(state: MatchState, durationSeconds: number): MatchState {
+    const now = Date.now();
+    return {
+        ...state,
+        breakTimerDuration: durationSeconds,
+        breakTimerStartTime: state.status === 'break' ? now : state.breakTimerStartTime,
+        breakTimerElapsed: 0,
         version: (state.version ?? 0) + 1,
     };
 }

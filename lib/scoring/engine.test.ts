@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MatchState } from '@/types/match';
 import { getRuleSet } from './rules';
-import { processScoringPipeline, resetMatchState, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, undoLastGame } from './engine';
+import { processScoringPipeline, resetMatchState, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, setBreakDuration, undoLastGame } from './engine';
 import { validateState } from './validation';
 
 function createInitialState(): MatchState {
@@ -247,5 +247,25 @@ describe('Badminton Scoring Engine', () => {
         expect(correctedState.gameHistory?.length).toBe(1);
         expect(correctedState.player1.score).toBe(20);
         expect(correctedState.player2.score).toBe(10);
+    });
+
+    it('Scenario 13: break timer toggle and duration setting', () => {
+        let state = createInitialState();
+        expect(state.status).toBe('live');
+
+        // Toggle to break
+        const breakState = toggleBreakState(state, 120);
+        expect(breakState.status).toBe('break');
+        expect(breakState.breakTimerDuration).toBe(120);
+        expect(breakState.breakTimerStartTime).toBeGreaterThan(0);
+
+        // Change break duration
+        const updatedBreakState = setBreakDuration(breakState, 90);
+        expect(updatedBreakState.breakTimerDuration).toBe(90);
+
+        // Resume from break
+        const resumedState = toggleBreakState(updatedBreakState);
+        expect(resumedState.status).toBe('live');
+        expect(resumedState.breakTimerStartTime).toBeNull();
     });
 });

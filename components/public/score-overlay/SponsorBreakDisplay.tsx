@@ -12,7 +12,35 @@ interface SponsorBreakDisplayProps {
 export default function SponsorBreakDisplay({ sponsors, currentSponsorIndex, match }: SponsorBreakDisplayProps) {
     const isBreak = match.status === 'break';
     const showFullPageAd = isBreak && sponsors.length > 0;
-    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, true);
+    const targetDuration = match.breakTimerDuration || 60;
+    const [breakTimeRemaining, setBreakTimeRemaining] = React.useState<number>(targetDuration);
+
+    React.useEffect(() => {
+        if (!isBreak || !match.breakTimerStartTime) {
+            setBreakTimeRemaining(targetDuration);
+            return;
+        }
+
+        const updateRemaining = () => {
+            const now = Date.now();
+            const elapsed = Math.floor((now - match.breakTimerStartTime!) / 1000);
+            setBreakTimeRemaining(targetDuration - elapsed);
+        };
+
+        updateRemaining();
+        const interval = setInterval(updateRemaining, 500);
+        return () => clearInterval(interval);
+    }, [isBreak, match.breakTimerStartTime, targetDuration]);
+
+    const formatBreakTime = (seconds: number) => {
+        const absSec = Math.abs(seconds);
+        const m = Math.floor(absSec / 60);
+        const s = Math.floor(absSec % 60);
+        const formatted = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        return seconds < 0 ? `-${formatted}` : formatted;
+    };
+
+    const progressPercent = Math.max(0, Math.min(100, (breakTimeRemaining / targetDuration) * 100));
 
     return (
         <div className={clsx(
@@ -39,17 +67,24 @@ export default function SponsorBreakDisplay({ sponsors, currentSponsorIndex, mat
                         />
                     </div>
 
-                    {/* Break Indicator Pill */}
-                    <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 bg-black/60 backdrop-blur-xl border border-white/20 px-10 py-4 rounded-full flex items-center gap-4 shadow-2xl">
+                    {/* Break Indicator Pill with Countdown */}
+                    <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 bg-black/60 backdrop-blur-xl border border-white/20 px-10 py-4 rounded-full flex items-center gap-6 shadow-2xl">
                         <div className="w-3 h-3 rounded-full bg-[#FF5A09] animate-pulse shadow-[0_0_12px_#FF5A09]" />
-                        <span className="text-white font-black uppercase tracking-[0.4em] text-lg">
+                        <span className="text-white font-black uppercase tracking-[0.3em] text-lg">
                             {match.status === 'break' ? "Match Break" : "Ad Break"}
+                        </span>
+                        <div className="h-5 w-[1px] bg-white/20" />
+                        <span className="text-[#FF5A09] font-black tracking-wider text-xl tabular-nums">
+                            {formatBreakTime(breakTimeRemaining)}
                         </span>
                     </div>
 
                     {/* Progress Indicator */}
                     <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#FF5A09] transition-all duration-1000 ease-linear" style={{ width: '100%' }} />
+                        <div
+                            className="h-full bg-[#FF5A09] transition-all duration-500 ease-linear"
+                            style={{ width: `${progressPercent}%` }}
+                        />
                     </div>
                 </div>
             )}

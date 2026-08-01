@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { MatchState, GameResult } from '@/types/match';
 import { getRuleSet, isGameComplete } from '@/lib/scoring/rules';
-import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, undoLastGame } from '@/lib/scoring/engine';
+import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, setBreakDuration, undoLastGame } from '@/lib/scoring/engine';
 import { validateState } from '@/lib/scoring/validation';
 import { getGameStructure } from '@/lib/matchHelpers';
 import { auth } from '@/lib/firebase/client';
@@ -247,9 +247,31 @@ export default function MatchConsole() {
     }, [tournament, match, mutation, userProfile]);
 
 
-    // 5. Timer & Clock Logic
+    const [breakRemainingDisplay, setBreakRemainingDisplay] = useState<number>(60);
+
+    // 5. Timer & Clock Logic (Match Clock & Break Clock)
     useEffect(() => {
         if (!match) return;
+
+        // Break Timer Countdown Logic
+        if (match.status === 'break') {
+            const targetDuration = match.breakTimerDuration || 60;
+            const calculateBreakRemaining = () => {
+                if (!match.breakTimerStartTime) return targetDuration;
+                const now = Date.now();
+                const elapsedSec = Math.floor((now - match.breakTimerStartTime) / 1000);
+                return targetDuration - elapsedSec;
+            };
+
+            setBreakRemainingDisplay(calculateBreakRemaining());
+            const breakInterval = setInterval(() => {
+                setBreakRemainingDisplay(calculateBreakRemaining());
+            }, 500);
+
+            return () => clearInterval(breakInterval);
+        }
+
+        // Match Clock Logic
         if (!match.isTimerRunning || match.status === 'completed') {
             setElapsedDisplay(match.timerElapsed || 0);
             return;
@@ -264,7 +286,7 @@ export default function MatchConsole() {
             setElapsedDisplay(calculateTime());
         }, 100);
         return () => clearInterval(timerInterval);
-    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match?.status]);
+    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match?.status, match?.breakTimerStartTime, match?.breakTimerDuration]);
 
     // Fullscreen Logic
     const toggleFullscreen = useCallback(() => {
@@ -442,6 +464,12 @@ export default function MatchConsole() {
         mutation.mutate(newState);
     }, [safeMatch, mutation]);
 
+    const handleSelectBreakDuration = useCallback((seconds: number) => {
+        if (!safeMatch) return;
+        const newState = setBreakDuration(safeMatch, seconds);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
+
     const handleToggleBreak = useCallback(() => {
         if (!safeMatch) return;
         const newState = toggleBreakState(safeMatch);
@@ -551,6 +579,9 @@ export default function MatchConsole() {
                             currentGame={currentGame}
                             totalGames={totalGames}
                             gameHistory={matchGameHistory}
+                            breakRemainingDisplay={breakRemainingDisplay}
+                            breakDuration={safeMatch.breakTimerDuration || 60}
+                            onSelectBreakDuration={handleSelectBreakDuration}
                         />
                     </div>
 
