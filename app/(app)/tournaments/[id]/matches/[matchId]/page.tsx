@@ -130,8 +130,20 @@ export default function MatchConsole() {
     // Helper to get token
     const getToken = useCallback(async () => {
         const user = auth.currentUser;
-        if (!user) throw new Error("Not authenticated");
-        return user.getIdToken();
+        if (user) {
+            return user.getIdToken();
+        }
+        // Wait for auth initialization
+        return new Promise<string>((resolve, reject) => {
+            const unsubscribe = auth.onIdTokenChanged((u: User | null) => {
+                unsubscribe();
+                if (u) {
+                    resolve(u.getIdToken());
+                } else {
+                    reject(new Error("Not authenticated"));
+                }
+            });
+        });
     }, []);
 
     // 1. Data Query: Match
@@ -206,7 +218,8 @@ export default function MatchConsole() {
             if (context?.previous) {
                 queryClient.setQueryData(['match', matchId], context.previous);
             }
-            toast.error(`Unable to save score: ${err.message || 'Changes reverted'}`);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            toast.error(`Unable to save score: ${errorMessage || 'Changes reverted'}`);
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['match', matchId] });
@@ -272,7 +285,7 @@ export default function MatchConsole() {
         }, 500);
 
         return () => clearInterval(breakInterval);
-    }, [match?.status, match?.breakTimerStartTime, match?.breakTimerDuration]);
+    }, [match]);
 
     // 6. Match Clock Logic (Runs continuously whenever isTimerRunning is true, regardless of break state)
     useEffect(() => {
