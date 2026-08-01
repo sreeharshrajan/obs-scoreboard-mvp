@@ -22,12 +22,12 @@ export default function BwfSponsorTickler({ sponsors, currentSponsorIndex, match
                 ? "h-28 max-w-[360px]"
                 : "h-14 max-w-[200px]"; // default 'md'
 
-    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, match.isSponsorsOverlayActive);
+    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, true);
 
     return (
         <div className={clsx(
             "absolute top-12 right-12 transition-all duration-700 ease-in-out z-40 font-sans flex items-center justify-center",
-            showSponsorCard ? "translate-y-0 opacity-100 scale-100" : "-translate-y-24 opacity-0 scale-95"
+            showSponsorCard ? "translate-y-0 opacity-100 scale-100 pointer-events-auto" : "-translate-y-24 opacity-0 scale-95 pointer-events-none"
         )}>
             {sponsors.length > 0 && (
                 isLogoOnly ? (

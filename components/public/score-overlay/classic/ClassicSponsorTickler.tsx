@@ -28,13 +28,13 @@ export default function ClassicSponsorTickler({ sponsors, currentSponsorIndex, m
                 ? "h-36 max-w-[440px]"
                 : "h-20 max-w-[240px]"; // default 'md'
 
-    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, match.isSponsorsOverlayActive);
+    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, true);
 
     return (
         <div className={clsx(
             "absolute bottom-12 transition-all duration-700 ease-in-out z-40 flex items-center justify-center",
             positionClass,
-            showSponsorCard ? "translate-y-0 opacity-100 scale-100" : "translate-y-24 opacity-0 scale-95"
+            showSponsorCard ? "translate-y-0 opacity-100 scale-100 pointer-events-auto" : "translate-y-24 opacity-0 scale-95 pointer-events-none"
         )}>
             {sponsors.length > 0 && (
                 isLogoOnly ? (

@@ -43,9 +43,10 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
             const matchDoc = snapshot.docs.find(d => d.id === matchId);
             if (matchDoc) {
                 setMatch(matchDoc.data() as MatchState);
-                // Extract tournamentId from reference path: tournaments/{id}/matches/{matchId}
-                if (matchDoc.ref.parent.parent) {
-                    setTournamentId(matchDoc.ref.parent.parent.id);
+                // Extract tournamentId from data or reference path: tournaments/{id}/matches/{matchId}
+                const resolvedTournamentId = (matchDoc.data() as any)?.tournamentId || matchDoc.ref.parent?.parent?.id;
+                if (resolvedTournamentId) {
+                    setTournamentId(resolvedTournamentId);
                 }
                 setError(null);
             } else {
@@ -85,16 +86,15 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         return () => clearInterval(timerInterval);
     }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match]);
 
-    // Sponsors Logic
+    // Sponsors Logic: Always subscribe to sponsors as long as tournamentId is available
     useEffect(() => {
-        const shouldFetch = match?.isSponsorsOverlayActive || match?.status === 'break';
-        if (!tournamentId || !shouldFetch) return;
+        if (!tournamentId) return;
 
         const q = query(collection(db, "tournaments", tournamentId, "sponsors"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const activeSponsors = snapshot.docs
                 .map(d => ({ id: d.id, ...d.data() } as any))
-                .filter(s => s.status === true)
+                .filter(s => s.status !== false)
                 .sort((a, b) => (a.priority || 99) - (b.priority || 99));
             setSponsors(activeSponsors);
         }, (err) => {
@@ -102,7 +102,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         });
 
         return () => unsubscribe();
-    }, [tournamentId, match?.isSponsorsOverlayActive, match?.status]);
+    }, [tournamentId]);
 
     // Carousel Timer
     useEffect(() => {
