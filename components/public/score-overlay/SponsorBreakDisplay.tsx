@@ -12,6 +12,7 @@ interface SponsorBreakDisplayProps {
 export default function SponsorBreakDisplay({ sponsors, currentSponsorIndex, match }: SponsorBreakDisplayProps) {
     const isBreak = match.status === 'break';
     const showFullPageAd = isBreak && sponsors.length > 0;
+    const currentSponsor = getActiveSponsor(sponsors, currentSponsorIndex, true);
     const targetDuration = match.breakTimerDuration || 60;
     const [breakTimeRemaining, setBreakTimeRemaining] = React.useState<number>(targetDuration);
 
