@@ -7,7 +7,7 @@ import { MatchState, GameResult } from '@/types/match';
 import { getRuleSet, isGameComplete } from '@/lib/scoring/rules';
 import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, setBreakDuration, undoLastGame } from '@/lib/scoring/engine';
 import { validateState } from '@/lib/scoring/validation';
-import { getGameStructure } from '@/lib/matchHelpers';
+import { getGameStructure, swapMatchSides } from '@/lib/matchHelpers';
 import { auth } from '@/lib/firebase/client';
 import { User } from 'firebase/auth';
 import { MatchConsoleSkeleton } from "@/components/dashboard/skeletons";
@@ -89,6 +89,14 @@ function useDebouncedMutation(
         }, delay);
     }, [mutationFn, delay]);
 
+    const cancel = useCallback(() => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+        pendingUpdatesRef.current = {};
+    }, []);
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -96,7 +104,7 @@ function useDebouncedMutation(
         };
     }, []);
 
-    return debouncedMutate;
+    return { debouncedMutate, cancel };
 }
 
 
@@ -217,8 +225,13 @@ export default function MatchConsole() {
                 queryClient.setQueryData<MatchState>(['match', matchId], (old) => {
                     if (!old) return previous;
                     const merged = { ...old, ...newData };
-                    if (newData.player1) merged.player1 = { ...old.player1, ...newData.player1 };
-                    if (newData.player2) merged.player2 = { ...old.player2, ...newData.player2 };
+                    if (newData.player1 && newData.player2) {
+                        merged.player1 = newData.player1;
+                        merged.player2 = newData.player2;
+                    } else {
+                        if (newData.player1) merged.player1 = { ...old.player1, ...newData.player1 };
+                        if (newData.player2) merged.player2 = { ...old.player2, ...newData.player2 };
+                    }
                     return merged;
                 });
             }
@@ -238,7 +251,7 @@ export default function MatchConsole() {
     });
 
     // Wrapper for debounced calls (specifically for rapid score/server updates)
-    const debouncedMutate = useDebouncedMutation(mutation.mutateAsync, 500);
+    const { debouncedMutate, cancel: cancelDebounced } = useDebouncedMutation(mutation.mutateAsync, 500);
 
 
     // 4. Sync Info to Match Doc (Tournament Logo + Streamer Logo)
@@ -347,8 +360,13 @@ export default function MatchConsole() {
         queryClient.setQueryData<MatchState>(['match', matchId], (old) => {
             if (!old) return old;
             const merged = { ...old, ...newData };
-            if (newData.player1) merged.player1 = { ...old.player1, ...newData.player1 };
-            if (newData.player2) merged.player2 = { ...old.player2, ...newData.player2 };
+            if (newData.player1 && newData.player2) {
+                merged.player1 = newData.player1;
+                merged.player2 = newData.player2;
+            } else {
+                if (newData.player1) merged.player1 = { ...old.player1, ...newData.player1 };
+                if (newData.player2) merged.player2 = { ...old.player2, ...newData.player2 };
+            }
             return merged;
         });
     }, [queryClient, matchId]);
@@ -512,46 +530,12 @@ export default function MatchConsole() {
     const swapSides = useCallback(() => {
         if (!safeMatch) return;
 
-        // Swap players
-        const newP1 = safeMatch.player2;
-        const newP2 = safeMatch.player1;
+        const updates = swapMatchSides(safeMatch);
 
-        // Flip current server
-        const newServer = safeMatch.currentServer === 'player1' ? 'player2' : 'player1';
-
-        // Swap gameHistory entries so set wins move with the players to their new slots
-        const newGameHistory = (safeMatch.gameHistory ?? []).map(g => ({
-            ...g,
-            player1Score: g.player2Score,
-            player2Score: g.player1Score,
-            winner: (g.winner === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
-        }));
-
-        // Swap scoreEvents entries
-        const newScoreEvents = (safeMatch.scoreEvents ?? []).map(e => ({
-            ...e,
-            team: (e.team === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
-            previousScore: {
-                player1: e.previousScore.player2,
-                player2: e.previousScore.player1,
-            },
-            resultingScore: {
-                player1: e.resultingScore.player2,
-                player2: e.resultingScore.player1,
-            },
-        }));
-
-        const updates: Partial<MatchState> = {
-            player1: newP1,
-            player2: newP2,
-            currentServer: newServer,
-            gameHistory: newGameHistory,
-            scoreEvents: newScoreEvents,
-        };
-
+        cancelDebounced();
         optimisticUpdate(updates);
-        debouncedMutate(updates);
-    }, [safeMatch, optimisticUpdate, debouncedMutate]);
+        mutation.mutate(updates);
+    }, [safeMatch, cancelDebounced, optimisticUpdate, mutation]);
 
     const handleSwapSetHistory = useCallback(() => {
         if (!safeMatch || !safeMatch.gameHistory || safeMatch.gameHistory.length === 0) return;

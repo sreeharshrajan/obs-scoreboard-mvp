@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ChevronLeft, Save, Loader2, RotateCcw, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Save, Loader2, RotateCcw, AlertTriangle, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
@@ -45,15 +45,20 @@ const matchSchema = z.object({
 
 type MatchFormValues = z.infer<typeof matchSchema>;
 
-export default function EditMatch({ params }: { params: Promise<{ id: string; matchId: string }> }) {
+export default function EditMatchPage({
+    params
+}: {
+    params: Promise<{ id: string; matchId: string }>
+}) {
     const { id: tournamentId, matchId } = use(params);
+
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [rawMatch, setRawMatch] = useState<MatchState | null>(null);
 
-    const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<MatchFormValues>({
+    const { register, handleSubmit, reset, watch, getValues, setValue, formState: { errors } } = useForm<MatchFormValues>({
         resolver: zodResolver(matchSchema),
     });
 
@@ -125,13 +130,59 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
             if (!user) throw new Error("Unauthorized");
             const token = await user.getIdToken();
 
+            const payload: any = { ...data };
+
+            // Check if player positions were swapped compared to rawMatch
+            const p1SwappedWithP2 =
+                rawMatch?.player1 && rawMatch?.player2 &&
+                data.player1.name === rawMatch.player2.name &&
+                data.player2.name === rawMatch.player1.name;
+
+            if (p1SwappedWithP2 && rawMatch) {
+                payload.player1 = {
+                    ...data.player1,
+                    score: rawMatch.player2.score ?? 0,
+                    gamesWon: rawMatch.player2.gamesWon ?? 0,
+                };
+                payload.player2 = {
+                    ...data.player2,
+                    score: rawMatch.player1.score ?? 0,
+                    gamesWon: rawMatch.player1.gamesWon ?? 0,
+                };
+                if (rawMatch.currentServer) {
+                    payload.currentServer = rawMatch.currentServer === 'player1' ? 'player2' : 'player1';
+                }
+                if (rawMatch.gameHistory) {
+                    payload.gameHistory = rawMatch.gameHistory.map(g => ({
+                        ...g,
+                        player1Score: g.player2Score,
+                        player2Score: g.player1Score,
+                        winner: (g.winner === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
+                    }));
+                }
+                if (rawMatch.scoreEvents) {
+                    payload.scoreEvents = rawMatch.scoreEvents.map(e => ({
+                        ...e,
+                        team: (e.team === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
+                        previousScore: {
+                            player1: e.previousScore.player2,
+                            player2: e.previousScore.player1,
+                        },
+                        resultingScore: {
+                            player1: e.resultingScore.player2,
+                            player2: e.resultingScore.player1,
+                        },
+                    }));
+                }
+            }
+
             const res = await fetch(`/api/tournaments/${tournamentId}/matches/${matchId}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) throw new Error("Failed to update match");
@@ -314,7 +365,20 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
 
                             <div className="flex items-center gap-4 py-1">
                                 <div className="h-px flex-1 bg-slate-100 dark:bg-white/5" />
-                                <span className="text-[10px] font-bold text-slate-400 italic">VS</span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const p1 = getValues("player1");
+                                        const p2 = getValues("player2");
+                                        setValue("player1", p2, { shouldValidate: true, shouldDirty: true });
+                                        setValue("player2", p1, { shouldValidate: true, shouldDirty: true });
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-orange-50 dark:hover:bg-orange-500/10 text-slate-500 hover:text-[#FF5A09] text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+                                    title="Swap Player Positions"
+                                >
+                                    <ArrowRightLeft size={12} />
+                                    <span>Swap Players</span>
+                                </button>
                                 <div className="h-px flex-1 bg-slate-100 dark:bg-white/5" />
                             </div>
 
