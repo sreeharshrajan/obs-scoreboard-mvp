@@ -29,7 +29,7 @@ export default memo(function QuickActions({
                     type="button"
                     onClick={onSwap}
                     disabled={isCompleted || isMatchWon}
-                    className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all group disabled:opacity-50 disabled:hover:border-slate-100 dark:disabled:hover:border-white/5 disabled:cursor-not-allowed"
+                    className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all group disabled:opacity-50 disabled:hover:border-slate-100 dark:disabled:hover:border-white/5 disabled:cursor-not-allowed"
                 >
                     <ArrowRightLeft size={20} className="text-slate-400 group-hover:text-[#FF5A09] transition-colors" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Swap Sides</span>
@@ -38,7 +38,7 @@ export default memo(function QuickActions({
                     type="button"
                     onClick={onResetGame}
                     disabled={isCompleted}
-                    className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-amber-500/30 transition-all group disabled:opacity-50 disabled:hover:border-slate-100 dark:disabled:hover:border-white/5 disabled:cursor-not-allowed"
+                    className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-white dark:bg-[#252525] border border-slate-100 dark:border-white/5 hover:border-amber-500/30 transition-all group disabled:opacity-50 disabled:hover:border-slate-100 dark:disabled:hover:border-white/5 disabled:cursor-not-allowed"
                     title="Reset current game scores to 0-0"
                 >
                     <RotateCcw size={20} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
@@ -49,7 +49,7 @@ export default memo(function QuickActions({
                         type="button"
                         onClick={onEndMatch}
                         className={clsx(
-                            "flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] border transition-all group cursor-pointer",
+                            "flex flex-col items-center justify-center gap-2 p-6 rounded-lg border transition-all group cursor-pointer",
                             isMatchWon
                                 ? "bg-red-500/10 border-red-500 shadow-lg shadow-red-500/20 animate-pulse ring-2 ring-red-500/30"
                                 : "bg-white dark:bg-[#252525] border-slate-100 dark:border-white/5 hover:border-red-500/30"
@@ -65,7 +65,7 @@ export default memo(function QuickActions({
                     <button
                         type="button"
                         onClick={onResumeMatch || onEndMatch}
-                        className="flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500 transition-all group cursor-pointer"
+                        className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500 transition-all group cursor-pointer"
                         title="Resume / Reopen Match"
                     >
                         <RotateCcw size={20} className="text-emerald-500 group-hover:rotate-[-45deg] transition-transform" />

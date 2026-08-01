@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Wifi, Maximize, Minimize, ArrowLeft, ExternalLink, Settings, Monitor, Image as ImageIcon, Users, Edit, Info, LayoutTemplate } from 'lucide-react';
+import { Maximize, Minimize, ArrowLeft, Settings, Monitor, Image as ImageIcon, Users, Edit, Info, LayoutTemplate, Download } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
@@ -14,9 +14,12 @@ interface ConsoleHeaderProps {
     isSyncing: boolean;
     isFullscreen: boolean;
     onToggleFullscreen: () => void;
+    onExportMatch?: () => void;
 }
 
-export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen }: ConsoleHeaderProps) {
+import { useRouter } from 'next/navigation';
+export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen, onExportMatch }: ConsoleHeaderProps) {
+    const router = useRouter();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +39,7 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
     };
 
     return (
-        <header className="relative z-50 flex items-center justify-between bg-white dark:bg-[#1E1E1E] border border-slate-200/60 dark:border-white/10 p-2 md:p-3 rounded-[24px] shadow-sm">
+        <header className="relative z-50 flex items-center justify-between bg-white dark:bg-[#1E1E1E] border border-slate-200/60 dark:border-white/10 p-2 md:p-3 rounded-3xl shadow-sm">
             {/* LEFT SECTION: Identity */}
             <div className="flex items-center gap-4">
                 <Link
@@ -105,13 +108,24 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                         <span className="hidden md:inline">Overlay</span>
                     </Link>
 
-                    <Link
+                    <button
+                        type="button"
                         title="Edit Match Info"
-                        href={`/tournaments/${tournamentId}/matches/${matchId}/edit`}
+                        onClick={() => router.push(`/tournaments/${tournamentId}/matches/${matchId}/edit`)}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm"
                     >
                         <Edit size={16} />
-                    </Link>
+                    </button>
+
+                    <button
+                        type="button"
+                        title="Export Match Report"
+                        onClick={onExportMatch}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm cursor-pointer"
+                    >
+                        <Download size={16} />
+                        <span className="hidden md:inline">Export</span>
+                    </button>
                 </div>
 
                 {/* Settings Toggle */}
@@ -131,7 +145,7 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
 
                     {/* Dropdown Menu (Improved Contrast) */}
                     {isSettingsOpen && (
-                        <div className="absolute top-full right-0 mt-3 w-72 origin-top-right overflow-hidden bg-white dark:bg-[#1A1A1A] rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-white/10 p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute top-full right-0 mt-3 w-72 origin-top-right overflow-hidden bg-white dark:bg-[#1A1A1A] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-white/10 p-2 z-60 animate-in fade-in zoom-in-95 duration-200">
                             <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 mb-2">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Graphics Configuration</p>
                             </div>

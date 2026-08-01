@@ -4,7 +4,7 @@ export default function GridSkeleton() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
             {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-56 rounded-[2rem] bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 p-6 flex flex-col justify-between relative overflow-hidden">
+                <div key={i} className="h-56 rounded-lg bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 p-6 flex flex-col justify-between relative overflow-hidden">
                     <div className="space-y-4 relative z-10">
                         <div className="flex justify-between">
                             <Skeleton className="h-5 w-16 rounded-lg" />

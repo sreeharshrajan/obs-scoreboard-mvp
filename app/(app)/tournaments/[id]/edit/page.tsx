@@ -206,7 +206,7 @@ export default function EditTournament({ params }: { params: Promise<{ id: strin
                 {/* RIGHT COLUMN: Logo & Submit */}
                 <div className="lg:col-span-5 space-y-6">
                     {/* Logo Upload Card */}
-                    <div className="p-6 md:p-8 rounded-[2rem] bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col items-center gap-6 shadow-sm">
+                    <div className="p-6 md:p-8 rounded-lg bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col items-center gap-6 shadow-sm">
                         <div
                             className="relative group cursor-pointer"
                             onClick={() => fileInputRef.current?.click()}
@@ -297,7 +297,7 @@ export default function EditTournament({ params }: { params: Promise<{ id: strin
                         </div>
                     </div>
 
-                    <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-[#2A2A2A]/20 border border-slate-200 dark:border-white/5 space-y-6">
+                    <div className="p-6 rounded-lg bg-slate-50 dark:bg-[#2A2A2A]/20 border border-slate-200 dark:border-white/5 space-y-6">
                         <button
                             type="submit"
                             disabled={isSaving}

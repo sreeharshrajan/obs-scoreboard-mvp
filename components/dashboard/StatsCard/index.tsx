@@ -19,7 +19,7 @@ export function StatsCard({ title, value, icon, color, isPrimary, link }: StatsC
 
     return (
         <Link href={link ?? "#"} className={`
-            p-4 sm:p-5 md:p-6 rounded-[1.5rem] sm:rounded-[2rem] border transition-all duration-500 group relative flex flex-col justify-between overflow-hidden 
+            p-4 sm:p-5 md:p-6 rounded-[1.5rem] sm:rounded-lg border transition-all duration-500 group relative flex flex-col justify-between overflow-hidden 
             ${isPrimary
                 ? 'bg-[#1A1A1A] dark:bg-white text-white dark:text-[#1A1A1A] border-transparent shadow-xl shadow-black/5'
                 : 'bg-white dark:bg-[#2A2A2A]/40 border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30'

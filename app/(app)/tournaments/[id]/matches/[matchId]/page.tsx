@@ -21,6 +21,7 @@ import MatchTimer from '@/components/match-console/MatchTimer';
 import QuickActions from '@/components/match-console/QuickActions';
 import SetCompletionModal from '@/components/match-console/SetCompletionModal';
 import EndMatchModal from '@/components/match-console/EndMatchModal';
+import ExportMatchModal from '@/components/match-console/ExportMatchModal';
 
 // --- Fetchers ---
 const fetchMatch = async (tournamentId: string, matchId: string, token: string): Promise<MatchState> => {
@@ -124,12 +125,36 @@ export default function MatchConsole() {
     } | null>(null);
 
     const [isEndMatchModalOpen, setIsEndMatchModalOpen] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+    // Track Firebase auth initialization
+    const [authReady, setAuthReady] = useState(false);
+    useEffect(() => {
+        if (auth.currentUser) {
+            setAuthReady(true);
+            return;
+        }
+        const unsub = auth.onIdTokenChanged(() => setAuthReady(true));
+        return () => unsub();
+    }, []);
 
     // Helper to get token
     const getToken = useCallback(async () => {
         const user = auth.currentUser;
-        if (!user) throw new Error("Not authenticated");
-        return user.getIdToken();
+        if (user) {
+            return user.getIdToken();
+        }
+        // Wait for auth initialization
+        return new Promise<string>((resolve, reject) => {
+            const unsubscribe = auth.onIdTokenChanged((u: User | null) => {
+                unsubscribe();
+                if (u) {
+                    resolve(u.getIdToken());
+                } else {
+                    reject(new Error("Not authenticated"));
+                }
+            });
+        });
     }, []);
 
     // 1. Data Query: Match
@@ -204,7 +229,8 @@ export default function MatchConsole() {
             if (context?.previous) {
                 queryClient.setQueryData(['match', matchId], context.previous);
             }
-            toast.error(`Unable to save score: ${err.message || 'Changes reverted'}`);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            toast.error(`Unable to save score: ${errorMessage || 'Changes reverted'}`);
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['match', matchId] });
@@ -270,7 +296,7 @@ export default function MatchConsole() {
         }, 500);
 
         return () => clearInterval(breakInterval);
-    }, [match?.status, match?.breakTimerStartTime, match?.breakTimerDuration]);
+    }, [match]);
 
     // 6. Match Clock Logic (Runs continuously whenever isTimerRunning is true, regardless of break state)
     useEffect(() => {
@@ -544,6 +570,7 @@ export default function MatchConsole() {
                 tournamentId={tournamentId}
                 matchId={matchId}
                 onUpdateMatch={handleUpdateMatch}
+                onExportMatch={() => setIsExportModalOpen(true)}
             />
 
             {/* Main Scoreboard Interface */}
@@ -635,6 +662,12 @@ export default function MatchConsole() {
                 isOpen={isEndMatchModalOpen}
                 onClose={() => setIsEndMatchModalOpen(false)}
                 onConfirm={handleConfirmEndMatch}
+                match={safeMatch}
+            />
+
+            <ExportMatchModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
                 match={safeMatch}
             />
         </div>

@@ -44,7 +44,7 @@ export default function SetCompletionModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
             <div 
-                className="relative w-full max-w-md bg-white dark:bg-[#1E1E1E] rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden p-6 lg:p-8 animate-in zoom-in-95 duration-200 flex flex-col gap-6"
+                className="relative w-full max-w-md bg-white dark:bg-[#1E1E1E] rounded-lg border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden p-6 lg:p-8 animate-in zoom-in-95 duration-200 flex flex-col gap-6"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}

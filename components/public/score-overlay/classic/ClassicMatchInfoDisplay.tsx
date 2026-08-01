@@ -14,18 +14,18 @@ export default function ClassicMatchInfoDisplay({ match }: ClassicMatchInfoDispl
     }
 
     return (
-        <div className="absolute top-12 right-12 h-[128px] flex items-stretch gap-4 animate-in slide-in-from-right-8 duration-700">
-            <div className="h-full bg-white text-slate-900 px-7 rounded-2xl shadow-2xl border border-white/40 flex flex-col justify-center items-end gap-1.5 min-w-[300px] max-w-[500px]">
+        <div className="absolute top-12 right-12 h-32 flex items-stretch gap-4 animate-in slide-in-from-right-8 duration-700">
+            <div className="h-full bg-white text-slate-900 px-7 rounded-2xl shadow-2xl border border-white/40 flex flex-col justify-center items-end gap-1.5 min-w-75 max-w-125">
                 {/* Tournament Tag */}
                 {match.tournamentName && (
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-red-600 to-red-700 px-3 py-1 rounded-md text-right whitespace-normal break-words leading-tight shadow-sm">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white bg-linear-to-r from-red-600 to-red-700 px-3 py-1 rounded-md text-right whitespace-normal wrap-break-word leading-tight shadow-sm">
                         {match.tournamentName}
                     </span>
                 )}
 
                 {/* Match Category / Title */}
                 {hasCategory && (
-                    <span className="text-lg font-black uppercase tracking-tight text-slate-900 leading-tight text-right whitespace-normal break-words">
+                    <span className="text-lg font-black uppercase tracking-tight text-slate-900 leading-tight text-right whitespace-normal wrap-break-word">
                         {hasCategory}
                     </span>
                 )}

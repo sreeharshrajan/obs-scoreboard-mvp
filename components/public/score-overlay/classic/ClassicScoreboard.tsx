@@ -44,7 +44,7 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
         <div className="absolute top-12 left-12 flex items-stretch shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700">
             {/* Left Brand Badge */}
             {match.showTournamentLogo !== false && match.tournamentLogo && (
-                <div className="flex flex-col items-center justify-center px-5 bg-gradient-to-br from-red-600 to-red-700 border-y border-l border-red-500/30 min-w-[90px] rounded-l-2xl">
+                <div className="flex flex-col items-center justify-center px-5 bg-linear-to-br from-red-600 to-red-700 border-y border-l border-red-500/30 min-w-22.5 rounded-l-2xl">
                     <div className="relative w-14 h-14">
                         <Image
                             src={match.tournamentLogo}
@@ -61,7 +61,7 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
             {/* Middle Player Rows (Dark Carbon Bars) */}
             <div className="flex flex-col divide-y divide-white/10 bg-[#1E293B] border-y border-white/10">
                 {/* Player 1 Row */}
-                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative">
+                <div className="flex-1 flex items-center justify-between min-w-70 px-6 gap-4 relative">
                     <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3.5 h-3.5 rounded-full transition-all duration-300",
@@ -81,10 +81,10 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                                 className={clsx(
                                     "shadow-md flex items-center justify-center transition-all",
                                     box.isCurrent
-                                        ? "px-3 py-1 rounded-xl min-w-[44px] bg-red-600 text-white font-black ring-2 ring-red-400"
+                                        ? "px-3 py-1 rounded-xl min-w-11 bg-red-600 text-white font-black ring-2 ring-red-400"
                                         : box.p1Winner
-                                        ? "px-2 py-0.5 rounded-lg min-w-[34px] bg-amber-400 text-slate-950 font-black ring-1 ring-amber-300 shadow-sm"
-                                        : "px-2 py-0.5 rounded-lg min-w-[34px] bg-white/10 text-white/35 font-medium"
+                                        ? "px-2 py-0.5 rounded-lg min-w-8.5 bg-amber-400 text-slate-950 font-black ring-1 ring-amber-300 shadow-sm"
+                                        : "px-2 py-0.5 rounded-lg min-w-8.5 bg-white/10 text-white/35 font-medium"
                                 )}
                             >
                                 <span className={clsx(
@@ -97,7 +97,7 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                 </div>
 
                 {/* Player 2 Row */}
-                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative">
+                <div className="flex-1 flex items-center justify-between min-w-70 px-6 gap-4 relative">
                     <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3.5 h-3.5 rounded-full transition-all duration-300",
@@ -117,10 +117,10 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
                                 className={clsx(
                                     "shadow-md flex items-center justify-center transition-all",
                                     box.isCurrent
-                                        ? "px-3 py-1 rounded-xl min-w-[44px] bg-red-600 text-white font-black ring-2 ring-red-400"
+                                        ? "px-3 py-1 rounded-xl min-w-11 bg-red-600 text-white font-black ring-2 ring-red-400"
                                         : box.p2Winner
-                                        ? "px-2 py-0.5 rounded-lg min-w-[34px] bg-amber-400 text-slate-950 font-black ring-1 ring-amber-300 shadow-sm"
-                                        : "px-2 py-0.5 rounded-lg min-w-[34px] bg-white/10 text-white/35 font-medium"
+                                        ? "px-2 py-0.5 rounded-lg min-w-8.5 bg-amber-400 text-slate-950 font-black ring-1 ring-amber-300 shadow-sm"
+                                        : "px-2 py-0.5 rounded-lg min-w-8.5 bg-white/10 text-white/35 font-medium"
                                 )}
                             >
                                 <span className={clsx(
@@ -134,7 +134,7 @@ export default function ClassicScoreboard({ match, elapsedDisplay }: ClassicScor
             </div>
 
             {/* Timer Box (Red Accent End Cap) */}
-            <div className="flex flex-col items-center justify-center px-6 bg-gradient-to-b from-red-600 to-red-700 text-white rounded-r-2xl border-y border-r border-red-500/30 min-w-[100px]">
+            <div className="flex flex-col items-center justify-center px-6 bg-linear-to-b from-red-600 to-red-700 text-white rounded-r-2xl border-y border-r border-red-500/30 min-w-[100px]">
                 <Clock size={16} className="text-red-200 mb-1" />
                 <span className="text-xl font-mono font-black tracking-tight text-white">{formatTime(elapsedDisplay)}</span>
                 {match.status === 'completed' ? (

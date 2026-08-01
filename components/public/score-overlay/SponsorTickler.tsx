@@ -47,9 +47,9 @@ export default function SponsorTickler({ sponsors, currentSponsorIndex, match }:
                         )}
                     />
                 ) : (
-                    <div className="bg-slate-950/90 text-white p-4 pr-8 rounded-2xl shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl flex items-center gap-6 min-w-[340px]">
+                    <div className="bg-slate-950/90 text-white p-4 pr-8 rounded-2xl shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl flex items-center gap-6 min-w-85">
                         {/* Sponsor Image Container */}
-                        <div className="h-16 w-auto min-w-[90px] flex items-center justify-center rounded-xl bg-white/5 p-2 border border-white/10 shadow-inner">
+                        <div className="h-16 w-auto min-w-22.5 flex items-center justify-center rounded-xl bg-white/5 p-2 border border-white/10 shadow-inner">
                             <img
                                 src={currentSponsor?.advertUrl}
                                 alt="Sponsor"

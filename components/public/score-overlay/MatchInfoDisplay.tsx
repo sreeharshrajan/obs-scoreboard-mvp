@@ -14,18 +14,18 @@ export default function MatchInfoDisplay({ match }: MatchInfoDisplayProps) {
     }
 
     return (
-        <div className="absolute top-12 right-12 h-[128px] flex items-stretch gap-4 animate-in slide-in-from-right-8 duration-700">
-            <div className="h-full bg-slate-950/90 text-white px-7 rounded-2xl shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl flex flex-col justify-center items-end gap-1.5 min-w-[300px] max-w-[500px]">
+        <div className="absolute top-12 right-12 h-32 flex items-stretch gap-4 animate-in slide-in-from-right-8 duration-700">
+            <div className="h-full bg-slate-950/90 text-white px-7 rounded-2xl shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl flex flex-col justify-center items-end gap-1.5 min-w-75 max-w-125">
                 {/* Tournament Tag - Wraps naturally onto next lines, NO ellipsis or text trimming */}
                 {match.tournamentName && (
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FF5A09] bg-[#FF5A09]/10 border border-[#FF5A09]/20 px-2.5 py-1 rounded-md text-right whitespace-normal break-words leading-tight">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FF5A09] bg-[#FF5A09]/10 border border-[#FF5A09]/20 px-2.5 py-1 rounded-md text-right whitespace-normal wrap-break-word leading-tight">
                         {match.tournamentName}
                     </span>
                 )}
 
                 {/* Match Category / Title */}
                 {hasCategory && (
-                    <span className="text-lg font-black uppercase tracking-tight text-white/95 leading-tight text-right whitespace-normal break-words">
+                    <span className="text-lg font-black uppercase tracking-tight text-white/95 leading-tight text-right whitespace-normal wrap-break-word">
                         {hasCategory}
                     </span>
                 )}
