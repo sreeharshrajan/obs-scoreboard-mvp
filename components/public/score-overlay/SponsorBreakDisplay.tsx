@@ -16,7 +16,7 @@ export default function SponsorBreakDisplay({ sponsors, currentSponsorIndex, mat
 
     return (
         <div className={clsx(
-            "absolute inset-0 z-50 bg-black flex items-center justify-center transition-opacity duration-1000",
+            "absolute inset-0 z-50 bg-black/95 flex items-center justify-center transition-opacity duration-1000",
             showFullPageAd ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}>
             {showFullPageAd && currentSponsor && (
