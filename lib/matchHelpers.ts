@@ -207,3 +207,52 @@ export function getPerGameScores(match: MatchState): GameScoreBox[] {
     return boxes;
 }
 
+/**
+ * Cleanly swaps sides and players in match state.
+ * Swaps player1 and player2 states (including current rally score & games won),
+ * current server, completed game history scores/winners, and score event logs.
+ */
+export function swapMatchSides(match: MatchState): Partial<MatchState> {
+    const p1 = match.player1 || { name: 'Player 1', score: 0, gamesWon: 0 };
+    const p2 = match.player2 || { name: 'Player 2', score: 0, gamesWon: 0 };
+
+    // Swap players (name, name2, score, gamesWon)
+    const newP1 = { ...p2 };
+    const newP2 = { ...p1 };
+
+    // Flip current server
+    const currentServer = match.currentServer ?? (match.player1?.isServing ? 'player1' : 'player2');
+    const newServer: 'player1' | 'player2' = currentServer === 'player1' ? 'player2' : 'player1';
+
+    // Swap gameHistory entries so set wins move with the players to their new slots
+    const newGameHistory = (match.gameHistory ?? []).map(g => ({
+        ...g,
+        player1Score: g.player2Score,
+        player2Score: g.player1Score,
+        winner: (g.winner === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
+    }));
+
+    // Swap scoreEvents entries
+    const newScoreEvents = (match.scoreEvents ?? []).map(e => ({
+        ...e,
+        team: (e.team === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
+        previousScore: {
+            player1: e.previousScore.player2,
+            player2: e.previousScore.player1,
+        },
+        resultingScore: {
+            player1: e.resultingScore.player2,
+            player2: e.resultingScore.player1,
+        },
+    }));
+
+    return {
+        player1: newP1,
+        player2: newP2,
+        currentServer: newServer,
+        gameHistory: newGameHistory,
+        scoreEvents: newScoreEvents,
+    };
+}
+
+

@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { MatchState } from '@/types/match';
-import { getPerGameScores, getMatchDetails } from './matchHelpers';
+import { getPerGameScores, getMatchDetails, swapMatchSides } from './matchHelpers';
 
 function createMockMatch(overrides?: Partial<MatchState>): MatchState {
+
     return {
         sport: 'badminton',
         scoringType: '21x3',
@@ -132,4 +133,49 @@ describe('matchHelpers - getPerGameScores', () => {
         expect(details.currentGame).toBe(2);
     });
 });
+
+describe('matchHelpers - swapMatchSides', () => {
+    it('swaps player names, current scores, games won, current server, game history, and score events', () => {
+        const match = createMockMatch({
+            player1: { name: 'Alice', name2: 'Amy', score: 14, gamesWon: 1 },
+            player2: { name: 'Bob', name2: 'Ben', score: 8, gamesWon: 0 },
+            currentServer: 'player1',
+            gameHistory: [
+                { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' }
+            ],
+            scoreEvents: [
+                {
+                    timestamp: 1000,
+                    elapsedTime: 10,
+                    gameNumber: 1,
+                    team: 'player1',
+                    delta: 1,
+                    previousScore: { player1: 0, player2: 0 },
+                    resultingScore: { player1: 1, player2: 0 }
+                }
+            ]
+        });
+
+        const updates = swapMatchSides(match);
+
+        expect(updates.player1).toEqual({ name: 'Bob', name2: 'Ben', score: 8, gamesWon: 0 });
+        expect(updates.player2).toEqual({ name: 'Alice', name2: 'Amy', score: 14, gamesWon: 1 });
+        expect(updates.currentServer).toBe('player2');
+        expect(updates.gameHistory).toEqual([
+            { gameNumber: 1, player1Score: 18, player2Score: 21, winner: 'player2' }
+        ]);
+        expect(updates.scoreEvents).toEqual([
+            {
+                timestamp: 1000,
+                elapsedTime: 10,
+                gameNumber: 1,
+                team: 'player2',
+                delta: 1,
+                previousScore: { player1: 0, player2: 0 },
+                resultingScore: { player1: 0, player2: 1 }
+            }
+        ]);
+    });
+});
+
 
