@@ -140,8 +140,9 @@ export function getGameStructure(match: MatchState): {
     const historyP1Won = gameHistory.filter(g => g.winner === 'player1').length;
     const historyP2Won = gameHistory.filter(g => g.winner === 'player2').length;
 
-    const p1GamesWon = Math.max(match.player1?.gamesWon ?? 0, historyP1Won);
-    const p2GamesWon = Math.max(match.player2?.gamesWon ?? 0, historyP2Won);
+    // Use gameHistory as authoritative source when gameHistory is present to prevent stale gamesWon field from corrupting match state
+    const p1GamesWon = gameHistory.length > 0 ? historyP1Won : (match.player1?.gamesWon ?? 0);
+    const p2GamesWon = gameHistory.length > 0 ? historyP2Won : (match.player2?.gamesWon ?? 0);
 
     return {
         currentGame,
