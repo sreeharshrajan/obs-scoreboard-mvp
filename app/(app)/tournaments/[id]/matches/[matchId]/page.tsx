@@ -423,23 +423,6 @@ export default function MatchConsole() {
         }
     }, [safeMatch, mutation]);
 
-    /* 
-    // Reset Not used in UI currently but kept for reference or future use
-    const resetMatch = () => {
-        if (!confirm('Are you sure you want to reset the match?')) return;
-        if (!match) return;
-        mutation.mutate({
-            player1: { ...match.player1, score: 0, isServing: true },
-            player2: { ...match.player2, score: 0, isServing: false },
-            isTimerRunning: false,
-            timerElapsed: 0,
-            timerStartTime: null,
-            serverNumber: 1,
-            status: 'scheduled'
-        });
-    };
-    */
-
     if (isLoading) return <MatchConsoleSkeleton />;
     if (isError || !match || !safeMatch) {
         if (isError) console.error(isError);
@@ -487,32 +470,38 @@ export default function MatchConsole() {
                 />
 
                 {/* Center Control Column */}
-                <div className="lg:col-span-4 flex flex-col gap-6">
-                    <MatchTimer
-                        matchDetails={safeMatch}
-                        elapsedDisplay={elapsedDisplay}
-                        isTimerRunning={safeMatch.isTimerRunning}
-                        isCompleted={isCompleted}
-                        isMatchWon={isMatchWon}
-                        onToggleTimer={handleToggleTimer}
-                        formatTime={formatTime}
-                        matchStatus={safeMatch.status}
-                        isBreak={safeMatch.status === 'break'}
-                        onToggleBreak={handleToggleBreak}
-                        currentGame={currentGame}
-                        totalGames={totalGames}
-                        gameHistory={matchGameHistory}
-                    />
+                <div className="lg:col-span-4 h-auto lg:h-auto flex flex-col gap-4">
 
-                    <QuickActions
-                        onSwap={swapSides}
-                        onEndMatch={handleEndMatch}
-                        onResumeMatch={handleResumeMatch}
-                        onResetGame={handleResetGame}
-                        isCompleted={isCompleted}
-                        isMatchWon={isMatchWon}
-                        currentGame={currentGame}
-                    />
+                    {/* flex-1 min-h-0 allows the timer to compress down instead of stretching the container out */}
+                    <div className="flex-1 min-h-0 flex flex-col w-full">
+                        <MatchTimer
+                            matchDetails={safeMatch}
+                            elapsedDisplay={elapsedDisplay}
+                            isTimerRunning={safeMatch.isTimerRunning}
+                            isCompleted={isCompleted}
+                            isMatchWon={isMatchWon}
+                            onToggleTimer={handleToggleTimer}
+                            formatTime={formatTime}
+                            matchStatus={safeMatch.status}
+                            isBreak={safeMatch.status === 'break'}
+                            onToggleBreak={handleToggleBreak}
+                            currentGame={currentGame}
+                            totalGames={totalGames}
+                            gameHistory={matchGameHistory}
+                        />
+                    </div>
+
+                    <div className="shrink-0 w-full">
+                        <QuickActions
+                            onSwap={swapSides}
+                            onEndMatch={handleEndMatch}
+                            onResumeMatch={handleResumeMatch}
+                            onResetGame={handleResetGame}
+                            isCompleted={isCompleted}
+                            isMatchWon={isMatchWon}
+                            currentGame={currentGame}
+                        />
+                    </div>
                 </div>
 
                 {/* Team 2 Card */}
