@@ -127,7 +127,7 @@ export function FormSkeleton() {
 
                 {/* Right Column Skeleton */}
                 <div className="lg:col-span-5 flex flex-col h-full">
-                    <div className="p-5 rounded-[2rem] bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col gap-6 shadow-sm flex-1">
+                    <div className="p-5 rounded-lg bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col gap-6 shadow-sm flex-1">
                         <div className="flex justify-center">
                             <Skeleton className="h-5 w-16" />
                         </div>

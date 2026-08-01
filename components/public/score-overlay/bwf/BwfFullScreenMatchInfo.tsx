@@ -29,7 +29,7 @@ export default function BwfFullScreenMatchInfo({ match, sponsors, currentSponsor
         <div className="absolute inset-x-0 bottom-16 flex justify-center z-30 pointer-events-none font-sans px-12 animate-in slide-in-from-bottom-12 fade-in duration-700">
             <div className="w-full max-w-5xl flex flex-col shadow-2xl rounded-xl overflow-hidden border border-white/20">
                 {/* Top Section - Light background */}
-                <div className="flex h-24 bg-gradient-to-r from-emerald-50 via-white to-emerald-50">
+                <div className="flex h-24 bg-linear-to-r from-emerald-50 via-white to-emerald-50">
                     {/* Left Logo Placeholder */}
                     <div className="w-48 flex items-center justify-center p-4">
                         {match.showTournamentLogo !== false && match.tournamentLogo && (

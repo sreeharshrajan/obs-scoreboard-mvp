@@ -44,7 +44,7 @@ export default function ExportMatchModal({
             onClick={onClose}
         >
             <div
-                className="relative w-full max-w-2xl bg-white dark:bg-[#1E1E1E] rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+                className="relative w-full max-w-2xl bg-white dark:bg-[#1E1E1E] rounded-lg border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Fixed Top Header */}
@@ -100,7 +100,7 @@ export default function ExportMatchModal({
                             {/* Team 1 */}
                             <div className="col-span-5 text-right space-y-0.5">
                                 <p className={clsx(
-                                    "text-sm sm:text-base font-black leading-snug break-words",
+                                    "text-sm sm:text-base font-black leading-snug wrap-break-word",
                                     isP1Winner ? "text-[#FF5A09]" : "text-slate-800 dark:text-white"
                                 )}>
                                     {p1.name}
@@ -136,7 +136,7 @@ export default function ExportMatchModal({
                             {/* Team 2 */}
                             <div className="col-span-5 text-left space-y-0.5">
                                 <p className={clsx(
-                                    "text-sm sm:text-base font-black leading-snug break-words",
+                                    "text-sm sm:text-base font-black leading-snug wrap-break-word",
                                     isP2Winner ? "text-[#FF5A09]" : "text-slate-800 dark:text-white"
                                 )}>
                                     {p2.name}

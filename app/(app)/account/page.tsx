@@ -162,7 +162,7 @@ export default function AccountPage() {
                 <div className="lg:col-span-5 space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         {/* Profile Photo */}
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col items-center gap-4 shadow-sm">
+                        <div className="p-6 rounded-lg bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col items-center gap-4 shadow-sm">
                             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                                 <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-100 dark:bg-white/5 border-2 border-white dark:border-[#2A2A2A] shadow-md relative ring-1 ring-slate-200 dark:ring-white/10">
                                     {photoURL ? (
@@ -218,7 +218,7 @@ export default function AccountPage() {
                         </div>
 
                         {/* Streamer Logo */}
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col items-center gap-4 shadow-sm">
+                        <div className="p-6 rounded-lg bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col items-center gap-4 shadow-sm">
                             <div className="relative group cursor-pointer" onClick={() => logoInputRef.current?.click()}>
                                 <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/30 flex items-center justify-center relative">
                                     {streamerLogo ? (
@@ -276,7 +276,7 @@ export default function AccountPage() {
                         </div>
                     </div>
 
-                    <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-[#2A2A2A]/20 border border-slate-200 dark:border-white/5 space-y-6">
+                    <div className="p-6 rounded-lg bg-slate-50 dark:bg-[#2A2A2A]/20 border border-slate-200 dark:border-white/5 space-y-6">
                         <button
                             type="submit"
                             disabled={loading}

@@ -127,7 +127,7 @@ export default function TournamentListing() {
                         ))}
                     </div>
                 ) : (
-                    <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 dark:border-white/5 rounded-[2rem]">
+                    <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 dark:border-white/5 rounded-lg">
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No tournaments found</p>
                     </div>
                 )}
@@ -173,7 +173,7 @@ function TournamentCard({ tournament, isAdmin, ownerName }: { tournament: any, i
     };
 
     return (
-        <Link href={`/tournaments/${tournament.id}`} className="group p-6 rounded-[2rem] bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all duration-500 flex flex-col justify-between h-56 relative overflow-hidden">
+        <Link href={`/tournaments/${tournament.id}`} className="group p-6 rounded-lg bg-white dark:bg-[#2A2A2A]/40 border border-slate-200 dark:border-white/5 hover:border-[#FF5A09]/30 transition-all duration-500 flex flex-col justify-between h-56 relative overflow-hidden">
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
                     <div className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider ${statusColors[displayStatus] || statusColors.Upcoming}`}>

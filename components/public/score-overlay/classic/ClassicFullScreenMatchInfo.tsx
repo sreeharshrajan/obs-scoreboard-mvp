@@ -42,7 +42,7 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
         <div className="absolute inset-x-0 bottom-16 flex justify-center z-30 pointer-events-none font-sans px-12 animate-in slide-in-from-bottom-12 fade-in duration-700">
             <div className="w-full max-w-5xl flex flex-col bg-[#1E293B] text-white rounded-3xl overflow-hidden shadow-2xl border border-white/10">
                 {/* Red Header Bar (Matches Classic Red Badge & Timer) */}
-                <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-red-600 via-red-700 to-red-600 border-b border-red-500/40 text-white">
+                <div className="flex items-center justify-between px-8 py-5 bg-linear-to-r from-red-600 via-red-700 to-red-600 border-b border-red-500/40 text-white">
                     <div className="flex items-center gap-4">
                         {match.showTournamentLogo !== false && match.tournamentLogo && (
                             <div className="relative w-12 h-12">
@@ -118,7 +118,7 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                     </div>
 
                     {/* Red VS Divider */}
-                    <div className="w-20 flex items-center justify-center bg-gradient-to-b from-red-600 to-red-700 shadow-inner">
+                    <div className="w-20 flex items-center justify-center bg-linear-to-b from-red-600 to-red-700 shadow-inner">
                         <span className="text-2xl font-black italic text-white tracking-widest drop-shadow-md">VS</span>
                     </div>
 

@@ -32,9 +32,9 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
     };
 
     return (
-        <div className="absolute top-12 left-12 h-[128px] flex items-stretch bg-slate-950/90 text-white rounded-2xl overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
+        <div className="absolute top-12 left-12 h-32 flex items-stretch bg-slate-950/90 text-white rounded-2xl overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.45)] border border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-left-8 duration-700">
             {match.showTournamentLogo !== false && match.tournamentLogo && (
-                <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", match.status === 'completed' ? 'bg-emerald-600' : isLive ? 'bg-gradient-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
+                <div className={clsx("flex flex-col items-center justify-center px-5 min-w-[100px]", match.status === 'completed' ? 'bg-emerald-600' : isLive ? 'bg-linear-to-br from-[#FF5A09] to-[#CC4807]' : 'bg-slate-900')}>
                     <div className="relative w-14 h-14 mb-1">
                         <Image
                             src={match.tournamentLogo}
@@ -50,7 +50,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
 
             <div className="flex flex-col h-full divide-y divide-white/10">
                 {/* Player 1 */}
-                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative overflow-hidden">
+                <div className="flex-1 flex items-center justify-between min-w-70 px-6 gap-4 relative overflow-hidden">
                     <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
@@ -81,7 +81,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                                 className={clsx(
                                     "flex items-center justify-center transition-all border",
                                     box.isCurrent
-                                        ? "min-w-[46px] h-11 px-2.5 rounded-xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
+                                        ? "min-w-[46px] h-11 px-2.5 rounded-xl bg-linear-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
                                         : box.p1Winner
                                         ? "min-w-[36px] h-9 px-2 rounded-lg bg-amber-500/25 text-amber-300 border-amber-400/50 shadow-sm"
                                         : "min-w-[36px] h-9 px-2 rounded-lg bg-white/5 text-white/35 border-white/5"
@@ -97,7 +97,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex-1 flex items-center justify-between min-w-[280px] px-6 gap-4 relative overflow-hidden">
+                <div className="flex-1 flex items-center justify-between min-w-70 px-6 gap-4 relative overflow-hidden">
                     <div className="flex items-center gap-3">
                         <div className={clsx(
                             "w-3 h-3 rounded-full transition-all duration-500",
@@ -128,7 +128,7 @@ export default function Scoreboard({ match, elapsedDisplay }: ScoreboardProps) {
                                 className={clsx(
                                     "flex items-center justify-center transition-all border",
                                     box.isCurrent
-                                        ? "min-w-[46px] h-11 px-2.5 rounded-xl bg-gradient-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
+                                        ? "min-w-[46px] h-11 px-2.5 rounded-xl bg-linear-to-br from-[#FF5A09] to-[#CC4807] text-white border-orange-400/40 shadow-[0_0_12px_rgba(255,90,9,0.4)]"
                                         : box.p2Winner
                                         ? "min-w-[36px] h-9 px-2 rounded-lg bg-amber-500/25 text-amber-300 border-amber-400/50 shadow-sm"
                                         : "min-w-[36px] h-9 px-2 rounded-lg bg-white/5 text-white/35 border-white/5"

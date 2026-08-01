@@ -39,7 +39,7 @@ export default memo(function PlayerCard({
     return (
         <div className={clsx(
             // RESTORED lg:col-span-4 to fix the squished width
-            "w-full lg:col-span-4 h-auto lg:h-auto rounded-[2rem] border-2 transition-all duration-300 p-6 lg:p-7 relative overflow-hidden flex flex-col justify-between",
+            "w-full lg:col-span-4 h-auto lg:h-auto rounded-lg border-2 transition-all duration-300 p-6 lg:p-7 relative overflow-hidden flex flex-col justify-between",
             isWinner
                 ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500 shadow-2xl shadow-amber-500/10"
                 : isServing && !isFinished

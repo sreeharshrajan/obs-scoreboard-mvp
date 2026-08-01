@@ -40,7 +40,7 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
     const p2Serving = currentServer === 'player2';
 
     // BWF style green gradient for the active score
-    const scoreBgGradient = "bg-gradient-to-b from-[#56ba87] via-[#3fa675] to-[#287e54]";
+    const scoreBgGradient = "bg-linear-to-b from-[#56ba87] via-[#3fa675] to-[#287e54]";
 
     const gameScores = getPerGameScores(match);
 

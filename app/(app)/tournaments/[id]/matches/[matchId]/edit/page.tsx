@@ -287,7 +287,7 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
                 {/* RIGHT COLUMN: Players & Submit & Danger Zone */}
                 <div className="lg:col-span-5 flex flex-col h-full gap-4">
                     {/* Combined Players & Action Card */}
-                    <div className="p-5 rounded-[2rem] bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col gap-4 shadow-sm flex-1">
+                    <div className="p-5 rounded-lg bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 flex flex-col gap-4 shadow-sm flex-1">
                         <div className="space-y-0.5 text-center">
                             <h3 className="text-base font-bold text-slate-900 dark:text-white">Players</h3>
                         </div>
@@ -357,7 +357,7 @@ export default function EditMatch({ params }: { params: Promise<{ id: string; ma
                     </div>
 
                     {/* Danger Zone / Admin Actions */}
-                    <div className="p-4 rounded-[2rem] bg-red-500/5 border border-red-500/10 flex flex-col gap-2">
+                    <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/10 flex flex-col gap-2">
                         <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-xs">
                             <AlertTriangle size={14} />
                             <span>Administrative Actions</span>
