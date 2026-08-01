@@ -55,6 +55,9 @@ export interface MatchState {
     isTimerRunning: boolean;
     timerStartTime: number | null;
     timerElapsed: number;
+    breakTimerDuration?: number; // Target break duration in seconds (e.g. 60, 120)
+    breakTimerStartTime?: number | null; // Timestamp when current break timer started
+    breakTimerElapsed?: number; // Elapsed seconds into the break timer
     isSponsorsOverlayActive?: boolean;
     showTournamentLogo?: boolean;
     showStreamerLogo?: boolean;

@@ -17,6 +17,9 @@ interface MatchTimerProps {
     currentGame?: number;
     totalGames?: number;
     gameHistory?: GameResult[];
+    breakRemainingDisplay?: number;
+    breakDuration?: number;
+    onSelectBreakDuration?: (seconds: number) => void;
 }
 
 export default memo(function MatchTimer({
@@ -33,7 +36,12 @@ export default memo(function MatchTimer({
     currentGame = 1,
     totalGames = 3,
     gameHistory = [],
+    breakRemainingDisplay = 60,
+    breakDuration = 60,
+    onSelectBreakDuration,
 }: MatchTimerProps) {
+    const isBreakOverTime = isBreak && breakRemainingDisplay < 0;
+
     return (
         <div className={clsx(
             "flex-1 rounded-3xl border transition-all duration-500 p-6 flex flex-col items-center justify-center gap-6 relative overflow-hidden",
@@ -109,7 +117,7 @@ export default memo(function MatchTimer({
             )}
 
             {/* Main Timer Group */}
-            <div className="flex flex-col items-center my-auto">
+            <div className="flex flex-col items-center my-auto w-full">
                 <div className={clsx(
                     "flex items-center gap-2 mb-3 px-4 py-1 rounded-full transition-colors",
                     isCompleted
@@ -117,13 +125,17 @@ export default memo(function MatchTimer({
                         : isMatchWon
                         ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
                         : isBreak
-                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
+                        ? isBreakOverTime
+                            ? "bg-red-500/20 text-red-500 font-bold animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
+                            : "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold"
                         : isTimerRunning
                         ? "bg-emerald-500/10 text-emerald-500"
                         : "bg-slate-100 dark:bg-white/5 text-slate-500"
                 )}>
                     {isCompleted || isMatchWon ? (
                         <Trophy size={14} className={isCompleted ? "text-emerald-500" : "text-amber-500"} />
+                    ) : isBreak ? (
+                        <Coffee size={14} className="animate-pulse" />
                     ) : (
                         <Clock size={14} className={clsx(isTimerRunning && "animate-pulse")} />
                     )}
@@ -133,24 +145,79 @@ export default memo(function MatchTimer({
                             : isMatchWon
                             ? "Match Won (Pending Confirmation)"
                             : isBreak
-                            ? "Break Time"
+                            ? "Break Countdown"
                             : isTimerRunning
                             ? "Match Clock"
                             : "Match Paused"}
                     </span>
                 </div>
 
-                <div className={clsx(
-                    "text-6xl font-bold tabular-nums tracking-tighter transition-colors duration-300",
-                    isTimerRunning ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-400"
-                )}>
-                    {formatTime(elapsedDisplay)}
-                </div>
-                
-                {isCompleted && (
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
-                        Final Duration
-                    </span>
+                {isBreak ? (
+                    <div className="flex flex-col items-center">
+                        {/* Match Clock (Displayed above Break Timer) */}
+                        <div className="flex items-center gap-1.5 mb-1 px-3 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10">
+                            <Clock size={11} className={clsx("text-slate-400", isTimerRunning && "animate-pulse text-emerald-500")} />
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 tabular-nums">
+                                Match Clock: {formatTime(elapsedDisplay)} {isTimerRunning ? "" : "(Paused)"}
+                            </span>
+                        </div>
+
+                        {/* Main Break Countdown */}
+                        <div className={clsx(
+                            "text-6xl font-bold tabular-nums tracking-tighter transition-all duration-500 mt-1",
+                            isBreakOverTime
+                                ? "text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]"
+                                : "text-indigo-600 dark:text-indigo-400"
+                        )}>
+                            {formatTime(Math.max(0, breakRemainingDisplay))}
+                        </div>
+                        <span className={clsx(
+                            "text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors",
+                            isBreakOverTime ? "text-red-400 font-extrabold animate-pulse" : "text-slate-400"
+                        )}>
+                            {isBreakOverTime ? "Break Time Over" : "Break Countdown"}
+                        </span>
+
+                        {/* Break Presets */}
+                        {onSelectBreakDuration && !isCompleted && (
+                            <div className="flex items-center gap-1.5 mt-4">
+                                {[60, 90, 120, 180].map((sec) => (
+                                    <button
+                                        type="button"
+                                        key={sec}
+                                        onClick={() => onSelectBreakDuration(sec)}
+                                        className={clsx(
+                                            "px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase transition-all border",
+                                            breakDuration === sec
+                                                ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20"
+                                                : "bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10"
+                                        )}
+                                    >
+                                        {sec >= 60 ? `${sec / 60}m` : `${sec}s`}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        <div className={clsx(
+                            "text-6xl font-bold tabular-nums tracking-tighter transition-colors duration-300",
+                            isTimerRunning ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-400"
+                        )}>
+                            {formatTime(elapsedDisplay)}
+                        </div>
+                        
+                        {isCompleted ? (
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
+                                Final Duration
+                            </span>
+                        ) : isMatchWon ? (
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mt-1 animate-pulse">
+                                Click &quot;Confirm &amp; End Match&quot; below to finalize
+                            </span>
+                        ) : null}
+                    </>
                 )}
             </div>
 
@@ -159,6 +226,7 @@ export default memo(function MatchTimer({
                 {!isCompleted ? (
                     <>
                         <button
+                            type="button"
                             onClick={onToggleTimer}
                             className={clsx(
                                 "flex-[2] py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg",
@@ -176,6 +244,7 @@ export default memo(function MatchTimer({
                         </button>
 
                         <button
+                            type="button"
                             onClick={onToggleBreak}
                             className={clsx(
                                 "flex-1 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border",
@@ -190,6 +259,7 @@ export default memo(function MatchTimer({
                     </>
                 ) : (
                     <button
+                        type="button"
                         onClick={onToggleTimer}
                         className={clsx(
                             "w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg border",

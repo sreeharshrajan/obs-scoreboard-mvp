@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { MatchState, GameResult } from '@/types/match';
 import { getRuleSet, isGameComplete } from '@/lib/scoring/rules';
-import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, undoLastGame } from '@/lib/scoring/engine';
+import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, setBreakDuration, undoLastGame } from '@/lib/scoring/engine';
 import { validateState } from '@/lib/scoring/validation';
 import { getGameStructure } from '@/lib/matchHelpers';
 import { auth } from '@/lib/firebase/client';
@@ -20,6 +20,7 @@ import PlayerCard from '@/components/match-console/PlayerCard';
 import MatchTimer from '@/components/match-console/MatchTimer';
 import QuickActions from '@/components/match-console/QuickActions';
 import SetCompletionModal from '@/components/match-console/SetCompletionModal';
+import EndMatchModal from '@/components/match-console/EndMatchModal';
 
 // --- Fetchers ---
 const fetchMatch = async (tournamentId: string, matchId: string, token: string): Promise<MatchState> => {
@@ -122,23 +123,14 @@ export default function MatchConsole() {
         isMatchPoint: boolean;
     } | null>(null);
 
+    const [isEndMatchModalOpen, setIsEndMatchModalOpen] = useState(false);
+
     // Helper to get token
-    const getToken = async () => {
+    const getToken = useCallback(async () => {
         const user = auth.currentUser;
-        if (!user) {
-            return new Promise<string>((resolve, reject) => {
-                const unsubscribe = auth.onIdTokenChanged(async (user: User | null) => {
-                    unsubscribe();
-                    if (user) {
-                        resolve(await user.getIdToken());
-                    } else {
-                        reject(new Error("Not authenticated"));
-                    }
-                });
-            });
-        }
+        if (!user) throw new Error("Not authenticated");
         return user.getIdToken();
-    };
+    }, []);
 
     // 1. Data Query: Match
     const { data: match, isLoading: isMatchLoading, isError: isMatchError } = useQuery<MatchState>({
@@ -188,7 +180,9 @@ export default function MatchConsole() {
     const mutation = useMutation({
         mutationFn: async (newData: Partial<MatchState>) => {
             const token = await getToken();
-            return updateMatch({ tournamentId, matchId, data: newData, token });
+            // Sanitize undefined fields so JSON payload is clean
+            const cleanData = JSON.parse(JSON.stringify(newData));
+            return updateMatch({ tournamentId, matchId, data: cleanData, token });
         },
         onMutate: async (newData) => {
             await queryClient.cancelQueries({ queryKey: ['match', matchId] });
@@ -206,10 +200,11 @@ export default function MatchConsole() {
             return { previous };
         },
         onError: (err, newData, context) => {
+            console.error("Match update mutation error:", err);
             if (context?.previous) {
                 queryClient.setQueryData(['match', matchId], context.previous);
             }
-            toast.error("Unable to save score. Changes have been reverted.");
+            toast.error(`Unable to save score: ${err.message || 'Changes reverted'}`);
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['match', matchId] });
@@ -255,7 +250,29 @@ export default function MatchConsole() {
     }, [tournament, match, mutation, userProfile]);
 
 
-    // 5. Timer & Clock Logic
+    const [breakRemainingDisplay, setBreakRemainingDisplay] = useState<number>(60);
+
+    // 5. Break Countdown Effect
+    useEffect(() => {
+        if (!match || match.status !== 'break') return;
+
+        const targetDuration = match.breakTimerDuration || 60;
+        const calculateBreakRemaining = () => {
+            if (!match.breakTimerStartTime) return targetDuration;
+            const now = Date.now();
+            const elapsedSec = Math.floor((now - match.breakTimerStartTime) / 1000);
+            return targetDuration - elapsedSec;
+        };
+
+        setBreakRemainingDisplay(calculateBreakRemaining());
+        const breakInterval = setInterval(() => {
+            setBreakRemainingDisplay(calculateBreakRemaining());
+        }, 500);
+
+        return () => clearInterval(breakInterval);
+    }, [match?.status, match?.breakTimerStartTime, match?.breakTimerDuration]);
+
+    // 6. Match Clock Logic (Runs continuously whenever isTimerRunning is true, regardless of break state)
     useEffect(() => {
         if (!match) return;
         if (!match.isTimerRunning || match.status === 'completed') {
@@ -431,9 +448,14 @@ export default function MatchConsole() {
     }, [safeMatch, handleStopTimer, handleStartTimer, mutation]);
 
     const handleEndMatch = useCallback(() => {
+        setIsEndMatchModalOpen(true);
+    }, []);
+
+    const handleConfirmEndMatch = useCallback(() => {
         if (!safeMatch) return;
         const newState = completeMatch(safeMatch);
         mutation.mutate(newState);
+        setIsEndMatchModalOpen(false);
     }, [safeMatch, mutation]);
 
     const handleResumeMatch = useCallback(() => {
@@ -442,6 +464,12 @@ export default function MatchConsole() {
             if (!confirm('Are you sure you want to resume this completed match?')) return;
         }
         const newState = resumeMatch(safeMatch);
+        mutation.mutate(newState);
+    }, [safeMatch, mutation]);
+
+    const handleSelectBreakDuration = useCallback((seconds: number) => {
+        if (!safeMatch) return;
+        const newState = setBreakDuration(safeMatch, seconds);
         mutation.mutate(newState);
     }, [safeMatch, mutation]);
 
@@ -554,6 +582,9 @@ export default function MatchConsole() {
                             currentGame={currentGame}
                             totalGames={totalGames}
                             gameHistory={matchGameHistory}
+                            breakRemainingDisplay={breakRemainingDisplay}
+                            breakDuration={safeMatch.breakTimerDuration || 60}
+                            onSelectBreakDuration={handleSelectBreakDuration}
                         />
                     </div>
 
@@ -598,6 +629,13 @@ export default function MatchConsole() {
                 p1Score={pendingSetCompletion?.potentialP1 ?? 0}
                 p2Score={pendingSetCompletion?.potentialP2 ?? 0}
                 isMatchPoint={pendingSetCompletion?.isMatchPoint ?? false}
+            />
+
+            <EndMatchModal
+                isOpen={isEndMatchModalOpen}
+                onClose={() => setIsEndMatchModalOpen(false)}
+                onConfirm={handleConfirmEndMatch}
+                match={safeMatch}
             />
         </div>
     );
