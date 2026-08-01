@@ -164,7 +164,7 @@ export default function MatchConsole() {
             const token = await getToken();
             return fetchMatch(tournamentId, matchId, token);
         },
-        refetchInterval: 2000,
+        refetchInterval: 5000,
         enabled: !!matchId && !!tournamentId,
         retry: (failureCount, error) => {
             if (error.message === "Not authenticated") return false;

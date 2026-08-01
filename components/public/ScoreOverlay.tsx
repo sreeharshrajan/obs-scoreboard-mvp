@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { db } from "@/lib/firebase/client";
-import { collectionGroup, query, onSnapshot, collection } from "firebase/firestore";
+import { collectionGroup, query, onSnapshot, collection, doc } from "firebase/firestore";
 import { MatchState } from "@/types/match";
 
 // Modern Components
@@ -37,25 +37,20 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const tournamentIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        // 1. Realtime Firestore Subscription
-        const q = query(collectionGroup(db, "matches"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const matchDoc = snapshot.docs.find(d => d.id === matchId);
-            if (matchDoc) {
-                setMatch(matchDoc.data() as MatchState);
-                const resolvedTournamentId = (matchDoc.data() as any)?.tournamentId || matchDoc.ref.parent?.parent?.id;
-                if (resolvedTournamentId) {
-                    setTournamentId(resolvedTournamentId);
-                    tournamentIdRef.current = resolvedTournamentId;
+        // 1. Realtime Firestore Subscription (Uses specific doc listener when tournamentId is known)
+        let docUnsub: (() => void) | null = null;
+        if (tournamentIdRef.current) {
+            const docRef = doc(db, "tournaments", tournamentIdRef.current, "matches", matchId);
+            docUnsub = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setMatch(docSnap.data() as MatchState);
+                    setError(null);
+                    setLoading(false);
                 }
-                setError(null);
-            } else {
-                setError("Match not found");
-            }
-            setLoading(false);
-        }, (err) => {
-            console.error("Firestore Error:", err);
-        });
+            }, (err) => {
+                console.error("Firestore Doc Error:", err);
+            });
+        }
 
         // 2. Polling Fallback for OBS Browser Sources (guarantees real-time updates even if WebSockets fail in OBS CEF)
         let isMounted = true;
@@ -86,11 +81,11 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         };
 
         pollOverlayData();
-        const pollInterval = setInterval(pollOverlayData, 1000);
+        const pollInterval = setInterval(pollOverlayData, 2000);
 
         return () => {
             isMounted = false;
-            unsubscribe();
+            if (docUnsub) docUnsub();
             clearInterval(pollInterval);
         };
     }, [matchId]);

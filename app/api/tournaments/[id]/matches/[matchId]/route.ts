@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
-import { FieldValue } from "firebase-admin/firestore";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 /**
  * GET: Fetch a single match by ID from a specific tournament
@@ -19,6 +19,12 @@ export async function GET(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        const cacheKey = `match:${tournamentId}:${matchId}`;
+        const cached = memoryCache.get(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached);
+        }
+
         const doc = await adminDb
             .collection("tournaments")
             .doc(tournamentId)
@@ -30,7 +36,10 @@ export async function GET(
             return NextResponse.json({ error: "Match not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ id: doc.id, ...doc.data() });
+        const matchPayload = { id: doc.id, ...doc.data() };
+        memoryCache.set(cacheKey, matchPayload, 1500);
+
+        return NextResponse.json(matchPayload);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Internal Server Error";
         return NextResponse.json({ error: message }, { status: 500 });
@@ -70,6 +79,10 @@ export async function PATCH(
             ...body,
             updatedAt: new Date().toISOString(),
         }, { merge: true });
+
+        // Invalidate cache immediately on update
+        memoryCache.invalidate(`match:${tournamentId}:${matchId}`);
+        memoryCache.invalidate(`overlay:${matchId}`);
 
         return NextResponse.json({ success: true });
     } catch (error: unknown) {

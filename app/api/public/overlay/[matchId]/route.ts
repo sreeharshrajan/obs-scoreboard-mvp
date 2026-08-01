@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldPath } from "firebase-admin/firestore";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,13 @@ export async function GET(
 
         const { searchParams } = new URL(req.url);
         const tournamentIdParam = searchParams.get("tournamentId");
+
+        // Check in-memory cache first (1.5s TTL to absorb high-frequency OBS polling)
+        const cacheKey = `overlay:${matchId}:${tournamentIdParam || 'any'}`;
+        const cached = memoryCache.get(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached);
+        }
 
         let matchDoc: FirebaseFirestore.DocumentSnapshot | undefined;
 
@@ -80,13 +88,19 @@ export async function GET(
                 .sort((a: any, b: any) => (a.priority || 99) - (b.priority || 99));
         }
 
-        return NextResponse.json({
+        const responsePayload = {
             match: { id: matchDoc.id, ...matchData },
             sponsors,
             tournamentId
-        });
+        };
+
+        // Cache for 1500ms
+        memoryCache.set(cacheKey, responsePayload, 1500);
+
+        return NextResponse.json(responsePayload);
     } catch (error: any) {
         console.error("Error in public overlay API:", error);
         return NextResponse.json({ error: error.message || "Internal Error" }, { status: 500 });
     }
 }
+
