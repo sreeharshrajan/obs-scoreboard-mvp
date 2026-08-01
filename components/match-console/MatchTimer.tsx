@@ -20,6 +20,7 @@ interface MatchTimerProps {
     breakRemainingDisplay?: number;
     breakDuration?: number;
     onSelectBreakDuration?: (seconds: number) => void;
+    onSwapSetHistory?: () => void;
 }
 
 export default memo(function MatchTimer({
@@ -39,6 +40,7 @@ export default memo(function MatchTimer({
     breakRemainingDisplay = 60,
     breakDuration = 60,
     onSelectBreakDuration,
+    onSwapSetHistory,
 }: MatchTimerProps) {
     const isBreakOverTime = isBreak && breakRemainingDisplay < 0;
 
@@ -55,7 +57,7 @@ export default memo(function MatchTimer({
                 <span className="block text-[9px] sm:text-[11px] font-bold uppercase tracking-widest text-orange-500 line-clamp-1 leading-normal">
                     {matchDetails.tournamentName || "Tournament Name"}
                 </span>
-                
+
                 <div className="hidden sm:flex items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
                     <div className="h-[1px] w-8 bg-current opacity-20" />
                     <Trophy size={14} />
@@ -75,12 +77,18 @@ export default memo(function MatchTimer({
                 {gameHistory.length > 0 && (
                     <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap pt-0.5 sm:pt-1">
                         {gameHistory.map((g) => (
-                            <span
+                            <button
                                 key={g.gameNumber}
-                                className="px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg bg-slate-100 dark:bg-white/5 text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums"
+                                type="button"
+                                onClick={onSwapSetHistory}
+                                title={onSwapSetHistory ? "Click to swap set winner if recorded under wrong team" : undefined}
+                                className={clsx(
+                                    "px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg bg-slate-100 dark:bg-white/5 text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums transition-all",
+                                    onSwapSetHistory && "hover:bg-orange-500/10 hover:text-[#FF5A09] cursor-pointer active:scale-95"
+                                )}
                             >
                                 G{g.gameNumber} {g.player1Score}–{g.player2Score}
-                            </span>
+                            </button>
                         ))}
                     </div>
                 )}
@@ -123,14 +131,14 @@ export default memo(function MatchTimer({
                     isCompleted
                         ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold"
                         : isMatchWon
-                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
-                        : isBreak
-                        ? isBreakOverTime
-                            ? "bg-red-500/20 text-red-500 font-bold animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
-                            : "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold"
-                        : isTimerRunning
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : "bg-slate-100 dark:bg-white/5 text-slate-500"
+                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
+                            : isBreak
+                                ? isBreakOverTime
+                                    ? "bg-red-500/20 text-red-500 font-bold animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.3)]"
+                                    : "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold"
+                                : isTimerRunning
+                                    ? "bg-emerald-500/10 text-emerald-500"
+                                    : "bg-slate-100 dark:bg-white/5 text-slate-500"
                 )}>
                     {isCompleted || isMatchWon ? (
                         <Trophy size={12} className={clsx("sm:hidden", isCompleted ? "text-emerald-500" : "text-amber-500")} />
@@ -150,12 +158,12 @@ export default memo(function MatchTimer({
                         {isCompleted
                             ? "Completed"
                             : isMatchWon
-                            ? "Won (Pending)"
-                            : isBreak
-                            ? "Break"
-                            : isTimerRunning
-                            ? "Live"
-                            : "Paused"}
+                                ? "Won (Pending)"
+                                : isBreak
+                                    ? "Break"
+                                    : isTimerRunning
+                                        ? "Live"
+                                        : "Paused"}
                     </span>
                 </div>
 
@@ -214,7 +222,7 @@ export default memo(function MatchTimer({
                         )}>
                             {formatTime(elapsedDisplay)}
                         </div>
-                        
+
                         {isCompleted ? (
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
                                 Final Duration
