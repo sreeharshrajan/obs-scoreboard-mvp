@@ -3,6 +3,20 @@ import { getGameStructure } from '@/lib/matchHelpers';
 
 // ── Types ──
 
+export interface SetTimelineGroup {
+    gameNumber: number;
+    p1SetsBefore: number;
+    p2SetsBefore: number;
+    setScoreBefore: string;
+    gameResult?: {
+        player1Score: number;
+        player2Score: number;
+        winner: string;
+        completedAt: string | null;
+    };
+    events: Array<MatchExportData['timeline'][number]>;
+}
+
 export interface MatchExportData {
     matchInfo: {
         tournament: string;
@@ -35,8 +49,12 @@ export interface MatchExportData {
         scoreChange: string;
         p1Score: number;
         p2Score: number;
+        p1Sets: number;
+        p2Sets: number;
+        setScore: string;
         detail: string;
     }>;
+    setGroups: SetTimelineGroup[];
     breakSummary: {
         totalBreaks: number;
         totalBreakDuration: string;
@@ -100,12 +118,22 @@ export function buildExportData(match: MatchState): MatchExportData {
     const scoreEvents = match.scoreEvents ?? [];
     const breakEvents = match.breakEvents ?? [];
 
-    type TimelineEntry = MatchExportData['timeline'][number];
-    const timeline: TimelineEntry[] = [];
+    type RawTimelineEntry = {
+        time: string;
+        elapsedSeconds: number;
+        game: number;
+        eventType: 'point' | 'break_start' | 'break_end';
+        player: string;
+        scoreChange: string;
+        p1Score: number;
+        p2Score: number;
+        detail: string;
+    };
+    const rawTimeline: RawTimelineEntry[] = [];
 
     // Add score events
     for (const evt of scoreEvents) {
-        timeline.push({
+        rawTimeline.push({
             time: formatTimeMMSS(evt.elapsedTime),
             elapsedSeconds: evt.elapsedTime,
             game: evt.gameNumber,
@@ -124,7 +152,7 @@ export function buildExportData(match: MatchState): MatchExportData {
             g.completedAt && g.completedAt <= brk.timestamp
         ).length + 1;
 
-        timeline.push({
+        rawTimeline.push({
             time: formatTimeMMSS(brk.elapsedTime),
             elapsedSeconds: brk.elapsedTime,
             game: gameAtBreak,
@@ -140,7 +168,49 @@ export function buildExportData(match: MatchState): MatchExportData {
     }
 
     // Sort by elapsed time
-    timeline.sort((a, b) => a.elapsedSeconds - b.elapsedSeconds);
+    rawTimeline.sort((a, b) => a.elapsedSeconds - b.elapsedSeconds);
+
+    // Populate set count (p1Sets, p2Sets, setScore) for each entry
+    type TimelineEntry = MatchExportData['timeline'][number];
+    const timeline: TimelineEntry[] = rawTimeline.map((evt) => {
+        const completedPriorGames = gameHistory.filter(g => g.gameNumber < evt.game);
+        const p1Sets = completedPriorGames.filter(g => g.winner === 'player1').length;
+        const p2Sets = completedPriorGames.filter(g => g.winner === 'player2').length;
+        return {
+            ...evt,
+            p1Sets,
+            p2Sets,
+            setScore: `${p1Sets}-${p2Sets}`,
+        };
+    });
+
+    // Group timeline entries into setGroups
+    const setMap = new Map<number, SetTimelineGroup>();
+
+    for (const entry of timeline) {
+        if (!setMap.has(entry.game)) {
+            const priorGames = gameHistory.filter(g => g.gameNumber < entry.game);
+            const p1SetsBefore = priorGames.filter(g => g.winner === 'player1').length;
+            const p2SetsBefore = priorGames.filter(g => g.winner === 'player2').length;
+            const gResult = gameHistory.find(g => g.gameNumber === entry.game);
+
+            setMap.set(entry.game, {
+                gameNumber: entry.game,
+                p1SetsBefore,
+                p2SetsBefore,
+                setScoreBefore: `${p1SetsBefore}-${p2SetsBefore}`,
+                gameResult: gResult ? {
+                    player1Score: gResult.player1Score,
+                    player2Score: gResult.player2Score,
+                    winner: gResult.winner === 'player1' ? p1Name : p2Name,
+                    completedAt: gResult.completedAt ? formatTimestamp(gResult.completedAt) : null,
+                } : undefined,
+                events: [],
+            });
+        }
+        setMap.get(entry.game)!.events.push(entry);
+    }
+    const setGroups = Array.from(setMap.values()).sort((a, b) => a.gameNumber - b.gameNumber);
 
     // Build break summary (pair start/end events)
     const breakPairs: MatchExportData['breakSummary']['breaks'] = [];
@@ -204,6 +274,7 @@ export function buildExportData(match: MatchState): MatchExportData {
             completedAt: g.completedAt ? formatTimestamp(g.completedAt) : null,
         })),
         timeline,
+        setGroups,
         breakSummary: {
             totalBreaks: breakPairs.length,
             totalBreakDuration: formatElapsed(totalBreakDuration),
@@ -253,21 +324,21 @@ export function generateTextSummary(data: MatchExportData): string {
     const p2Display = p2.partner ? `${p2.name} & ${p2.partner}` : p2.name;
 
     lines.push(`  ${p1Display}`);
-    lines.push(`    Games Won: ${p1.gamesWon}    Current Score: ${p1.finalScore}`);
+    lines.push(`    Sets Won: ${p1.gamesWon}    Current Score: ${p1.finalScore}`);
     lines.push('');
     lines.push(`  ${p2Display}`);
-    lines.push(`    Games Won: ${p2.gamesWon}    Current Score: ${p2.finalScore}`);
+    lines.push(`    Sets Won: ${p2.gamesWon}    Current Score: ${p2.finalScore}`);
     lines.push('');
 
     // Game-by-game breakdown
     if (data.gameResults.length > 0) {
         lines.push(thinDivider);
-        lines.push('  GAME-BY-GAME RESULTS');
+        lines.push('  SET-BY-SET RESULTS');
         lines.push(thinDivider);
         lines.push('');
 
         for (const g of data.gameResults) {
-            lines.push(`  Game ${g.gameNumber}: ${g.player1Score} - ${g.player2Score}  →  Winner: ${g.winner}`);
+            lines.push(`  Set ${g.gameNumber}: ${g.player1Score} - ${g.player2Score}  →  Winner: ${g.winner}`);
             if (g.completedAt) {
                 lines.push(`    Completed at: ${g.completedAt}`);
             }
@@ -295,23 +366,33 @@ export function generateTextSummary(data: MatchExportData): string {
         lines.push('');
     }
 
-    // Scoring Timeline
-    const pointEvents = data.timeline.filter(e => e.eventType === 'point');
-    if (pointEvents.length > 0) {
+    // Scoring Timeline Grouped by Sets
+    if (data.setGroups.length > 0) {
         lines.push(thinDivider);
-        lines.push('  SCORING TIMELINE');
+        lines.push('  SCORING TIMELINE (GROUPED BY SETS)');
         lines.push(thinDivider);
         lines.push('');
-        lines.push(`  ${'Time'.padEnd(8)} ${'Game'.padEnd(6)} ${'Player'.padEnd(24)} ${'Δ'.padEnd(4)} ${'Score'.padEnd(10)}`);
-        lines.push(`  ${'─'.repeat(8)} ${'─'.repeat(6)} ${'─'.repeat(24)} ${'─'.repeat(4)} ${'─'.repeat(10)}`);
 
-        for (const e of pointEvents) {
-            const playerTruncated = e.player.length > 22 ? e.player.substring(0, 22) + '..' : e.player;
-            lines.push(
-                `  ${e.time.padEnd(8)} ${`G${e.game}`.padEnd(6)} ${playerTruncated.padEnd(24)} ${e.scoreChange.padEnd(4)} ${e.detail.padEnd(10)}`
-            );
+        for (const group of data.setGroups) {
+            const groupPoints = group.events.filter(e => e.eventType === 'point');
+            if (groupPoints.length === 0) continue;
+
+            const resStr = group.gameResult
+                ? ` (Final: ${group.gameResult.player1Score}-${group.gameResult.player2Score}, Winner: ${group.gameResult.winner})`
+                : ' (In Progress)';
+
+            lines.push(`  ── SET ${group.gameNumber}${resStr} ──`);
+            lines.push(`  ${'Time'.padEnd(8)} ${'Player'.padEnd(24)} ${'Δ'.padEnd(4)} ${'Rally'.padEnd(10)} ${'Set Score'.padEnd(10)}`);
+            lines.push(`  ${'─'.repeat(8)} ${'─'.repeat(24)} ${'─'.repeat(4)} ${'─'.repeat(10)} ${'─'.repeat(10)}`);
+
+            for (const e of groupPoints) {
+                const playerTruncated = e.player.length > 22 ? e.player.substring(0, 22) + '..' : e.player;
+                lines.push(
+                    `  ${e.time.padEnd(8)} ${playerTruncated.padEnd(24)} ${e.scoreChange.padEnd(4)} ${e.detail.padEnd(10)} ${e.setScore.padEnd(10)}`
+                );
+            }
+            lines.push('');
         }
-        lines.push('');
     }
 
     lines.push(divider);
@@ -324,14 +405,14 @@ export function generateTextSummary(data: MatchExportData): string {
 export function generateCSV(data: MatchExportData): string {
     const rows: string[] = [];
 
-    // Header
-    rows.push('Time,Elapsed (s),Game,Event Type,Player,Score Change,P1 Score,P2 Score,Detail');
+    // Header with set count included
+    rows.push('Time,Elapsed (s),Game,Event Type,Player,Score Change,P1 Score,P2 Score,P1 Sets,P2 Sets,Set Score,Detail');
 
     for (const e of data.timeline) {
         const escapedPlayer = `"${e.player.replace(/"/g, '""')}"`;
         const escapedDetail = `"${e.detail.replace(/"/g, '""')}"`;
         rows.push(
-            `${e.time},${Math.round(e.elapsedSeconds)},${e.game},${e.eventType},${escapedPlayer},${e.scoreChange},${e.p1Score},${e.p2Score},${escapedDetail}`
+            `${e.time},${Math.round(e.elapsedSeconds)},${e.game},${e.eventType},${escapedPlayer},${e.scoreChange},${e.p1Score},${e.p2Score},${e.p1Sets},${e.p2Sets},"${e.setScore}",${escapedDetail}`
         );
     }
 

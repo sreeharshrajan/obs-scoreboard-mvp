@@ -268,4 +268,48 @@ describe('Badminton Scoring Engine', () => {
         expect(resumedState.status).toBe('live');
         expect(resumedState.breakTimerStartTime).toBeNull();
     });
+
+    it('Scenario 14: minus button (-1) on losing team at 0-0 in new game un-archives game without re-completing it', () => {
+        let state = createInitialState();
+        state.player1.gamesWon = 1;
+        state.player1.score = 20;
+        state.player2.score = 10;
+        state.gameHistory = [
+            { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' }
+        ];
+
+        // Player 1 wins Game 2 (21-10) -> Match won
+        const matchWonState = processScoringPipeline(state, 'player1', 1, rules);
+        expect(matchWonState.player1.gamesWon).toBe(2);
+        expect(matchWonState.gameHistory?.length).toBe(2);
+        expect(matchWonState.player1.score).toBe(0);
+        expect(matchWonState.player2.score).toBe(0);
+
+        // Operator clicks (-) on Player 2 (losing team) at 0-0 score in Game 3
+        const correctedState = processScoringPipeline(matchWonState, 'player2', -1, rules);
+
+        // Should restore Game 2 with P1=21, P2=9, and NOT immediately auto-complete Game 2
+        expect(correctedState.gameHistory?.length).toBe(1);
+        expect(correctedState.player1.gamesWon).toBe(1);
+        expect(correctedState.player1.score).toBe(21);
+        expect(correctedState.player2.score).toBe(9);
+    });
+
+    it('Scenario 15: minus button (-1) on 0 score team when active game has points (3-0) does not un-archive previous game', () => {
+        let state = createInitialState();
+        state.player1.gamesWon = 1;
+        state.player1.score = 3;
+        state.player2.score = 0;
+        state.gameHistory = [
+            { gameNumber: 1, player1Score: 21, player2Score: 18, winner: 'player1' }
+        ];
+
+        // Operator clicks (-) on Player 2 (who has 0 points, but P1 has 3 points in Game 2)
+        const nextState = processScoringPipeline(state, 'player2', -1, rules);
+
+        // Game history should remain intact and score should stay 3-0
+        expect(nextState.gameHistory?.length).toBe(1);
+        expect(nextState.player1.score).toBe(3);
+        expect(nextState.player2.score).toBe(0);
+    });
 });
