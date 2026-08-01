@@ -99,4 +99,19 @@ describe('matchHelpers - getPerGameScores', () => {
 
         expect(scores).toHaveLength(3);
     });
+
+    it('ignores corrupted player.gamesWon in state when gameHistory is present', () => {
+        const match = createMockMatch({
+            player1: { name: 'Player 1', score: 14, gamesWon: 0 },
+            player2: { name: 'Player 2', score: 15, gamesWon: 2 }, // Corrupted gamesWon=2 in document
+            gameHistory: [
+                { gameNumber: 1, player1Score: 9, player2Score: 15, winner: 'player2' },
+            ],
+        });
+
+        const details = getMatchDetails(match);
+        expect(details.p2GamesWon).toBe(1); // Derived correctly from gameHistory
+        expect(details.currentGame).toBe(2);
+    });
 });
+

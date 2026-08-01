@@ -4,6 +4,7 @@ import React from 'react';
 import { Trophy, X, CheckCircle2 } from 'lucide-react';
 import clsx from 'clsx';
 import { MatchState } from '@/types/match';
+import { getGameStructure } from '@/lib/matchHelpers';
 
 interface EndMatchModalProps {
     isOpen: boolean;
@@ -23,8 +24,7 @@ export default function EndMatchModal({
     const p1Name = [match.player1?.name, match.player1?.name2].filter(Boolean).join(" & ") || "Team 1";
     const p2Name = [match.player2?.name, match.player2?.name2].filter(Boolean).join(" & ") || "Team 2";
 
-    const p1Games = match.player1?.gamesWon ?? 0;
-    const p2Games = match.player2?.gamesWon ?? 0;
+    const { p1GamesWon: p1Games, p2GamesWon: p2Games } = getGameStructure(match);
 
     const isP1Winner = p1Games > p2Games;
     const isP2Winner = p2Games > p1Games;

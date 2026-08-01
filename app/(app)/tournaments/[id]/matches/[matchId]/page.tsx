@@ -164,7 +164,7 @@ export default function MatchConsole() {
             const token = await getToken();
             return fetchMatch(tournamentId, matchId, token);
         },
-        refetchInterval: 2000,
+        refetchInterval: 5000,
         enabled: !!matchId && !!tournamentId,
         retry: (failureCount, error) => {
             if (error.message === "Not authenticated") return false;
@@ -560,7 +560,7 @@ export default function MatchConsole() {
     return (
         <div
             ref={containerRef}
-            className="w-full h-full bg-[#FDFDFD] dark:bg-[#1A1A1A] p-4 lg:p-8 flex flex-col gap-6"
+            className="w-full h-full bg-[#FDFDFD] dark:bg-[#1A1A1A] p-2 sm:p-4 lg:p-8 flex flex-col gap-3 sm:gap-4 lg:gap-6"
         >
             <ConsoleHeader
                 match={safeMatch}
@@ -574,24 +574,42 @@ export default function MatchConsole() {
             />
 
             {/* Main Scoreboard Interface */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+            <div className="flex-1 grid grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6 min-h-0 overflow-y-auto lg:overflow-hidden">
 
-                {/* Team 1 Card */}
-                <PlayerCard
-                    player={safeMatch.player1}
-                    teamLabel="Team One"
-                    isServing={safeMatch.currentServer === 'player1'}
-                    isCompleted={isCompleted}
-                    onScoreChange={(delta) => handleScore('player1', delta)}
-                    onToggleServer={() => toggleServer('player1')}
-                    matchType={safeMatch.matchType}
-                    gamesWon={p1GamesWon}
-                    totalGames={totalGames}
-                    lastGameScore={lastGame?.player1Score}
-                />
+                {/* Team 1 Card — order-1 on desktop (left) */}
+                <div className="col-span-1 lg:col-span-4 lg:order-1">
+                    <PlayerCard
+                        player={safeMatch.player1}
+                        teamLabel="Team One"
+                        isServing={safeMatch.currentServer === 'player1'}
+                        isCompleted={isCompleted}
+                        onScoreChange={(delta) => handleScore('player1', delta)}
+                        onToggleServer={() => toggleServer('player1')}
+                        matchType={safeMatch.matchType}
+                        gamesWon={p1GamesWon}
+                        totalGames={totalGames}
+                        lastGameScore={lastGame?.player1Score}
+                    />
+                </div>
 
-                {/* Center Control Column */}
-                <div className="lg:col-span-4 h-auto lg:h-auto flex flex-col gap-4">
+                {/* Team 2 Card — order-3 on desktop (right), but order-2 in source for mobile side-by-side */}
+                <div className="col-span-1 lg:col-span-4 lg:order-3">
+                    <PlayerCard
+                        player={safeMatch.player2}
+                        teamLabel="Team Two"
+                        isServing={safeMatch.currentServer === 'player2'}
+                        isCompleted={isCompleted}
+                        onScoreChange={(delta) => handleScore('player2', delta)}
+                        onToggleServer={() => toggleServer('player2')}
+                        matchType={safeMatch.matchType}
+                        gamesWon={p2GamesWon}
+                        totalGames={totalGames}
+                        lastGameScore={lastGame?.player2Score}
+                    />
+                </div>
+
+                {/* Center Control Column — order-2 on desktop (center), full-width on mobile (below both cards) */}
+                <div className="col-span-2 lg:col-span-4 lg:order-2 h-auto lg:h-auto flex flex-col gap-3 sm:gap-4">
 
                     {/* flex-1 min-h-0 allows the timer to compress down instead of stretching the container out */}
                     <div className="flex-1 min-h-0 flex flex-col w-full">
@@ -627,20 +645,6 @@ export default function MatchConsole() {
                         />
                     </div>
                 </div>
-
-                {/* Team 2 Card */}
-                <PlayerCard
-                    player={safeMatch.player2}
-                    teamLabel="Team Two"
-                    isServing={safeMatch.currentServer === 'player2'}
-                    isCompleted={isCompleted}
-                    onScoreChange={(delta) => handleScore('player2', delta)}
-                    onToggleServer={() => toggleServer('player2')}
-                    matchType={safeMatch.matchType}
-                    gamesWon={p2GamesWon}
-                    totalGames={totalGames}
-                    lastGameScore={lastGame?.player2Score}
-                />
 
             </div>
 

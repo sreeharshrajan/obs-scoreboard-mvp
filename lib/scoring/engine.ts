@@ -31,8 +31,8 @@ export function applyScore(ctx: ScoringContext): ScoringContext {
         const newHistory = gameHistory.slice(0, -1);
         const winner = lastGame.winner;
 
-        const p1GamesWon = Math.max(0, (state.player1?.gamesWon ?? 0) - (winner === 'player1' ? 1 : 0));
-        const p2GamesWon = Math.max(0, (state.player2?.gamesWon ?? 0) - (winner === 'player2' ? 1 : 0));
+        const p1GamesWon = newHistory.filter(g => g.winner === 'player1').length;
+        const p2GamesWon = newHistory.filter(g => g.winner === 'player2').length;
 
         const restoredP1 = team === 'player1' ? Math.max(0, lastGame.player1Score + delta) : lastGame.player1Score;
         const restoredP2 = team === 'player2' ? Math.max(0, lastGame.player2Score + delta) : lastGame.player2Score;
@@ -178,8 +178,9 @@ export function applyGameRule(ctx: ScoringContext): ScoringContext {
         completedAt: now,
     };
 
-    const p1GamesWon = (state.player1?.gamesWon ?? 0) + (winner === 'player1' ? 1 : 0);
-    const p2GamesWon = (state.player2?.gamesWon ?? 0) + (winner === 'player2' ? 1 : 0);
+    const newGameHistory = [...gameHistory, newGameResult];
+    const p1GamesWon = newGameHistory.filter(g => g.winner === 'player1').length;
+    const p2GamesWon = newGameHistory.filter(g => g.winner === 'player2').length;
 
     return {
         ...ctx,
@@ -195,7 +196,7 @@ export function applyGameRule(ctx: ScoringContext): ScoringContext {
                 score: 0,
                 gamesWon: p2GamesWon,
             },
-            gameHistory: [...gameHistory, newGameResult],
+            gameHistory: newGameHistory,
         },
     };
 }
@@ -425,8 +426,8 @@ export function undoLastGame(state: MatchState): MatchState {
     const newHistory = gameHistory.slice(0, -1);
     const winner = lastGame.winner;
 
-    const p1GamesWon = Math.max(0, (state.player1?.gamesWon ?? 0) - (winner === 'player1' ? 1 : 0));
-    const p2GamesWon = Math.max(0, (state.player2?.gamesWon ?? 0) - (winner === 'player2' ? 1 : 0));
+    const p1GamesWon = newHistory.filter(g => g.winner === 'player1').length;
+    const p2GamesWon = newHistory.filter(g => g.winner === 'player2').length;
 
     // Restore rally scores to point before winning point
     const restoredP1Score = winner === 'player1' ? Math.max(0, lastGame.player1Score - 1) : lastGame.player1Score;

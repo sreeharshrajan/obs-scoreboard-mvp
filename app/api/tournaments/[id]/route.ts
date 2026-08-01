@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuth } from "firebase-admin/auth";
 import { adminDb } from "@/lib/firebase/admin";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 export async function GET(
     req: Request,
@@ -15,6 +16,13 @@ export async function GET(
             await verifyRequest(req);
         } catch {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Check memory cache first
+        const cacheKey = `tournament:${id}`;
+        const cached = memoryCache.get<any>(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached);
         }
 
         // 2. Fetch tournament
@@ -54,7 +62,7 @@ export async function GET(
             }
         }
 
-        return NextResponse.json({
+        const responsePayload = {
             id: doc.id,
             name: tournament.name || "Unnamed Tournament",
             location: tournament.location || "",
@@ -65,7 +73,11 @@ export async function GET(
             status: tournament.status || "draft",
             createdAt: formatDate(tournament.createdAt),
             owner: ownerData,
-        });
+        };
+
+        memoryCache.set(cacheKey, responsePayload, 3000);
+
+        return NextResponse.json(responsePayload);
 
     } catch (globalError: unknown) {
         const message = globalError instanceof Error ? globalError.message : "Internal Server Error";
@@ -117,6 +129,7 @@ export async function PATCH(
         if (status) updates.status = status;
 
         await docRef.update(updates);
+        memoryCache.invalidate(`tournament:${id}`);
 
         return NextResponse.json({ success: true, message: "Tournament updated successfully" });
 

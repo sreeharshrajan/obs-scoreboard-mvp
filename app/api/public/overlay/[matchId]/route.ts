@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
-import { FieldPath } from "firebase-admin/firestore";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +17,13 @@ export async function GET(
         const { searchParams } = new URL(req.url);
         const tournamentIdParam = searchParams.get("tournamentId");
 
+        // Check in-memory cache first (1.5s TTL to absorb high-frequency OBS polling)
+        const cacheKey = `overlay:${matchId}:${tournamentIdParam || 'any'}`;
+        const cached = memoryCache.get(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached);
+        }
+
         let matchDoc: FirebaseFirestore.DocumentSnapshot | undefined;
 
         if (tournamentIdParam) {
@@ -32,30 +39,18 @@ export async function GET(
         }
 
         if (!matchDoc) {
-            let snapshot = await adminDb
-                .collectionGroup("matches")
-                .where("matchId", "==", matchId)
-                .limit(1)
-                .get();
-
-            if (snapshot.empty) {
-                snapshot = await adminDb
-                    .collectionGroup("matches")
-                    .where("id", "==", matchId)
-                    .limit(1)
-                    .get();
-            }
-
-            if (snapshot.empty) {
-                snapshot = await adminDb
-                    .collectionGroup("matches")
-                    .where(FieldPath.documentId(), "==", matchId)
-                    .limit(1)
-                    .get();
-            }
-
-            if (!snapshot.empty) {
-                matchDoc = snapshot.docs[0];
+            // Find match document by ID across tournaments in parallel without needing collectionGroup indexes
+            try {
+                const tournamentsSnap = await adminDb.collection("tournaments").get();
+                const matchSnaps = await Promise.all(
+                    tournamentsSnap.docs.map(tDoc => tDoc.ref.collection("matches").doc(matchId).get())
+                );
+                const found = matchSnaps.find(snap => snap.exists);
+                if (found) {
+                    matchDoc = found;
+                }
+            } catch (err) {
+                console.error("Error finding match across tournaments:", err);
             }
         }
 
@@ -80,13 +75,19 @@ export async function GET(
                 .sort((a: any, b: any) => (a.priority || 99) - (b.priority || 99));
         }
 
-        return NextResponse.json({
+        const responsePayload = {
             match: { id: matchDoc.id, ...matchData },
             sponsors,
             tournamentId
-        });
+        };
+
+        // Cache for 1500ms
+        memoryCache.set(cacheKey, responsePayload, 1500);
+
+        return NextResponse.json(responsePayload);
     } catch (error: any) {
         console.error("Error in public overlay API:", error);
         return NextResponse.json({ error: error.message || "Internal Error" }, { status: 500 });
     }
 }
+
