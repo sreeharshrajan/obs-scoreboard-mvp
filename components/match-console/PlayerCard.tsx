@@ -60,7 +60,7 @@ export default memo(function PlayerCard({
                     <div className="flex items-center gap-1 sm:gap-2">
                         {/* Sets Won Badge */}
                         <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg">
-                            Sets: {gamesWon}
+                            {gamesWon === 1 ? 'Set Won: 1' : `Sets Won: ${gamesWon}`}
                         </span>
 
                         {/* Desktop Serving Badge */}

@@ -511,11 +511,69 @@ export default function MatchConsole() {
 
     const swapSides = useCallback(() => {
         if (!safeMatch) return;
-        mutation.mutate({
-            player1: safeMatch.player2,
-            player2: safeMatch.player1
-        });
-    }, [safeMatch, mutation]);
+
+        // Swap players
+        const newP1 = safeMatch.player2;
+        const newP2 = safeMatch.player1;
+
+        // Flip current server
+        const newServer = safeMatch.currentServer === 'player1' ? 'player2' : 'player1';
+
+        // Swap gameHistory entries so set wins move with the players to their new slots
+        const newGameHistory = (safeMatch.gameHistory ?? []).map(g => ({
+            ...g,
+            player1Score: g.player2Score,
+            player2Score: g.player1Score,
+            winner: (g.winner === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
+        }));
+
+        // Swap scoreEvents entries
+        const newScoreEvents = (safeMatch.scoreEvents ?? []).map(e => ({
+            ...e,
+            team: (e.team === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
+            previousScore: {
+                player1: e.previousScore.player2,
+                player2: e.previousScore.player1,
+            },
+            resultingScore: {
+                player1: e.resultingScore.player2,
+                player2: e.resultingScore.player1,
+            },
+        }));
+
+        const updates: Partial<MatchState> = {
+            player1: newP1,
+            player2: newP2,
+            currentServer: newServer,
+            gameHistory: newGameHistory,
+            scoreEvents: newScoreEvents,
+        };
+
+        optimisticUpdate(updates);
+        debouncedMutate(updates);
+    }, [safeMatch, optimisticUpdate, debouncedMutate]);
+
+    const handleSwapSetHistory = useCallback(() => {
+        if (!safeMatch || !safeMatch.gameHistory || safeMatch.gameHistory.length === 0) return;
+
+        const confirmMsg = "Swap the winner of completed sets in Game History?\n\nThis will flip the set win records between Team One and Team Two.";
+        if (!confirm(confirmMsg)) return;
+
+        const newGameHistory = safeMatch.gameHistory.map(g => ({
+            ...g,
+            player1Score: g.player2Score,
+            player2Score: g.player1Score,
+            winner: (g.winner === 'player1' ? 'player2' : 'player1') as 'player1' | 'player2',
+        }));
+
+        const updates: Partial<MatchState> = {
+            gameHistory: newGameHistory,
+        };
+
+        optimisticUpdate(updates);
+        mutation.mutate(updates);
+        toast.success("Set history winner swapped successfully.");
+    }, [safeMatch, optimisticUpdate, mutation]);
 
     const handleResetGame = useCallback(() => {
         if (!safeMatch) return;
@@ -630,6 +688,7 @@ export default function MatchConsole() {
                             breakRemainingDisplay={breakRemainingDisplay}
                             breakDuration={safeMatch.breakTimerDuration || 60}
                             onSelectBreakDuration={handleSelectBreakDuration}
+                            onSwapSetHistory={handleSwapSetHistory}
                         />
                     </div>
 
