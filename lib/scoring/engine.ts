@@ -12,6 +12,7 @@ export interface ScoringContext {
     readonly delta: number;
     readonly rules: MatchRules;
     readonly previousState: MatchState;
+    readonly didUnarchiveGame?: boolean;
 }
 
 // ── Pipeline Stage 1: Apply Score ──
@@ -23,13 +24,14 @@ export interface ScoringContext {
 export function applyScore(ctx: ScoringContext): ScoringContext {
     const { state, team, delta } = ctx;
     const currentScore = state[team]?.score ?? 0;
+    const p1Score = state.player1?.score ?? 0;
+    const p2Score = state.player2?.score ?? 0;
 
-    // Handle score reduction (delta < 0) immediately after a game was archived into gameHistory
-    if (delta < 0 && currentScore === 0 && (state.gameHistory?.length ?? 0) > 0) {
+    // Handle score reduction (delta < 0) when current active game is 0-0 and previous games exist in gameHistory
+    if (delta < 0 && p1Score === 0 && p2Score === 0 && (state.gameHistory?.length ?? 0) > 0) {
         const gameHistory = state.gameHistory ?? [];
         const lastGame = gameHistory[gameHistory.length - 1];
         const newHistory = gameHistory.slice(0, -1);
-        const winner = lastGame.winner;
 
         const p1GamesWon = newHistory.filter(g => g.winner === 'player1').length;
         const p2GamesWon = newHistory.filter(g => g.winner === 'player2').length;
@@ -39,6 +41,7 @@ export function applyScore(ctx: ScoringContext): ScoringContext {
 
         return {
             ...ctx,
+            didUnarchiveGame: true,
             state: {
                 ...state,
                 isTimerRunning: false,
@@ -62,6 +65,7 @@ export function applyScore(ctx: ScoringContext): ScoringContext {
 
     return {
         ...ctx,
+        didUnarchiveGame: false,
         state: {
             ...state,
             [team]: {
@@ -152,9 +156,9 @@ export function recordScoreEvent(ctx: ScoringContext): ScoringContext {
  * Only applies when rules.autoEndGame is true.
  */
 export function applyGameRule(ctx: ScoringContext): ScoringContext {
-    const { state, rules } = ctx;
+    const { state, rules, didUnarchiveGame } = ctx;
 
-    if (!rules.autoEndGame) {
+    if (!rules.autoEndGame || didUnarchiveGame) {
         return ctx;
     }
 
@@ -210,9 +214,9 @@ export function applyGameRule(ctx: ScoringContext): ScoringContext {
  * Only applies when rules.autoEndMatch is true.
  */
 export function applyMatchRule(ctx: ScoringContext): ScoringContext {
-    const { state, rules } = ctx;
+    const { state, rules, didUnarchiveGame } = ctx;
 
-    if (!rules.autoEndMatch) {
+    if (!rules.autoEndMatch || didUnarchiveGame) {
         return ctx;
     }
 

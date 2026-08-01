@@ -203,42 +203,64 @@ export default function ExportMatchModal({
                         </div>
                     )}
 
-                    {/* Timeline Preview */}
+                    {/* Timeline Preview (Grouped by Set) */}
                     {pointEvents.length > 0 && (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <div className="flex items-center justify-between px-1">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                    Scoring Timeline Preview
+                                    Scoring Timeline (Grouped by Set)
                                 </span>
                                 <span className="text-[10px] font-bold text-slate-400">
-                                    {pointEvents.length} points logged
+                                    {pointEvents.length} points logged across {exportData.setGroups.length} set{exportData.setGroups.length > 1 ? 's' : ''}
                                 </span>
                             </div>
-                            <div className="rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
-                                <table className="w-full text-xs">
-                                    <thead>
-                                        <tr className="bg-slate-100/70 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                                            <th className="text-left px-3 py-2">Match Time</th>
-                                            <th className="text-left px-3 py-2">Scored By</th>
-                                            <th className="text-center px-3 py-2">Rally Score</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                                        {pointEvents.slice(-5).map((e, i) => (
-                                            <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
-                                                <td className="px-3 py-2 font-mono text-slate-400 tabular-nums">{e.time}</td>
-                                                <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px]">{e.player}</td>
-                                                <td className="text-center px-3 py-2 font-black text-slate-900 dark:text-white tabular-nums">{e.detail}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                {pointEvents.length > 5 && (
-                                    <div className="px-4 py-2 text-center text-[10px] font-bold text-slate-400 bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5">
-                                        + {pointEvents.length - 5} earlier point events in full export files
+
+                            {exportData.setGroups.map((group) => {
+                                const groupPoints = group.events.filter(e => e.eventType === 'point');
+                                if (groupPoints.length === 0) return null;
+
+                                return (
+                                    <div key={group.gameNumber} className="rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+                                        <div className="px-4 py-2 bg-slate-100/80 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between text-xs">
+                                            <span className="font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                                                Set {group.gameNumber}
+                                                {group.gameResult ? (
+                                                    <span className="ml-2 font-normal text-slate-500">
+                                                        (Final: {group.gameResult.player1Score}-{group.gameResult.player2Score} • Winner: {group.gameResult.winner})
+                                                    </span>
+                                                ) : (
+                                                    <span className="ml-2 font-normal text-amber-500 font-semibold">
+                                                        (In Progress)
+                                                    </span>
+                                                )}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-[#FF5A09] bg-[#FF5A09]/10 px-2 py-0.5 rounded-full">
+                                                Set Score Before: {group.setScoreBefore}
+                                            </span>
+                                        </div>
+                                        <table className="w-full text-xs">
+                                            <thead>
+                                                <tr className="border-b border-slate-100 dark:border-white/5 text-slate-400 text-[9px] font-black uppercase tracking-widest bg-slate-50/50 dark:bg-white/[0.01]">
+                                                    <th className="text-left px-3 py-1.5">Match Time</th>
+                                                    <th className="text-left px-3 py-1.5">Scored By</th>
+                                                    <th className="text-center px-3 py-1.5">Rally Score</th>
+                                                    <th className="text-right px-3 py-1.5">Set Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                                                {groupPoints.map((e, i) => (
+                                                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+                                                        <td className="px-3 py-2 font-mono text-slate-400 tabular-nums">{e.time}</td>
+                                                        <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px]">{e.player}</td>
+                                                        <td className="text-center px-3 py-2 font-black text-slate-900 dark:text-white tabular-nums">{e.detail}</td>
+                                                        <td className="text-right px-3 py-2 font-bold text-slate-500 tabular-nums">{e.setScore}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
-                                )}
-                            </div>
+                                );
+                            })}
                         </div>
                     )}
 
