@@ -17,7 +17,9 @@ interface ConsoleHeaderProps {
     onExportMatch?: () => void;
 }
 
+import { useRouter } from 'next/navigation';
 export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen, onExportMatch }: ConsoleHeaderProps) {
+    const router = useRouter();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -106,13 +108,14 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                         <span className="hidden md:inline">Overlay</span>
                     </Link>
 
-                    <Link
+                    <button
+                        type="button"
                         title="Edit Match Info"
-                        href={`/tournaments/${tournamentId}/matches/${matchId}/edit`}
+                        onClick={() => router.push(`/tournaments/${tournamentId}/matches/${matchId}/edit`)}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-[#FF5A09] transition-all font-bold text-xs uppercase tracking-wide active:scale-95 shadow-sm"
                     >
                         <Edit size={16} />
-                    </Link>
+                    </button>
 
                     <button
                         type="button"
