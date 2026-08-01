@@ -45,7 +45,7 @@ export default function ResolutionWrapper({
 
     return (
         <div
-            className={`overflow-hidden pointer-events-none ${className}`}
+            className={`pointer-events-none ${className}`}
             style={{
                 width: baseWidth,
                 height: baseHeight,

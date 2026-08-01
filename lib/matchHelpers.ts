@@ -137,11 +137,17 @@ export function getGameStructure(match: MatchState): {
     const rawCurrentGame = gameHistory.length + 1;
     const currentGame = Math.min(rawCurrentGame, totalGames);
 
+    const historyP1Won = gameHistory.filter(g => g.winner === 'player1').length;
+    const historyP2Won = gameHistory.filter(g => g.winner === 'player2').length;
+
+    const p1GamesWon = Math.max(match.player1?.gamesWon ?? 0, historyP1Won);
+    const p2GamesWon = Math.max(match.player2?.gamesWon ?? 0, historyP2Won);
+
     return {
         currentGame,
         totalGames,
-        p1GamesWon: match.player1?.gamesWon ?? 0,
-        p2GamesWon: match.player2?.gamesWon ?? 0,
+        p1GamesWon,
+        p2GamesWon,
         gameHistory,
     };
 }

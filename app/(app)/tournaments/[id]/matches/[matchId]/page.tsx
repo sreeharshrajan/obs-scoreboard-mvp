@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { MatchState, GameResult } from '@/types/match';
-import { getRuleSet } from '@/lib/scoring/rules';
+import { getRuleSet, isGameComplete } from '@/lib/scoring/rules';
 import { processScoringPipeline, startMatchTimer, pauseMatchTimer, completeMatch, resumeMatch, toggleBreakState, undoLastGame } from '@/lib/scoring/engine';
 import { validateState } from '@/lib/scoring/validation';
 import { getGameStructure } from '@/lib/matchHelpers';
@@ -19,6 +19,7 @@ import ConsoleHeader from '@/components/match-console/ConsoleHeader';
 import PlayerCard from '@/components/match-console/PlayerCard';
 import MatchTimer from '@/components/match-console/MatchTimer';
 import QuickActions from '@/components/match-console/QuickActions';
+import SetCompletionModal from '@/components/match-console/SetCompletionModal';
 
 // --- Fetchers ---
 const fetchMatch = async (tournamentId: string, matchId: string, token: string): Promise<MatchState> => {
@@ -108,6 +109,18 @@ export default function MatchConsole() {
 
     const [elapsedDisplay, setElapsedDisplay] = useState<number>(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [pendingSetCompletion, setPendingSetCompletion] = useState<{
+        team: 'player1' | 'player2';
+        delta: number;
+        winnerName: string;
+        winnerTeamLabel: string;
+        gameNumber: number;
+        p1Name: string;
+        p2Name: string;
+        potentialP1: number;
+        potentialP2: number;
+        isMatchPoint: boolean;
+    } | null>(null);
 
     // Helper to get token
     const getToken = async () => {
@@ -321,12 +334,65 @@ export default function MatchConsole() {
         const { valid } = validateState(safeMatch, rules);
         if (!valid) return;
 
+        // Check if adding a point completes the set
+        if (delta > 0 && rules.autoEndGame) {
+            const currentP1 = safeMatch.player1?.score ?? 0;
+            const currentP2 = safeMatch.player2?.score ?? 0;
+            const potentialP1 = team === 'player1' ? currentP1 + delta : currentP1;
+            const potentialP2 = team === 'player2' ? currentP2 + delta : currentP2;
+
+            const { complete, winner } = isGameComplete(potentialP1, potentialP2, rules);
+
+            if (complete && winner) {
+                const { currentGame, p1GamesWon, p2GamesWon } = getGameStructure(safeMatch);
+                const winnerName = winner === 'player1'
+                    ? (safeMatch.player1?.name || 'Team 1')
+                    : (safeMatch.player2?.name || 'Team 2');
+                const winnerTeamLabel = winner === 'player1' ? 'Team One' : 'Team Two';
+
+                const winnerPreviousSets = winner === 'player1' ? p1GamesWon : p2GamesWon;
+                const setsToWin = Math.ceil(rules.bestOf / 2);
+                const isMatchPoint = (winnerPreviousSets + 1) >= setsToWin;
+
+                setPendingSetCompletion({
+                    team,
+                    delta,
+                    winnerName,
+                    winnerTeamLabel,
+                    gameNumber: currentGame,
+                    p1Name: safeMatch.player1?.name || 'Team 1',
+                    p2Name: safeMatch.player2?.name || 'Team 2',
+                    potentialP1,
+                    potentialP2,
+                    isMatchPoint,
+                });
+                return;
+            }
+        }
+
         // Run scoring pipeline (pure — returns new state)
         const newState = processScoringPipeline(safeMatch, team, delta, rules);
 
         optimisticUpdate(newState);
         debouncedMutate(newState);
     }, [safeMatch, optimisticUpdate, debouncedMutate]);
+
+
+    const handleConfirmSetCompletion = useCallback(() => {
+        if (!safeMatch || !pendingSetCompletion) return;
+
+        const rules = getRuleSet(safeMatch.sport, safeMatch.scoringType);
+        const newState = processScoringPipeline(
+            safeMatch,
+            pendingSetCompletion.team,
+            pendingSetCompletion.delta,
+            rules
+        );
+
+        optimisticUpdate(newState);
+        debouncedMutate(newState);
+        setPendingSetCompletion(null);
+    }, [safeMatch, pendingSetCompletion, optimisticUpdate, debouncedMutate]);
 
 
     const toggleServer = useCallback((team: 'player1' | 'player2') => {
@@ -423,23 +489,6 @@ export default function MatchConsole() {
         }
     }, [safeMatch, mutation]);
 
-    /* 
-    // Reset Not used in UI currently but kept for reference or future use
-    const resetMatch = () => {
-        if (!confirm('Are you sure you want to reset the match?')) return;
-        if (!match) return;
-        mutation.mutate({
-            player1: { ...match.player1, score: 0, isServing: true },
-            player2: { ...match.player2, score: 0, isServing: false },
-            isTimerRunning: false,
-            timerElapsed: 0,
-            timerStartTime: null,
-            serverNumber: 1,
-            status: 'scheduled'
-        });
-    };
-    */
-
     if (isLoading) return <MatchConsoleSkeleton />;
     if (isError || !match || !safeMatch) {
         if (isError) console.error(isError);
@@ -487,32 +536,38 @@ export default function MatchConsole() {
                 />
 
                 {/* Center Control Column */}
-                <div className="lg:col-span-4 flex flex-col gap-6">
-                    <MatchTimer
-                        matchDetails={safeMatch}
-                        elapsedDisplay={elapsedDisplay}
-                        isTimerRunning={safeMatch.isTimerRunning}
-                        isCompleted={isCompleted}
-                        isMatchWon={isMatchWon}
-                        onToggleTimer={handleToggleTimer}
-                        formatTime={formatTime}
-                        matchStatus={safeMatch.status}
-                        isBreak={safeMatch.status === 'break'}
-                        onToggleBreak={handleToggleBreak}
-                        currentGame={currentGame}
-                        totalGames={totalGames}
-                        gameHistory={matchGameHistory}
-                    />
+                <div className="lg:col-span-4 h-auto lg:h-auto flex flex-col gap-4">
 
-                    <QuickActions
-                        onSwap={swapSides}
-                        onEndMatch={handleEndMatch}
-                        onResumeMatch={handleResumeMatch}
-                        onResetGame={handleResetGame}
-                        isCompleted={isCompleted}
-                        isMatchWon={isMatchWon}
-                        currentGame={currentGame}
-                    />
+                    {/* flex-1 min-h-0 allows the timer to compress down instead of stretching the container out */}
+                    <div className="flex-1 min-h-0 flex flex-col w-full">
+                        <MatchTimer
+                            matchDetails={safeMatch}
+                            elapsedDisplay={elapsedDisplay}
+                            isTimerRunning={safeMatch.isTimerRunning}
+                            isCompleted={isCompleted}
+                            isMatchWon={isMatchWon}
+                            onToggleTimer={handleToggleTimer}
+                            formatTime={formatTime}
+                            matchStatus={safeMatch.status}
+                            isBreak={safeMatch.status === 'break'}
+                            onToggleBreak={handleToggleBreak}
+                            currentGame={currentGame}
+                            totalGames={totalGames}
+                            gameHistory={matchGameHistory}
+                        />
+                    </div>
+
+                    <div className="shrink-0 w-full">
+                        <QuickActions
+                            onSwap={swapSides}
+                            onEndMatch={handleEndMatch}
+                            onResumeMatch={handleResumeMatch}
+                            onResetGame={handleResetGame}
+                            isCompleted={isCompleted}
+                            isMatchWon={isMatchWon}
+                            currentGame={currentGame}
+                        />
+                    </div>
                 </div>
 
                 {/* Team 2 Card */}
@@ -530,6 +585,20 @@ export default function MatchConsole() {
                 />
 
             </div>
+
+            <SetCompletionModal
+                isOpen={!!pendingSetCompletion}
+                onClose={() => setPendingSetCompletion(null)}
+                onConfirm={handleConfirmSetCompletion}
+                winnerName={pendingSetCompletion?.winnerName ?? ''}
+                winnerTeamLabel={pendingSetCompletion?.winnerTeamLabel ?? ''}
+                gameNumber={pendingSetCompletion?.gameNumber ?? 1}
+                p1Name={pendingSetCompletion?.p1Name ?? 'Team 1'}
+                p2Name={pendingSetCompletion?.p2Name ?? 'Team 2'}
+                p1Score={pendingSetCompletion?.potentialP1 ?? 0}
+                p2Score={pendingSetCompletion?.potentialP2 ?? 0}
+                isMatchPoint={pendingSetCompletion?.isMatchPoint ?? false}
+            />
         </div>
     );
 }

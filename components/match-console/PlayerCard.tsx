@@ -32,111 +32,117 @@ export default memo(function PlayerCard({
     const isWinner = gamesWon >= gamesNeeded;
     const isFinished = isCompleted || isWinner;
 
-    const displayScore = (isFinished || (player.score === 0 && lastGameScore !== undefined))
-        ? (lastGameScore ?? player.score)
+    const displayScore = isFinished
+        ? (player.score === 0 && lastGameScore !== undefined ? lastGameScore : player.score)
         : player.score;
 
     return (
         <div className={clsx(
-            "w-full h-30 lg:h-[400px] lg:col-span-4 rounded-[2rem] border-2 transition-all duration-500 p-6 lg:p-8 relative overflow-hidden flex flex-row lg:flex-col items-center lg:items-stretch",
+            // RESTORED lg:col-span-4 to fix the squished width
+            "w-full lg:col-span-4 h-auto lg:h-auto rounded-[2rem] border-2 transition-all duration-300 p-6 lg:p-7 relative overflow-hidden flex flex-col justify-between",
             isWinner
                 ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500 shadow-2xl shadow-amber-500/10"
                 : isServing && !isFinished
-                ? "bg-white dark:bg-[#252525] border-[#FF5A09] shadow-2xl shadow-[#FF5A09]/5"
-                : "bg-slate-50/50 dark:bg-white/[0.02] border-transparent"
+                    ? "bg-white dark:bg-[#1E1E1E] border-[#FF5A09] shadow-2xl shadow-[#FF5A09]/10"
+                    : "bg-white dark:bg-[#1E1E1E] border-slate-100 dark:border-white/5 shadow-xl"
         )}>
-            {isServing && !isFinished && (
-                <div className="hidden lg:flex absolute top-6 right-6 items-center gap-2 bg-[#FF5A09] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest z-20 animate-in fade-in zoom-in">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                    Serving
-                </div>
-            )}
-            {isWinner && (
-                <div className="absolute top-6 right-6 flex items-center gap-1.5 bg-amber-500 text-slate-950 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest z-20 shadow-md">
-                    <Trophy size={12} className="text-slate-950" />
-                    Winner
-                </div>
-            )}
+            {/* Top Bar: Header & Badges */}
+            <div className="w-full">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-black text-[#FF5A09] uppercase tracking-[0.2em]">
+                            {teamLabel}
+                        </span>
+                        {isServing && !isFinished && (
+                            <div className="lg:hidden w-2 h-2 bg-[#FF5A09] rounded-full animate-pulse" />
+                        )}
+                    </div>
 
-            <div className="flex-1 flex flex-col justify-center lg:justify-start lg:mb-4">
-                <div className="flex items-center gap-2 mb-1 lg:mb-2">
-                    <span className="text-[10px] lg:text-xs font-black text-[#FF5A09] uppercase tracking-[0.2em] block">
-                        {teamLabel}
-                    </span>
-                    {isServing && !isFinished && <div className="lg:hidden w-1.5 h-1.5 bg-[#FF5A09] rounded-full animate-pulse" />}
-                    {/* Games Won Badge */}
-                    <div className="flex items-center gap-1.5 ml-auto">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                    <div className="flex items-center gap-2">
+                        {/* Sets Won Badge */}
+                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-lg">
                             Sets: {gamesWon}
                         </span>
-                    </div>
-                </div>
 
-                <div className="flex flex-col">
-                    <div className="text-lg lg:text-2xl font-instrument italic font-medium text-slate-900 dark:text-white truncate max-w-[120px] lg:max-w-none">
-                        {player.name}
-                    </div>
-                    {(matchType === "Doubles" || matchType === "Mixed Doubles" || player.name2) && (
-                        <div className="text-lg lg:text-2xl font-instrument italic font-medium text-slate-900 dark:text-white truncate max-w-[120px] lg:max-w-none">
-                            {player.name2 || "—"}
-                        </div>
-                    )}
-                </div>
-
-                {!isFinished && (
-                    <button 
-                        onClick={onToggleServer}
-                        className={clsx(
-                            "lg:hidden mt-2 text-[9px] font-black uppercase tracking-widest text-left transition-colors",
-                            isServing ? "text-[#FF5A09]" : "text-slate-400"
+                        {/* Desktop Serving Badge */}
+                        {isServing && !isFinished && (
+                            <div className="hidden lg:flex items-center gap-1.5 bg-[#FF5A09] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md animate-in fade-in zoom-in">
+                                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                Serving
+                            </div>
                         )}
-                    >
-                        {isServing ? "Active Server" : "Set Server"}
-                    </button>
-                )}
+
+                        {/* Winner Badge */}
+                        {isWinner && (
+                            <div className="flex items-center gap-1.5 bg-amber-500 text-slate-950 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">
+                                <Trophy size={12} className="text-slate-950" />
+                                Winner
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Player Names Container */}
+                <div className="space-y-0.5 my-4 flex flex-col justify-center">
+                    <div className="text-xl lg:text-2xl font-extrabold font-instrument italic text-slate-900 dark:text-white truncate">
+                        {player.name || "Player 1"}
+                        {(matchType === "Doubles" || matchType === "Mixed Doubles" || player.name2) && (
+                            <>
+                                <span className="font-semibold ml-2 text-xl text-slate-500 dark:text-slate-400"> & </span>
+                                <span className="font-semibold ml-2 text-xl text-slate-500 dark:text-slate-400">{player.name2 || "—"}</span>
+                            </>
+                        )}
+                    </div>
+                </div>
             </div>
 
-            <div className="flex flex-row lg:flex-col items-center justify-center gap-4 lg:gap-2 lg:flex-1">
-                <span className="text-5xl lg:text-8xl lg:mb-5 leading-none font-instrument font-light tracking-tighter text-slate-900 dark:text-white tabular-nums">
+            {/* Middle Section: Display Score */}
+            <div className="flex flex-col items-center justify-center my-2">
+                <span className="text-7xl lg:text-9xl font-bold font-instrument tracking-tighter text-slate-900 dark:text-white tabular-nums leading-none select-none">
                     {displayScore}
                 </span>
+            </div>
 
+            {/* Bottom Controls Area */}
+            <div className="w-full space-y-3 my-2">
+                {/* Score Modifier Buttons */}
                 {!isCompleted && (
-                    <div className="flex items-center gap-2 lg:gap-4">
-                        <button 
-                            onClick={() => onScoreChange(-1)} 
-                            className="w-12 h-12 rounded-xl lg:rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer active:scale-95"
-                            title="Reduce score / Undo point"
+                    <div className="flex items-center justify-center gap-3">
+                        <button
+                            onClick={() => onScoreChange(-1)}
+                            className="w-12 h-12 rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer active:scale-95"
+                            title="Subtract Point"
                         >
                             <Minus size={20} />
                         </button>
-                        
+
                         {!isWinner && (
-                            <button 
-                                onClick={() => onScoreChange(1)} 
-                                className="w-12 h-12 lg:w-20 lg:h-20 rounded-xl lg:rounded-[2rem] bg-[#FF5A09] text-white shadow-lg shadow-[#FF5A09]/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                                title="Add point"
+                            <button
+                                onClick={() => onScoreChange(1)}
+                                className="flex-1 max-w-[140px] h-12 rounded-2xl bg-[#FF5A09] text-white shadow-lg shadow-[#FF5A09]/20 flex items-center justify-center hover:bg-[#E04F08] active:scale-95 transition-all cursor-pointer"
+                                title="Add Point"
                             >
-                                <Plus size={24} className="lg:w-8 lg:h-8" />
+                                <Plus size={24} />
                             </button>
                         )}
                     </div>
                 )}
-            </div>
 
-            {!isFinished && (
-                <button
-                    onClick={onToggleServer}
-                    className={clsx(
-                        "hidden lg:block mt-4 w-full py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all",
-                        isServing
-                            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
-                            : "bg-slate-200/50 dark:bg-white/5 text-slate-400 hover:text-slate-600"
-                    )}
-                >
-                    Mark as Server
-                </button>
-            )}
+                {/* Mark as Server Action Button */}
+                {!isFinished && (
+                    <button
+                        onClick={onToggleServer}
+                        className={clsx(
+                            "w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer active:scale-98 m-1",
+                            isServing
+                                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
+                                : "bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        )}
+                    >
+                        {isServing ? "Active Server" : "Mark as Server"}
+                    </button>
+                )}
+            </div>
         </div>
     );
 });

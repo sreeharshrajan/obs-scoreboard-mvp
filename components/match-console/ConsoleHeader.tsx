@@ -139,7 +139,7 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                             <div className="space-y-0.5">
                                 <ToggleItem icon={<Monitor size={16} />} label="Sponsor Cards" active={!!match.isSponsorsOverlayActive} onClick={() => toggleSetting('isSponsorsOverlayActive')} />
                                 <ToggleItem icon={<ImageIcon size={16} />} label="Tournament Logo" active={match.showTournamentLogo !== false} onClick={() => toggleSetting('showTournamentLogo')} />
-                                <ToggleItem icon={<Users size={16} />} label="Streamer Branding" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
+                                <ToggleItem icon={<Users size={16} />} label="Streamer Logo" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
                                 <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
                                 <ToggleItem icon={<Monitor size={16} />} label="Full Screen Details" active={!!match.showFullScreenMatchDetails} onClick={() => toggleSetting('showFullScreenMatchDetails')} />
                             </div>

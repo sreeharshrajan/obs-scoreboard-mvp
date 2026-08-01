@@ -36,33 +36,36 @@ export default memo(function MatchTimer({
 }: MatchTimerProps) {
     return (
         <div className={clsx(
-            "flex-1 rounded-3xl border transition-all duration-500 p-6 max-h-[280px] flex flex-col items-center justify-between relative overflow-hidden",
+            "flex-1 rounded-3xl border transition-all duration-500 p-6 flex flex-col items-center justify-center gap-6 relative overflow-hidden",
             isBreak
                 ? "bg-indigo-50/40 dark:bg-indigo-500/10 border-indigo-500/40 shadow-[0_0_20px_rgba(99,102,241,0.1)]"
                 : "bg-white dark:bg-[#1E1E1E] border-slate-100 dark:border-white/5 shadow-xl"
         )}>
 
             {/* Header: Tournament Context */}
-            <div className="w-full text-center space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500">
+            <div className="w-full text-center space-y-4 px-2">
+                <span className="block text-[11px] font-bold uppercase tracking-widest text-orange-500 line-clamp-1 leading-normal">
                     {matchDetails.tournamentName || "Tournament Name"}
                 </span>
-                <div className="flex items-center justify-center gap-2 mt-1 text-slate-400 dark:text-slate-500">
+                
+                <div className="flex items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
                     <div className="h-[1px] w-8 bg-current opacity-20" />
                     <Trophy size={14} />
                     <div className="h-[1px] w-8 bg-current opacity-20" />
                 </div>
+
                 {/* Game Indicator */}
                 {totalGames > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-1.5">
+                    <div className="flex items-center justify-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                             Game {currentGame > totalGames ? totalGames : currentGame} of {totalGames}
                         </span>
                     </div>
                 )}
+
                 {/* Set History Chips */}
                 {gameHistory.length > 0 && (
-                    <div className="flex items-center justify-center gap-2 mt-1.5">
+                    <div className="flex items-center justify-center gap-1.5 flex-wrap pt-1">
                         {gameHistory.map((g) => (
                             <span
                                 key={g.gameNumber}
@@ -75,30 +78,30 @@ export default memo(function MatchTimer({
                 )}
             </div>
 
-            {/* Match Metadata Grid */}
+            {/* Match Metadata Grid (Shown only when completed) */}
             {isCompleted && (
-                <div className="grid grid-cols-2 gap-x-8 gap-y-2 my-4">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2 py-2 w-full max-w-xs">
                     <div className="flex items-center gap-2">
-                        <MapPin size={12} className="text-slate-400" />
-                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 capitalize">
+                        <MapPin size={12} className="text-slate-400 shrink-0" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 capitalize truncate">
                             {matchDetails.court || "Court 1"}
                         </span>
                     </div>
-                    <div className="flex items-center gap-2 text-right justify-end">
-                        <Info size={12} className="text-slate-400" />
-                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-2 justify-end">
+                        <Info size={12} className="text-slate-400 shrink-0" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate">
                             {matchDetails.matchType || "Singles"}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Hash size={12} className="text-slate-400" />
-                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                        <Hash size={12} className="text-slate-400 shrink-0" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate">
                             {matchDetails.scoringType || "21x3"} pts
                         </span>
                     </div>
-                    <div className="flex items-center gap-2 text-right justify-end">
-                        <Clock size={12} className="text-slate-400" />
-                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-2 justify-end">
+                        <Clock size={12} className="text-slate-400 shrink-0" />
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate">
                             {matchDetails.roundType || "Knockout"}
                         </span>
                     </div>
@@ -106,9 +109,9 @@ export default memo(function MatchTimer({
             )}
 
             {/* Main Timer Group */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center my-auto">
                 <div className={clsx(
-                    "flex items-center gap-2 mb-2 px-4 py-1 rounded-full transition-colors",
+                    "flex items-center gap-2 mb-3 px-4 py-1 rounded-full transition-colors",
                     isCompleted
                         ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold"
                         : isMatchWon
@@ -138,11 +141,12 @@ export default memo(function MatchTimer({
                 </div>
 
                 <div className={clsx(
-                    "text-6xl font-bold tabular-nums tracking-tighter transition-all duration-300",
-                    isTimerRunning ? "text-slate-900 dark:text-white scale-110" : "text-slate-700 dark:text-slate-200"
+                    "text-6xl font-bold tabular-nums tracking-tighter transition-colors duration-300",
+                    isTimerRunning ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-400"
                 )}>
                     {formatTime(elapsedDisplay)}
                 </div>
+                
                 {isCompleted && (
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
                         Final Duration
@@ -151,7 +155,7 @@ export default memo(function MatchTimer({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 w-full max-w-[320px] mt-6">
+            <div className="flex gap-3 w-full max-w-[320px] mt-auto">
                 {!isCompleted ? (
                     <>
                         <button
@@ -164,9 +168,9 @@ export default memo(function MatchTimer({
                             )}
                         >
                             {isTimerRunning ? (
-                                <Pause size={16} fill="white" />
+                                <Pause size={16} fill="currentColor" />
                             ) : (
-                                <Play size={16} fill="white" />
+                                <Play size={16} fill="currentColor" />
                             )}
                             {isTimerRunning ? "Pause Match" : "Start Match"}
                         </button>
@@ -177,7 +181,7 @@ export default memo(function MatchTimer({
                                 "flex-1 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border",
                                 isBreak
                                     ? "bg-indigo-600 text-white border-transparent"
-                                    : "bg-transparent border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
+                                    : "bg-transparent border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"
                             )}
                         >
                             <Coffee size={16} />
@@ -196,18 +200,18 @@ export default memo(function MatchTimer({
                     >
                         {isTimerRunning ? (
                             <>
-                                <Pause size={16} fill="white" />
+                                <Pause size={16} fill="currentColor" />
                                 <span>Stop Clock</span>
                             </>
                         ) : (
                             <>
-                                <Play size={16} fill="white" />
+                                <Play size={16} fill="currentColor" />
                                 <span>Resume & Start Clock</span>
                             </>
                         )}
                     </button>
                 )}
             </div>
-        </div >
+        </div>
     );
 });

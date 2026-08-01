@@ -36,16 +36,15 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const [tournamentId, setTournamentId] = useState<string | null>(null);
 
     useEffect(() => {
-        // collectionGroup allows finding the matchId across any tournament path
+        // 1. Realtime Firestore Subscription
         const q = query(collectionGroup(db, "matches"));
-
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const matchDoc = snapshot.docs.find(d => d.id === matchId);
             if (matchDoc) {
                 setMatch(matchDoc.data() as MatchState);
-                // Extract tournamentId from reference path: tournaments/{id}/matches/{matchId}
-                if (matchDoc.ref.parent.parent) {
-                    setTournamentId(matchDoc.ref.parent.parent.id);
+                const resolvedTournamentId = (matchDoc.data() as any)?.tournamentId || matchDoc.ref.parent?.parent?.id;
+                if (resolvedTournamentId) {
+                    setTournamentId(resolvedTournamentId);
                 }
                 setError(null);
             } else {
@@ -54,11 +53,39 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
             setLoading(false);
         }, (err) => {
             console.error("Firestore Error:", err);
-            setError(err.message);
-            setLoading(false);
         });
 
-        return () => unsubscribe();
+        // 2. Polling Fallback for OBS Browser Sources (guarantees real-time updates even if WebSockets fail in OBS CEF)
+        let isMounted = true;
+        const pollOverlayData = async () => {
+            try {
+                const res = await fetch(`/api/public/overlay/${matchId}`, { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (isMounted && data.match) {
+                    setMatch(data.match);
+                    if (data.sponsors && data.sponsors.length > 0) {
+                        setSponsors(data.sponsors);
+                    }
+                    if (data.tournamentId) {
+                        setTournamentId(data.tournamentId);
+                    }
+                    setError(null);
+                    setLoading(false);
+                }
+            } catch (err) {
+                console.error("Overlay Polling Error:", err);
+            }
+        };
+
+        pollOverlayData();
+        const pollInterval = setInterval(pollOverlayData, 1000);
+
+        return () => {
+            isMounted = false;
+            unsubscribe();
+            clearInterval(pollInterval);
+        };
     }, [matchId]);
 
     // Timer Logic
@@ -85,16 +112,15 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         return () => clearInterval(timerInterval);
     }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match]);
 
-    // Sponsors Logic
+    // Sponsors Logic: Always subscribe to sponsors as long as tournamentId is available
     useEffect(() => {
-        const shouldFetch = match?.isSponsorsOverlayActive || match?.status === 'break';
-        if (!tournamentId || !shouldFetch) return;
+        if (!tournamentId) return;
 
         const q = query(collection(db, "tournaments", tournamentId, "sponsors"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const activeSponsors = snapshot.docs
                 .map(d => ({ id: d.id, ...d.data() } as any))
-                .filter(s => s.status === true)
+                .filter(s => s.status !== false)
                 .sort((a, b) => (a.priority || 99) - (b.priority || 99));
             setSponsors(activeSponsors);
         }, (err) => {
@@ -102,7 +128,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         });
 
         return () => unsubscribe();
-    }, [tournamentId, match?.isSponsorsOverlayActive, match?.status]);
+    }, [tournamentId]);
 
     // Carousel Timer
     useEffect(() => {
@@ -123,13 +149,17 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
 
     return (
         <ResolutionWrapper baseWidth={1920} baseHeight={1080}>
-            <div className="relative w-full h-full overflow-hidden p-6 md:p-12 pointer-events-none font-instrument transition-opacity duration-500">
+            {/* Layer 1: Full-Screen Break & Sponsor Overlay */}
+            <div className="absolute inset-0 z-50 pointer-events-none">
                 <SponsorBreakDisplay
                     sponsors={sponsors}
                     currentSponsorIndex={currentSponsorIndex}
                     match={match}
                 />
+            </div>
 
+            {/* Layer 2: HUD Graphics Layer */}
+            <div className="relative w-full h-full p-6 md:p-12 pointer-events-none font-instrument transition-opacity duration-500">
                 {isBwf ? (
                     <>
                         {!match.showFullScreenMatchDetails && (
