@@ -1,4 +1,4 @@
-import { MatchState, MatchRules, GameResult, ScoreEvent } from '@/types/match';
+import { MatchState, MatchRules, GameResult, ScoreEvent, BreakEvent } from '@/types/match';
 import { isGameComplete, isMatchComplete } from './rules';
 
 // ── Types ──
@@ -368,12 +368,27 @@ export function toggleBreakState(state: MatchState, defaultBreakDuration: number
     const isStartingBreak = state.status !== 'break';
     const now = Date.now();
 
+    // Calculate current match elapsed time for the break event log
+    const elapsedTime = state.isTimerRunning && state.timerStartTime
+        ? (state.timerElapsed || 0) + (now - state.timerStartTime) / 1000
+        : (state.timerElapsed || 0);
+
+    const breakEvent: BreakEvent = {
+        type: isStartingBreak ? 'break_start' : 'break_end',
+        timestamp: now,
+        elapsedTime,
+        ...(isStartingBreak ? { durationSeconds: state.breakTimerDuration || defaultBreakDuration } : {}),
+    };
+
+    const existingBreakEvents = state.breakEvents ?? [];
+
     return {
         ...state,
         status: isStartingBreak ? 'break' : 'live',
         breakTimerDuration: isStartingBreak ? (state.breakTimerDuration || defaultBreakDuration) : undefined,
         breakTimerStartTime: isStartingBreak ? now : null,
         breakTimerElapsed: isStartingBreak ? 0 : undefined,
+        breakEvents: [...existingBreakEvents, breakEvent],
         version: (state.version ?? 0) + 1,
     };
 }
@@ -459,6 +474,7 @@ export function resetMatchState(existingMatch: MatchState): MatchState {
         currentServer: 'player1',
         gameHistory: [],
         scoreEvents: [],
+        breakEvents: [],
         status: 'scheduled',
         isTimerRunning: false,
         timerStartTime: null,

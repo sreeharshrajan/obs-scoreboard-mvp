@@ -35,6 +35,14 @@ export interface ScoreEvent {
     };
 }
 
+// Break event log — persisted alongside scoreEvents for match export
+export interface BreakEvent {
+    type: 'break_start' | 'break_end';
+    timestamp: number;
+    elapsedTime: number;       // match clock elapsed at time of break event (seconds)
+    durationSeconds?: number;  // target break duration in seconds (present on break_start)
+}
+
 // Configurable sport rules — runtime only, never persisted.
 // Derived from sport + scoringType via getRuleSet().
 export interface MatchRules {
@@ -75,6 +83,7 @@ export interface MatchState {
     // Game Structure — derived currentGame = (gameHistory?.length ?? 0) + 1
     gameHistory?: GameResult[];
     scoreEvents?: ScoreEvent[];
+    breakEvents?: BreakEvent[];
 
     // UI/Meta
     tournamentName?: string;

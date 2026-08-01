@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { db } from "@/lib/firebase/client";
 import { collectionGroup, query, onSnapshot, collection } from "firebase/firestore";
 import { MatchState } from "@/types/match";
@@ -34,6 +34,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     const [sponsors, setSponsors] = useState<{ id: string, advertUrl: string, name: string }[]>([]);
     const [currentSponsorIndex, setCurrentSponsorIndex] = useState(0);
     const [tournamentId, setTournamentId] = useState<string | null>(null);
+    const tournamentIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         // 1. Realtime Firestore Subscription
@@ -45,6 +46,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                 const resolvedTournamentId = (matchDoc.data() as any)?.tournamentId || matchDoc.ref.parent?.parent?.id;
                 if (resolvedTournamentId) {
                     setTournamentId(resolvedTournamentId);
+                    tournamentIdRef.current = resolvedTournamentId;
                 }
                 setError(null);
             } else {
@@ -59,7 +61,11 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         let isMounted = true;
         const pollOverlayData = async () => {
             try {
-                const res = await fetch(`/api/public/overlay/${matchId}`, { cache: 'no-store' });
+                const tId = tournamentIdRef.current;
+                const url = tId
+                    ? `/api/public/overlay/${matchId}?tournamentId=${encodeURIComponent(tId)}`
+                    : `/api/public/overlay/${matchId}`;
+                const res = await fetch(url, { cache: 'no-store' });
                 if (!res.ok) return;
                 const data = await res.json();
                 if (isMounted && data.match) {
@@ -69,6 +75,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                     }
                     if (data.tournamentId) {
                         setTournamentId(data.tournamentId);
+                        tournamentIdRef.current = data.tournamentId;
                     }
                     setError(null);
                     setLoading(false);
@@ -112,9 +119,15 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         return () => clearInterval(timerInterval);
     }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match]);
 
-    // Sponsors Logic: Always subscribe to sponsors as long as tournamentId is available
+    // Sponsors Logic: subscribe only when sponsors can be visible to avoid unnecessary reads
     useEffect(() => {
-        if (!tournamentId) return;
+        const shouldSubscribe =
+            !!tournamentId &&
+            (match?.isSponsorsOverlayActive || match?.status === "break" || match?.showFullScreenMatchDetails);
+
+        if (!shouldSubscribe) {
+            return;
+        }
 
         const q = query(collection(db, "tournaments", tournamentId, "sponsors"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -128,7 +141,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
         });
 
         return () => unsubscribe();
-    }, [tournamentId]);
+    }, [tournamentId, match?.isSponsorsOverlayActive, match?.status, match?.showFullScreenMatchDetails]);
 
     // Carousel Timer
     useEffect(() => {
