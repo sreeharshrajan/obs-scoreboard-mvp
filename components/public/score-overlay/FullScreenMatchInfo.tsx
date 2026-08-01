@@ -39,7 +39,6 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                             </div>
                         )}
                         <div className="flex flex-col">
-                            <span className="text-[11px] font-black text-[#FF5A09] uppercase tracking-[0.2em]">Match Overview</span>
                             <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight">{tournamentName}</h2>
                         </div>
                     </div>
@@ -56,11 +55,11 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                         <span className="px-3.5 py-1.5 rounded-xl bg-linear-to-r from-[#FF5A09] to-[#CC4807] text-xs font-black uppercase tracking-wider text-white shadow-md shadow-orange-500/20">
                             {matchCategory}
                         </span>
-                        {matchType && (
+                        {/* {matchType && (
                             <span className="px-3.5 py-1.5 rounded-xl bg-white/10 text-xs font-black uppercase tracking-wider text-slate-300 border border-white/10">
                                 {matchType}
                             </span>
-                        )}
+                        )} */}
                     </div>
                 </div>
 
@@ -87,8 +86,8 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                                         box.isCurrent
                                             ? "min-w-16 h-20 rounded-2xl px-3 bg-linear-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
                                             : box.p1Winner
-                                            ? "min-w-12.5 h-16 rounded-xl px-2 bg-amber-500/25 border-amber-400/60 text-amber-300 shadow-md"
-                                            : "min-w-12.5 h-16 rounded-xl px-2 bg-white/5 border-white/5 opacity-60"
+                                                ? "min-w-12.5 h-16 rounded-xl px-2 bg-amber-500/25 border-amber-400/60 text-amber-300 shadow-md"
+                                                : "min-w-12.5 h-16 rounded-xl px-2 bg-white/5 border-white/5 opacity-60"
                                     )}
                                 >
                                     <span className="text-[9px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>
@@ -117,8 +116,8 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                                         box.isCurrent
                                             ? "min-w-16 h-20 rounded-2xl px-3 bg-linear-to-br from-[#FF5A09] to-[#CC4807] border-orange-400/40 shadow-[0_0_20px_rgba(255,90,9,0.35)]"
                                             : box.p2Winner
-                                            ? "min-w-12.5 h-16 rounded-xl px-2 bg-amber-500/25 border-amber-400/60 text-amber-300 shadow-md"
-                                            : "min-w-12.5 h-16 rounded-xl px-2 bg-white/5 border-white/5 opacity-60"
+                                                ? "min-w-12.5 h-16 rounded-xl px-2 bg-amber-500/25 border-amber-400/60 text-amber-300 shadow-md"
+                                                : "min-w-12.5 h-16 rounded-xl px-2 bg-white/5 border-white/5 opacity-60"
                                     )}
                                 >
                                     <span className="text-[9px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>
@@ -144,10 +143,9 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
 
                 {/* Footer Sponsor Bar */}
                 {activeSponsor && (
-                    <div className="py-3 px-8 bg-black/40 flex items-center justify-center gap-4">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Proudly Sponsored By</span>
-                        <div className="h-7 relative w-28">
-                            <img src={activeSponsor.advertUrl} alt={activeSponsor.name} className="h-full w-auto object-contain max-w-[110px]" />
+                    <div className="py-3 px-8 bg-black/40 flex items-center justify-center gap-1">
+                        <div className="h-7 relative w-28 flex items-center justify-center">
+                            <Image src={activeSponsor.advertUrl} alt={activeSponsor.name} fill className="object-contain" />
                         </div>
                         <span className="text-sm font-black text-white">{activeSponsor.name}</span>
                     </div>
