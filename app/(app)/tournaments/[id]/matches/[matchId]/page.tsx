@@ -127,6 +127,17 @@ export default function MatchConsole() {
     const [isEndMatchModalOpen, setIsEndMatchModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+    // Track Firebase auth initialization
+    const [authReady, setAuthReady] = useState(false);
+    useEffect(() => {
+        if (auth.currentUser) {
+            setAuthReady(true);
+            return;
+        }
+        const unsub = auth.onIdTokenChanged(() => setAuthReady(true));
+        return () => unsub();
+    }, []);
+
     // Helper to get token
     const getToken = useCallback(async () => {
         const user = auth.currentUser;
