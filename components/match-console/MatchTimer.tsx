@@ -46,9 +46,7 @@ export default memo(function MatchTimer({
         <div className={clsx(
             "flex-1 rounded-3xl border transition-all duration-500 p-6 flex flex-col items-center justify-center gap-6 relative overflow-hidden",
             isBreak
-                ? isBreakOverTime
-                    ? "bg-red-500/10 border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
-                    : "bg-indigo-50/40 dark:bg-indigo-500/10 border-indigo-500/40 shadow-[0_0_20px_rgba(99,102,241,0.1)]"
+                ? "bg-indigo-50/40 dark:bg-indigo-500/10 border-indigo-500/40 shadow-[0_0_20px_rgba(99,102,241,0.1)]"
                 : "bg-white dark:bg-[#1E1E1E] border-slate-100 dark:border-white/5 shadow-xl"
         )}>
 
@@ -127,9 +125,7 @@ export default memo(function MatchTimer({
                         : isMatchWon
                         ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
                         : isBreak
-                        ? isBreakOverTime
-                            ? "bg-red-500/20 text-red-500 font-bold animate-pulse"
-                            : "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold"
+                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold"
                         : isTimerRunning
                         ? "bg-emerald-500/10 text-emerald-500"
                         : "bg-slate-100 dark:bg-white/5 text-slate-500"
@@ -147,7 +143,7 @@ export default memo(function MatchTimer({
                             : isMatchWon
                             ? "Match Won (Pending Confirmation)"
                             : isBreak
-                            ? isBreakOverTime ? "Break Time Exceeded" : "Break Countdown"
+                            ? "Break Countdown"
                             : isTimerRunning
                             ? "Match Clock"
                             : "Match Paused"}
@@ -156,11 +152,8 @@ export default memo(function MatchTimer({
 
                 {isBreak ? (
                     <div className="flex flex-col items-center">
-                        <div className={clsx(
-                            "text-6xl font-bold tabular-nums tracking-tighter transition-colors duration-300",
-                            isBreakOverTime ? "text-red-500 animate-pulse" : "text-indigo-600 dark:text-indigo-400"
-                        )}>
-                            {isBreakOverTime ? `-${formatTime(Math.abs(breakRemainingDisplay))}` : formatTime(breakRemainingDisplay)}
+                        <div className="text-6xl font-bold tabular-nums tracking-tighter transition-colors duration-300 text-indigo-600 dark:text-indigo-400">
+                            {formatTime(Math.max(0, breakRemainingDisplay))}
                         </div>
                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
                             Match Clock Paused ({formatTime(elapsedDisplay)})
