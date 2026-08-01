@@ -9,9 +9,10 @@ interface ClassicFullScreenMatchInfoProps {
     match: MatchState;
     sponsors: Sponsor[];
     currentSponsorIndex: number;
+    elapsedDisplay?: number;
 }
 
-export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSponsorIndex }: ClassicFullScreenMatchInfoProps) {
+export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSponsorIndex, elapsedDisplay }: ClassicFullScreenMatchInfoProps) {
     if (!match.showFullScreenMatchDetails) return null;
 
     const {
@@ -55,7 +56,6 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                             </div>
                         )}
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-amber-300 uppercase tracking-[0.2em]">Match Overview</span>
                             <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight">{tournamentName}</h2>
                         </div>
                     </div>
