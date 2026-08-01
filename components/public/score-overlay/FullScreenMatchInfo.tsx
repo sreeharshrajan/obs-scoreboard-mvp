@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MatchState } from "@/types/match";
 import Image from "next/image";
-import { Trophy } from 'lucide-react';
+import { Trophy, Calendar, Timer } from 'lucide-react';
 import { getMatchDetails, Sponsor } from '@/lib/matchHelpers';
 import clsx from 'clsx';
 
@@ -9,10 +9,67 @@ interface FullScreenMatchInfoProps {
     match: MatchState;
     sponsors: Sponsor[];
     currentSponsorIndex: number;
+    elapsedDisplay?: number;
 }
 
-export default function FullScreenMatchInfo({ match, sponsors, currentSponsorIndex }: FullScreenMatchInfoProps) {
+export default function FullScreenMatchInfo({ match, sponsors, currentSponsorIndex, elapsedDisplay }: FullScreenMatchInfoProps) {
+    const [now, setNow] = useState<Date | null>(null);
+    const [liveElapsed, setLiveElapsed] = useState<number>(elapsedDisplay ?? 0);
+
+    // Live Date State
+    useEffect(() => {
+        setNow(new Date());
+        const timer = setInterval(() => {
+            setNow(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Match Timer State
+    useEffect(() => {
+        if (elapsedDisplay !== undefined) {
+            setLiveElapsed(elapsedDisplay);
+            return;
+        }
+
+        if (!match?.isTimerRunning) {
+            setLiveElapsed(match?.timerElapsed || 0);
+            return;
+        }
+
+        const calc = () => {
+            const currentTime = Date.now();
+            const startTime = match.timerStartTime ?? currentTime;
+            return (match.timerElapsed || 0) + (currentTime - startTime) / 1000;
+        };
+
+        setLiveElapsed(calc());
+        const timerInterval = setInterval(() => {
+            setLiveElapsed(calc());
+        }, 200);
+
+        return () => clearInterval(timerInterval);
+    }, [elapsedDisplay, match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed]);
+
     if (!match.showFullScreenMatchDetails) return null;
+
+    const formattedDate = now ? now.toLocaleDateString(undefined, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    }) : '';
+
+    const formatMatchTimer = (seconds: number) => {
+        const safeSecs = isNaN(seconds) ? 0 : Math.max(0, Math.floor(seconds));
+        const hrs = Math.floor(safeSecs / 3600);
+        const mins = Math.floor((safeSecs % 3600) / 60);
+        const secs = safeSecs % 60;
+        if (hrs > 0) {
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const {
         p1Name,
@@ -40,6 +97,12 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                         )}
                         <div className="flex flex-col">
                             <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight">{tournamentName}</h2>
+                            {now && (
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mt-1">
+                                    <Calendar size={13} className="text-[#FF5A09]" />
+                                    <span>{formattedDate}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -55,11 +118,6 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                         <span className="px-3.5 py-1.5 rounded-xl bg-linear-to-r from-[#FF5A09] to-[#CC4807] text-xs font-black uppercase tracking-wider text-white shadow-md shadow-orange-500/20">
                             {matchCategory}
                         </span>
-                        {/* {matchType && (
-                            <span className="px-3.5 py-1.5 rounded-xl bg-white/10 text-xs font-black uppercase tracking-wider text-slate-300 border border-white/10">
-                                {matchType}
-                            </span>
-                        )} */}
                     </div>
                 </div>
 
@@ -100,9 +158,13 @@ export default function FullScreenMatchInfo({ match, sponsors, currentSponsorInd
                         </div>
                     </div>
 
-                    {/* VS Badge Center */}
-                    <div className="w-20 flex items-center justify-center bg-slate-900/80">
-                        <span className="text-xl font-black italic text-slate-400 uppercase tracking-wider">VS</span>
+                    {/* VS & Match Timer Center Badge */}
+                    <div className="w-28 flex flex-col items-center justify-center bg-slate-900/90 border-x border-white/10 px-2 py-3 gap-1.5 shrink-0">
+                        <span className="text-lg font-black italic text-slate-400 uppercase tracking-widest leading-none">VS</span>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[#FF5A09] font-mono font-bold">
+                            <Timer size={12} className={clsx(match.isTimerRunning && "animate-pulse")} />
+                            <span className="tabular-nums text-xs tracking-wider text-white font-black">{formatMatchTimer(liveElapsed)}</span>
+                        </div>
                     </div>
 
                     {/* Player 2 Side */}

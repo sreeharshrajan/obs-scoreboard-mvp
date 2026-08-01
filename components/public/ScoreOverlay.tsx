@@ -235,6 +235,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                             match={match}
                             sponsors={sponsors}
                             currentSponsorIndex={currentSponsorIndex}
+                            elapsedDisplay={elapsedDisplay}
                         />
                     </>
                 )}

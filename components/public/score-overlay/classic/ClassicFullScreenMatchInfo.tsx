@@ -186,7 +186,7 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                 {/* Classic Sponsor Footer */}
                 {activeSponsor && (
                     <div className="py-3 px-8 bg-slate-950 flex items-center justify-center gap-4 border-t border-white/10">
-                        <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">Proudly Sponsored By</span>
+                        <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]"> Sponsored By</span>
                         <div className="h-7 relative w-28">
                             <Image src={activeSponsor.advertUrl} alt={activeSponsor.name} fill className="object-contain" />
                         </div>
