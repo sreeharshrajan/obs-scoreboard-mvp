@@ -249,29 +249,29 @@ export default function MatchConsole() {
 
     const [breakRemainingDisplay, setBreakRemainingDisplay] = useState<number>(60);
 
-    // 5. Timer & Clock Logic (Match Clock & Break Clock)
+    // 5. Break Countdown Effect
+    useEffect(() => {
+        if (!match || match.status !== 'break') return;
+
+        const targetDuration = match.breakTimerDuration || 60;
+        const calculateBreakRemaining = () => {
+            if (!match.breakTimerStartTime) return targetDuration;
+            const now = Date.now();
+            const elapsedSec = Math.floor((now - match.breakTimerStartTime) / 1000);
+            return targetDuration - elapsedSec;
+        };
+
+        setBreakRemainingDisplay(calculateBreakRemaining());
+        const breakInterval = setInterval(() => {
+            setBreakRemainingDisplay(calculateBreakRemaining());
+        }, 500);
+
+        return () => clearInterval(breakInterval);
+    }, [match?.status, match?.breakTimerStartTime, match?.breakTimerDuration]);
+
+    // 6. Match Clock Logic (Runs continuously whenever isTimerRunning is true, regardless of break state)
     useEffect(() => {
         if (!match) return;
-
-        // Break Timer Countdown Logic
-        if (match.status === 'break') {
-            const targetDuration = match.breakTimerDuration || 60;
-            const calculateBreakRemaining = () => {
-                if (!match.breakTimerStartTime) return targetDuration;
-                const now = Date.now();
-                const elapsedSec = Math.floor((now - match.breakTimerStartTime) / 1000);
-                return targetDuration - elapsedSec;
-            };
-
-            setBreakRemainingDisplay(calculateBreakRemaining());
-            const breakInterval = setInterval(() => {
-                setBreakRemainingDisplay(calculateBreakRemaining());
-            }, 500);
-
-            return () => clearInterval(breakInterval);
-        }
-
-        // Match Clock Logic
         if (!match.isTimerRunning || match.status === 'completed') {
             setElapsedDisplay(match.timerElapsed || 0);
             return;
@@ -286,7 +286,7 @@ export default function MatchConsole() {
             setElapsedDisplay(calculateTime());
         }, 100);
         return () => clearInterval(timerInterval);
-    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match?.status, match?.breakTimerStartTime, match?.breakTimerDuration]);
+    }, [match?.isTimerRunning, match?.timerStartTime, match?.timerElapsed, match?.status]);
 
     // Fullscreen Logic
     const toggleFullscreen = useCallback(() => {

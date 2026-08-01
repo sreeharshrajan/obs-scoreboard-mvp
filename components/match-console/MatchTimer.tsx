@@ -154,8 +154,17 @@ export default memo(function MatchTimer({
 
                 {isBreak ? (
                     <div className="flex flex-col items-center">
+                        {/* Match Clock (Displayed above Break Timer) */}
+                        <div className="flex items-center gap-1.5 mb-1 px-3 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10">
+                            <Clock size={11} className={clsx("text-slate-400", isTimerRunning && "animate-pulse text-emerald-500")} />
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 tabular-nums">
+                                Match Clock: {formatTime(elapsedDisplay)} {isTimerRunning ? "" : "(Paused)"}
+                            </span>
+                        </div>
+
+                        {/* Main Break Countdown */}
                         <div className={clsx(
-                            "text-6xl font-bold tabular-nums tracking-tighter transition-all duration-500",
+                            "text-6xl font-bold tabular-nums tracking-tighter transition-all duration-500 mt-1",
                             isBreakOverTime
                                 ? "text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]"
                                 : "text-indigo-600 dark:text-indigo-400"
@@ -166,7 +175,7 @@ export default memo(function MatchTimer({
                             "text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors",
                             isBreakOverTime ? "text-red-400 font-extrabold animate-pulse" : "text-slate-400"
                         )}>
-                            {isBreakOverTime ? "Break Time Over" : `Match Clock Paused (${formatTime(elapsedDisplay)})`}
+                            {isBreakOverTime ? "Break Time Over" : "Break Countdown"}
                         </span>
 
                         {/* Break Presets */}
