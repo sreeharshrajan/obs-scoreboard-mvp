@@ -147,11 +147,15 @@ export default memo(function MatchTimer({
                     {formatTime(elapsedDisplay)}
                 </div>
                 
-                {isCompleted && (
+                {isCompleted ? (
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
                         Final Duration
                     </span>
-                )}
+                ) : isMatchWon ? (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mt-1 animate-pulse">
+                        Click &quot;Confirm &amp; End Match&quot; below to finalize
+                    </span>
+                ) : null}
             </div>
 
             {/* Action Buttons */}

@@ -20,6 +20,7 @@ import PlayerCard from '@/components/match-console/PlayerCard';
 import MatchTimer from '@/components/match-console/MatchTimer';
 import QuickActions from '@/components/match-console/QuickActions';
 import SetCompletionModal from '@/components/match-console/SetCompletionModal';
+import EndMatchModal from '@/components/match-console/EndMatchModal';
 
 // --- Fetchers ---
 const fetchMatch = async (tournamentId: string, matchId: string, token: string): Promise<MatchState> => {
@@ -121,6 +122,8 @@ export default function MatchConsole() {
         potentialP2: number;
         isMatchPoint: boolean;
     } | null>(null);
+
+    const [isEndMatchModalOpen, setIsEndMatchModalOpen] = useState(false);
 
     // Helper to get token
     const getToken = useCallback(async () => {
@@ -420,9 +423,14 @@ export default function MatchConsole() {
     }, [safeMatch, handleStopTimer, handleStartTimer, mutation]);
 
     const handleEndMatch = useCallback(() => {
+        setIsEndMatchModalOpen(true);
+    }, []);
+
+    const handleConfirmEndMatch = useCallback(() => {
         if (!safeMatch) return;
         const newState = completeMatch(safeMatch);
         mutation.mutate(newState);
+        setIsEndMatchModalOpen(false);
     }, [safeMatch, mutation]);
 
     const handleResumeMatch = useCallback(() => {
@@ -587,6 +595,13 @@ export default function MatchConsole() {
                 p1Score={pendingSetCompletion?.potentialP1 ?? 0}
                 p2Score={pendingSetCompletion?.potentialP2 ?? 0}
                 isMatchPoint={pendingSetCompletion?.isMatchPoint ?? false}
+            />
+
+            <EndMatchModal
+                isOpen={isEndMatchModalOpen}
+                onClose={() => setIsEndMatchModalOpen(false)}
+                onConfirm={handleConfirmEndMatch}
+                match={safeMatch}
             />
         </div>
     );

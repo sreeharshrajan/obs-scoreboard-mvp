@@ -51,13 +51,15 @@ export default memo(function QuickActions({
                         className={clsx(
                             "flex flex-col items-center justify-center gap-2 p-6 rounded-[2rem] border transition-all group cursor-pointer",
                             isMatchWon
-                                ? "bg-red-500/10 border-red-500 shadow-lg shadow-red-500/20 animate-pulse"
+                                ? "bg-red-500/10 border-red-500 shadow-lg shadow-red-500/20 animate-pulse ring-2 ring-red-500/30"
                                 : "bg-white dark:bg-[#252525] border-slate-100 dark:border-white/5 hover:border-red-500/30"
                         )}
-                        title="End Match"
+                        title={isMatchWon ? "Confirm and End Match" : "End Match"}
                     >
                         <Trophy size={20} className={isMatchWon ? "text-red-500" : "text-slate-400 group-hover:text-red-500 transition-colors"} />
-                        <span className={clsx("text-[10px] font-black uppercase tracking-widest", isMatchWon ? "text-red-600 dark:text-red-400" : "text-slate-500")}>End Match</span>
+                        <span className={clsx("text-[10px] font-black uppercase tracking-widest text-center", isMatchWon ? "text-red-600 dark:text-red-400 font-extrabold" : "text-slate-500")}>
+                            {isMatchWon ? "Confirm & End Match" : "End Match"}
+                        </span>
                     </button>
                 ) : (
                     <button
