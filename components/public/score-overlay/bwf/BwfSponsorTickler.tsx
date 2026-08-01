@@ -40,9 +40,9 @@ export default function BwfSponsorTickler({ sponsors, currentSponsorIndex, match
                         )}
                     />
                 ) : (
-                    <div className="bg-white/95 backdrop-blur-sm text-slate-900 p-3 pr-6 rounded-lg shadow-xl flex items-center gap-4 min-w-70 border border-slate-200">
+                    <div className="bg-white/95 backdrop-blur-sm text-slate-900 p-3 pr-6 rounded-lg shadow-xl flex items-center gap-2 min-w-70 border border-slate-200">
                         {/* Sponsor Image Container */}
-                        <div className="h-12 w-auto min-w-17.5 flex items-center justify-center bg-white rounded-md p-1.5 shadow-sm border border-slate-100">
+                        <div className="h-12 w-auto min-w-17.5 flex items-center justify-center">
                             <img
                                 src={currentSponsor?.advertUrl}
                                 alt="Sponsor"

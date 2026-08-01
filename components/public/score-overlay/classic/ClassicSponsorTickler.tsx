@@ -47,9 +47,9 @@ export default function ClassicSponsorTickler({ sponsors, currentSponsorIndex, m
                         )}
                     />
                 ) : (
-                    <div className="bg-white text-slate-900 p-4 pr-8 rounded-2xl shadow-2xl border border-white/40 flex items-center gap-6 min-w-85">
+                    <div className="bg-white text-slate-900 p-4 pr-8 rounded-2xl shadow-2xl border border-white/40 flex items-center gap-2 min-w-85">
                         {/* Sponsor Image Container */}
-                        <div className="h-16 w-auto min-w-22.5 flex items-center justify-center rounded-xl bg-slate-50 p-2 border border-slate-200 shadow-inner">
+                        <div className="h-16 w-auto min-w-22.5 flex items-center justify-center">
                             <img
                                 src={currentSponsor?.advertUrl}
                                 alt="Sponsor"
@@ -58,7 +58,7 @@ export default function ClassicSponsorTickler({ sponsors, currentSponsorIndex, m
                         </div>
 
                         <div className="flex flex-col gap-0.5">
-                            <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em]">Proudly Sponsored By</span>
+                            <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em]"> Sponsored By</span>
                             <span className="text-xl font-black text-slate-900 leading-tight tracking-tight line-clamp-1">
                                 {currentSponsor?.name}
                             </span>
