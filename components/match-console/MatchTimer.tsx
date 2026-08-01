@@ -171,6 +171,7 @@ export default memo(function MatchTimer({
                             <div className="flex items-center gap-1.5 mt-4">
                                 {[60, 90, 120, 180].map((sec) => (
                                     <button
+                                        type="button"
                                         key={sec}
                                         onClick={() => onSelectBreakDuration(sec)}
                                         className={clsx(
@@ -213,6 +214,7 @@ export default memo(function MatchTimer({
                 {!isCompleted ? (
                     <>
                         <button
+                            type="button"
                             onClick={onToggleTimer}
                             className={clsx(
                                 "flex-[2] py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg",
@@ -230,6 +232,7 @@ export default memo(function MatchTimer({
                         </button>
 
                         <button
+                            type="button"
                             onClick={onToggleBreak}
                             className={clsx(
                                 "flex-1 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border",
@@ -244,6 +247,7 @@ export default memo(function MatchTimer({
                     </>
                 ) : (
                     <button
+                        type="button"
                         onClick={onToggleTimer}
                         className={clsx(
                             "w-full py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg border",
