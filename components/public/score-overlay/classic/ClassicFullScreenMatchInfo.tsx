@@ -46,21 +46,22 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                 <div className="flex items-center justify-between px-8 py-5 bg-linear-to-r from-red-600 via-red-700 to-red-600 border-b border-red-500/40 text-white">
                     <div className="flex items-center gap-4">
                         {match.showTournamentLogo !== false && match.tournamentLogo && (
-                            <div className="relative w-12 h-12">
+                            <div className="relative w-18 h-18 bg-amber-50">
                                 <Image
                                     src={match.tournamentLogo}
                                     alt="Logo"
                                     fill
-                                    className="object-contain filter drop-shadow-md"
+                                    className="object-contain mix-blend-multiply p-1"
                                 />
                             </div>
                         )}
-                        <div className="flex flex-col">
-                            <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight">{tournamentName}</h2>
-                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center justify-center text-center">
+                        <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight">{tournamentName}</h2>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-3">
                         <span className="px-3.5 py-1.5 rounded-xl bg-black/20 text-xs font-black uppercase tracking-wider text-white border border-white/10">
                             {courtName}
                         </span>
@@ -103,8 +104,8 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                                         box.isCurrent
                                             ? "px-4 py-2 rounded-2xl min-w-[60px] bg-red-600 text-white border-red-400 font-black"
                                             : box.p1Winner
-                                            ? "px-3 py-1 rounded-xl min-w-[48px] bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md"
-                                            : "px-3 py-1 rounded-xl min-w-[48px] bg-white/10 text-white/35 border-white/5 opacity-60"
+                                                ? "px-3 py-1 rounded-xl min-w-[48px] bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md"
+                                                : "px-3 py-1 rounded-xl min-w-[48px] bg-white/10 text-white/35 border-white/5 opacity-60"
                                     )}
                                 >
                                     <span className="text-[8px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>
@@ -134,8 +135,8 @@ export default function ClassicFullScreenMatchInfo({ match, sponsors, currentSpo
                                         box.isCurrent
                                             ? "px-4 py-2 rounded-2xl min-w-[60px] bg-red-600 text-white border-red-400 font-black"
                                             : box.p2Winner
-                                            ? "px-3 py-1 rounded-xl min-w-[48px] bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md"
-                                            : "px-3 py-1 rounded-xl min-w-[48px] bg-white/10 text-white/35 border-white/5 opacity-60"
+                                                ? "px-3 py-1 rounded-xl min-w-[48px] bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md"
+                                                : "px-3 py-1 rounded-xl min-w-[48px] bg-white/10 text-white/35 border-white/5 opacity-60"
                                     )}
                                 >
                                     <span className="text-[8px] font-black uppercase text-white/60 tracking-wider">Set {box.gameNumber}</span>

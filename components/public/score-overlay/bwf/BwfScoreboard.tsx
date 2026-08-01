@@ -50,7 +50,7 @@ export default function BwfScoreboard({ match, elapsedDisplay }: BwfScoreboardPr
             {match.showTournamentLogo !== false && match.tournamentLogo && (
                 <div className="w-14 bg-white flex items-center justify-center p-2 border-r border-slate-300 self-stretch">
                     <div className="relative w-10 h-10">
-                        <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain" />
+                        <Image src={match.tournamentLogo} alt="Logo" fill className="object-contain mix-blend-multiply" />
                     </div>
                 </div>
             )}
