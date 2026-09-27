@@ -1,13 +1,13 @@
 // src/app/api/stats/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import * as admin from "firebase-admin";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb, adminAuth } from "@/lib/firebase/admin";
 import { resolveRoles } from "@/lib/auth/roles";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 export async function GET() {
   try {
-    // 1️⃣ Read session cookie (Next.js 15+)
+    // 1️⃣ Read session cookie
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("session")?.value;
 
@@ -18,57 +18,56 @@ export async function GET() {
       );
     }
 
-    // 2️⃣ Verify session cookie
-    const decoded = await admin
-      .auth()
-      .verifySessionCookie(sessionCookie, true);
+    // 2️⃣ Verify session cookie (with memory caching to avoid remote network latency)
+    const sessionCacheKey = `auth:session:${sessionCookie.slice(-32)}`;
+    let decoded = memoryCache.get<{ uid: string; email?: string }>(sessionCacheKey);
 
-    const { uid, email } = decoded;
-    const roles = resolveRoles(email ?? null);
+    if (!decoded) {
+      decoded = await adminAuth.verifySessionCookie(sessionCookie, false);
+      memoryCache.set(sessionCacheKey, { uid: decoded.uid, email: decoded.email }, 60000);
+    }
 
-    // 3️⃣ Admin verification logic
-    // Removed strict admin check to allow regular users to access their own stats
-    /* if (!roles.isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden: Admin access required" },
-        { status: 403 }
-      );
-    } */
+    const { uid } = decoded;
 
-    // 4️⃣ Fetch stats (Firestore count aggregation)
-    const [
-      tournamentsSnap,
-      liveMatchesSnap,
-      completedMatchesSnap,
-    ] = await Promise.all([
-      adminDb
-        .collection("tournaments")
-        .where("ownerId", "==", uid)
-        .count()
-        .get(),
+    // 3️⃣ Realtime user tournament stats (No stale caching)
+    const tournamentsSnap = await adminDb
+      .collection("tournaments")
+      .where("ownerId", "==", uid)
+      .get();
 
-      adminDb
-        .collection("matches")
-        .where("ownerId", "==", uid)
-        .where("status", "==", "live")
-        .count()
-        .get(),
+    // Fetch matches across user's tournaments concurrently
+    const matchSnaps = await Promise.all(
+      tournamentsSnap.docs.map(t => t.ref.collection("matches").get())
+    );
 
-      adminDb
-        .collection("matches")
-        .where("ownerId", "==", uid)
-        .where("status", "==", "completed")
-        .count()
-        .get(),
-    ]);
+    let liveMatches = 0;
+    let completedMatches = 0;
+
+    for (const snap of matchSnaps) {
+      for (const doc of snap.docs) {
+        const s = doc.data().status;
+        if (s === "live" || s === "in_progress") {
+          liveMatches++;
+        } else if (s === "completed") {
+          completedMatches++;
+        }
+      }
+    }
+
+    const statsData = {
+      userTournaments: tournamentsSnap.size,
+      liveMatches,
+      completedMatches,
+    };
 
     return NextResponse.json({
       success: true,
-      data: {
-        userTournaments: tournamentsSnap.data().count,
-        liveMatches: liveMatchesSnap.data().count,
-        completedMatches: completedMatchesSnap.data().count,
-      },
+      data: statsData,
+    }, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+      }
     });
   } catch (error) {
     console.error("Stats API Error:", error);
@@ -78,3 +77,4 @@ export async function GET() {
     );
   }
 }
+

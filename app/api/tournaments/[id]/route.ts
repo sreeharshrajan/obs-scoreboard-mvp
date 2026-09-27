@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuth } from "firebase-admin/auth";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
 import { memoryCache } from "@/lib/cache/memoryCache";
 
@@ -18,14 +17,7 @@ export async function GET(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Check memory cache first
-        const cacheKey = `tournament:${id}`;
-        const cached = memoryCache.get<any>(cacheKey);
-        if (cached) {
-            return NextResponse.json(cached);
-        }
-
-        // 2. Fetch tournament
+        // 2. Fetch fresh tournament from Firestore
         const doc = await adminDb.collection("tournaments").doc(id).get();
 
         if (!doc.exists) {
@@ -49,16 +41,33 @@ export async function GET(
 
         let ownerData = null;
         if (ownerId && typeof ownerId === 'string') {
-            try {
-                const user = await getAuth().getUser(ownerId);
-                ownerData = {
-                    id: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
-                };
-            } catch (userError) {
-                console.warn("Owner not found in Auth:", userError);
+            const ownerCacheKey = `user:profile:${ownerId}`;
+            ownerData = memoryCache.get(ownerCacheKey);
+            if (!ownerData) {
+                // Check full user cache
+                const fullUser = memoryCache.get<any>(`user:${ownerId}`);
+                if (fullUser) {
+                    ownerData = {
+                        id: fullUser.id,
+                        email: fullUser.email,
+                        displayName: fullUser.displayName,
+                        photoURL: fullUser.photoURL,
+                    };
+                    memoryCache.set(ownerCacheKey, ownerData, 300000);
+                } else {
+                    try {
+                        const user = await adminAuth.getUser(ownerId);
+                        ownerData = {
+                            id: user.uid,
+                            email: user.email,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                        };
+                        memoryCache.set(ownerCacheKey, ownerData, 300000);
+                    } catch (userError) {
+                        console.warn("Owner not found in Auth:", userError);
+                    }
+                }
             }
         }
 
@@ -75,9 +84,12 @@ export async function GET(
             owner: ownerData,
         };
 
-        memoryCache.set(cacheKey, responsePayload, 3000);
-
-        return NextResponse.json(responsePayload);
+        return NextResponse.json(responsePayload, {
+            headers: {
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+            }
+        });
 
     } catch (globalError: unknown) {
         const message = globalError instanceof Error ? globalError.message : "Internal Server Error";

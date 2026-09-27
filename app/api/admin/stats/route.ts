@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import * as admin from "firebase-admin";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb, adminAuth } from "@/lib/firebase/admin";
 import { resolveRoles } from "@/lib/auth/roles";
 import { AdminStats, ApiResponse } from "@/lib/types/admin";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 export async function GET() {
   try {
-    // 1️⃣ Read session cookie (Next.js 15+)
+    // 1️⃣ Read session cookie
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("session")?.value;
 
@@ -18,10 +18,14 @@ export async function GET() {
       );
     }
 
-    // 2️⃣ Verify session cookie
-    const decoded = await admin
-      .auth()
-      .verifySessionCookie(sessionCookie, true);
+    // 2️⃣ Verify session cookie (with memory caching to avoid remote network latency)
+    const sessionCacheKey = `auth:session:${sessionCookie.slice(-32)}`;
+    let decoded = memoryCache.get<{ email?: string; uid: string }>(sessionCacheKey);
+
+    if (!decoded) {
+      decoded = await adminAuth.verifySessionCookie(sessionCookie, false);
+      memoryCache.set(sessionCacheKey, { email: decoded.email, uid: decoded.uid }, 60000);
+    }
 
     const { email } = decoded;
     const roles = resolveRoles(email ?? null);
@@ -34,10 +38,11 @@ export async function GET() {
       );
     }
 
+    // 4️⃣ Live Realtime Stats (Direct from database, no stale caching)
     const [usersSnap, tournamentsSnap, matchesSnap] = await Promise.all([
       adminDb.collection("users").count().get(),
       adminDb.collection("tournaments").count().get(),
-      adminDb.collection("matches").count().get(),
+      adminDb.collectionGroup("matches").count().get(),
     ]);
 
     const stats: AdminStats = {
@@ -51,7 +56,12 @@ export async function GET() {
       data: stats,
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+      },
+    });
   } catch (error) {
     console.error("Admin Stats Error:", error);
     const errorResponse: ApiResponse<null> = {
@@ -61,3 +71,4 @@ export async function GET() {
     return NextResponse.json(errorResponse, { status: 500 });
   }
 }
+

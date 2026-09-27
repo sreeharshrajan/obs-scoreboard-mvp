@@ -19,12 +19,6 @@ export async function GET(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const cacheKey = `match:${tournamentId}:${matchId}`;
-        const cached = memoryCache.get(cacheKey);
-        if (cached) {
-            return NextResponse.json(cached);
-        }
-
         const doc = await adminDb
             .collection("tournaments")
             .doc(tournamentId)
@@ -37,9 +31,14 @@ export async function GET(
         }
 
         const matchPayload = { id: doc.id, ...doc.data() };
-        memoryCache.set(cacheKey, matchPayload, 1500);
+        memoryCache.set(`match-tournament:${matchId}`, tournamentId, 3600000);
 
-        return NextResponse.json(matchPayload);
+        return NextResponse.json(matchPayload, {
+            headers: {
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+            }
+        });
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Internal Server Error";
         return NextResponse.json({ error: message }, { status: 500 });
@@ -81,6 +80,7 @@ export async function PATCH(
         }, { merge: true });
 
         // Invalidate cache immediately on update
+        memoryCache.invalidate(`tournament-matches:${tournamentId}`);
         memoryCache.invalidate(`match:${tournamentId}:${matchId}`);
         memoryCache.invalidate(`overlay:${matchId}`);
 
@@ -113,6 +113,10 @@ export async function DELETE(
             .collection("matches")
             .doc(matchId)
             .delete();
+
+        memoryCache.invalidate(`tournament-matches:${tournamentId}`);
+        memoryCache.invalidate(`match:${tournamentId}:${matchId}`);
+        memoryCache.invalidate(`overlay:${matchId}`);
 
         return NextResponse.json({ success: true, message: "Match deleted" });
     } catch (error: unknown) {

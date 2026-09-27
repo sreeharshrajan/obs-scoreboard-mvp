@@ -1,9 +1,9 @@
 // app/api/users/[id]/route.ts
-import { getAuth } from "firebase-admin/auth";
 import { NextResponse } from "next/server";
 import { verifyRequest } from "@/lib/auth/verifyRequest";
 import { enforceAdmin } from "@/lib/permissions/adminPolicy";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb, adminAuth } from "@/lib/firebase/admin";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 // GET: Fetch single user by ID
 export async function GET(
@@ -23,20 +23,36 @@ export async function GET(
         }
         if (!id) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
 
-        const userRecord = await getAuth().getUser(id);
+        const cacheKey = `user:${id}`;
+        const cachedUser = memoryCache.get(cacheKey);
+        if (cachedUser) {
+            return NextResponse.json(cachedUser, {
+                headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" }
+            });
+        }
 
-        // Fetch additional data from Firestore
-        const userDoc = await adminDb.collection("users").doc(id).get();
+        // Fetch Auth User & Firestore Data in parallel
+        const [userRecord, userDoc] = await Promise.all([
+            adminAuth.getUser(id),
+            adminDb.collection("users").doc(id).get()
+        ]);
+
         const userData = userDoc.exists ? userDoc.data() : {};
 
-        return NextResponse.json({
+        const responsePayload = {
             id: userRecord.uid,
             email: userRecord.email,
-            displayName: userRecord.displayName, // Auth might be more up to date for basic profile
+            displayName: userRecord.displayName,
             photoURL: userRecord.photoURL,
             role: userRecord.customClaims?.role || "User",
             createdAt: userRecord.metadata.creationTime,
             ...userData, // Merge Firestore data (streamerLogo, etc)
+        };
+
+        memoryCache.set(cacheKey, responsePayload, 60000);
+
+        return NextResponse.json(responsePayload, {
+            headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" }
         });
 
     } catch (error: unknown) {
@@ -66,13 +82,14 @@ export async function DELETE(
             return NextResponse.json({ error: "You cannot delete your own account." }, { status: 403 });
         }
 
-        await getAuth().deleteUser(id);
+        await adminAuth.deleteUser(id);
+
+        memoryCache.invalidate(`user:${id}`);
+        memoryCache.invalidate("admin:users");
 
         return NextResponse.json({ success: true, message: "User deleted successfully" });
     } catch (error: unknown) {
-        // Standard practice: check if it's an instance of Error
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-
         console.error("Delete User Error:", error);
 
         return NextResponse.json(

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Maximize, Minimize, ArrowLeft, Settings, Monitor, Image as ImageIcon, Users, Edit, Info, LayoutTemplate, Download } from 'lucide-react';
+import { Maximize, Minimize, ArrowLeft, Settings, Monitor, Image as ImageIcon, Users, Edit, Info, LayoutTemplate, Download, RotateCcw } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { MatchState } from '@/types/match';
@@ -15,10 +15,11 @@ interface ConsoleHeaderProps {
     isFullscreen: boolean;
     onToggleFullscreen: () => void;
     onExportMatch?: () => void;
+    onResetTimer?: () => void;
 }
 
 import { useRouter } from 'next/navigation';
-export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen, onExportMatch }: ConsoleHeaderProps) {
+export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentName, match, onUpdateMatch, isSyncing, isFullscreen, onToggleFullscreen, onExportMatch, onResetTimer }: ConsoleHeaderProps) {
     const router = useRouter();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,6 +37,21 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
     const toggleSetting = (key: keyof MatchState) => {
         const currentVal = key === 'isSponsorsOverlayActive' ? !!match.isSponsorsOverlayActive : match[key] !== false;
         onUpdateMatch({ [key]: !currentVal });
+    };
+
+    const handleResetTimer = () => {
+        if (!window.confirm("Are you sure you want to reset the match timer to 00:00?")) return;
+        if (onResetTimer) {
+            onResetTimer();
+        } else {
+            const now = Date.now();
+            onUpdateMatch({
+                timerElapsed: 0,
+                timerStartTime: match.isTimerRunning ? now : null,
+                breakTimerElapsed: 0,
+                breakTimerStartTime: match.status === 'break' ? now : null,
+            });
+        }
     };
 
     return (
@@ -130,6 +146,17 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                         <Download size={16} className="hidden sm:block" />
                         <span className="hidden md:inline">Export</span>
                     </button>
+
+                    <button
+                        type="button"
+                        title="Reset Timer to 00:00"
+                        onClick={handleResetTimer}
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-400 transition-all font-bold text-[10px] sm:text-xs uppercase tracking-wide active:scale-95 shadow-sm cursor-pointer"
+                    >
+                        <RotateCcw size={14} className="sm:hidden" />
+                        <RotateCcw size={16} className="hidden sm:block" />
+                        <span className="hidden md:inline">Reset Timer</span>
+                    </button>
                 </div>
 
                 {/* Settings Toggle */}
@@ -161,6 +188,20 @@ export default memo(function ConsoleHeader({ matchId, tournamentId, tournamentNa
                                 <ToggleItem icon={<Users size={16} />} label="Streamer Logo" active={match.showStreamerLogo !== false} onClick={() => toggleSetting('showStreamerLogo')} />
                                 <ToggleItem icon={<Info size={16} />} label="Match Details" active={match.showMatchInfo !== false} onClick={() => toggleSetting('showMatchInfo')} />
                                 <ToggleItem icon={<Monitor size={16} />} label="Full Screen Details" active={!!match.showFullScreenMatchDetails} onClick={() => toggleSetting('showFullScreenMatchDetails')} />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsSettingsOpen(false);
+                                        handleResetTimer();
+                                    }}
+                                    className="flex w-full items-center justify-between px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-all group cursor-pointer text-red-500 dark:text-red-400"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <RotateCcw size={16} />
+                                        <span className="text-[13px] font-bold">Reset Timer</span>
+                                    </div>
+                                    <span className="text-[10px] uppercase font-bold text-red-400/80 tracking-wider">00:00</span>
+                                </button>
                             </div>
 
                             {/* Sponsor Config Options */}
