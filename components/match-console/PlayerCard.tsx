@@ -1,6 +1,6 @@
 import { Minus, Plus, Trophy } from 'lucide-react';
 import clsx from 'clsx';
-import { PlayerState, MatchState } from '@/types/match';
+import { PlayerState, MatchState, MatchStatus } from '@/types/match';
 import { memo } from 'react';
 
 interface PlayerCardProps {
@@ -11,6 +11,7 @@ interface PlayerCardProps {
     onScoreChange: (delta: number) => void;
     onToggleServer: () => void;
     matchType: MatchState['matchType'];
+    matchStatus: MatchStatus;
     gamesWon?: number;
     totalGames?: number;
     lastGameScore?: number;
@@ -24,6 +25,7 @@ export default memo(function PlayerCard({
     onScoreChange,
     onToggleServer,
     matchType,
+    matchStatus,
     gamesWon = 0,
     totalGames = 3,
     lastGameScore,
@@ -31,6 +33,9 @@ export default memo(function PlayerCard({
     const gamesNeeded = Math.ceil(totalGames / 2);
     const isWinner = gamesWon >= gamesNeeded;
     const isFinished = isCompleted || isWinner;
+    // Only show serving indicators once the match is underway
+    const matchStarted = matchStatus === 'live' || matchStatus === 'break';
+    const showServing = isServing && matchStarted;
 
     const displayScore = isFinished
         ? (player.score === 0 && lastGameScore !== undefined ? lastGameScore : player.score)
@@ -41,7 +46,7 @@ export default memo(function PlayerCard({
             "w-full h-full rounded-lg border-2 transition-all duration-300 p-3 sm:p-5 lg:p-7 relative overflow-hidden flex flex-col justify-between",
             isWinner
                 ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500 shadow-2xl shadow-amber-500/10"
-                : isServing && !isFinished
+                : showServing && !isFinished
                     ? "bg-white dark:bg-[#1E1E1E] border-[#FF5A09] shadow-2xl shadow-[#FF5A09]/10"
                     : "bg-white dark:bg-[#1E1E1E] border-slate-100 dark:border-white/5 shadow-xl"
         )}>
@@ -52,7 +57,7 @@ export default memo(function PlayerCard({
                         <span className="text-[9px] sm:text-[11px] font-black text-[#FF5A09] uppercase tracking-[0.15em] sm:tracking-[0.2em]">
                             {teamLabel}
                         </span>
-                        {isServing && !isFinished && (
+                        {showServing && !isFinished && (
                             <div className="lg:hidden w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#FF5A09] rounded-full animate-pulse" />
                         )}
                     </div>
@@ -64,7 +69,7 @@ export default memo(function PlayerCard({
                         </span>
 
                         {/* Desktop Serving Badge */}
-                        {isServing && !isFinished && (
+                        {showServing && !isFinished && (
                             <div className="hidden lg:flex items-center gap-1.5 bg-[#FF5A09] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md animate-in fade-in zoom-in">
                                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                                 Serving
@@ -140,7 +145,10 @@ export default memo(function PlayerCard({
                                 : "bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                         )}
                     >
-                        {isServing ? "Serving" : "Set Server"}
+                        {/* Label depends on match state: before start show intent, after start show active status */}
+                        {isServing
+                            ? (matchStarted ? "Serving" : "First Server")
+                            : "Set Server"}
                     </button>
                 )}
             </div>

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
+import { memoryCache } from "@/lib/cache/memoryCache";
 
 export async function GET() {
     try {
-        // Fetch only completed tournaments or top results
+        // Fetch real-time completed tournaments or top results
         const snapshot = await adminDb
             .collection("tournaments")
             .where("status", "==", "completed")
@@ -21,7 +22,12 @@ export async function GET() {
             };
         });
 
-        return NextResponse.json(results);
+        return NextResponse.json(results, {
+            headers: {
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+            }
+        });
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Internal Server Error";
         return NextResponse.json({ error: message }, { status: 500 });

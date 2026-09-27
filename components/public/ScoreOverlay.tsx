@@ -24,7 +24,13 @@ import BwfScoreboard from "./score-overlay/bwf/BwfScoreboard";
 import BwfSponsorTickler from "./score-overlay/bwf/BwfSponsorTickler";
 import BwfFullScreenMatchInfo from "./score-overlay/bwf/BwfFullScreenMatchInfo";
 
-export default function ScoreOverlay({ matchId }: { matchId: string }) {
+export default function ScoreOverlay({
+    matchId,
+    initialTournamentId,
+}: {
+    matchId: string;
+    initialTournamentId?: string | null;
+}) {
     const [match, setMatch] = useState<MatchState | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -33,14 +39,27 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
     // Sponsors State
     const [sponsors, setSponsors] = useState<{ id: string, advertUrl: string, name: string }[]>([]);
     const [currentSponsorIndex, setCurrentSponsorIndex] = useState(0);
-    const [tournamentId, setTournamentId] = useState<string | null>(null);
-    const tournamentIdRef = useRef<string | null>(null);
+    const [tournamentId, setTournamentId] = useState<string | null>(initialTournamentId || null);
+    const tournamentIdRef = useRef<string | null>(initialTournamentId || null);
+
+    // Also check query param if initialTournamentId not provided
+    useEffect(() => {
+        if (!tournamentIdRef.current && typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const paramTId = params.get('tournamentId');
+            if (paramTId) {
+                tournamentIdRef.current = paramTId;
+                setTournamentId(paramTId);
+            }
+        }
+    }, []);
 
     useEffect(() => {
-        // 1. Realtime Firestore Subscription (Uses specific doc listener when tournamentId is known)
+        // 1. Realtime Firestore Subscription
         let docUnsub: (() => void) | null = null;
-        if (tournamentIdRef.current) {
-            const docRef = doc(db, "tournaments", tournamentIdRef.current, "matches", matchId);
+        const attachListener = (tId: string) => {
+            if (docUnsub) return;
+            const docRef = doc(db, "tournaments", tId, "matches", matchId);
             docUnsub = onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     setMatch(docSnap.data() as MatchState);
@@ -50,6 +69,10 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
             }, (err) => {
                 console.error("Firestore Doc Error:", err);
             });
+        };
+
+        if (tournamentIdRef.current) {
+            attachListener(tournamentIdRef.current);
         }
 
         // 2. Polling Fallback for OBS Browser Sources (guarantees real-time updates even if WebSockets fail in OBS CEF)
@@ -71,6 +94,7 @@ export default function ScoreOverlay({ matchId }: { matchId: string }) {
                     if (data.tournamentId) {
                         setTournamentId(data.tournamentId);
                         tournamentIdRef.current = data.tournamentId;
+                        attachListener(data.tournamentId);
                     }
                     setError(null);
                     setLoading(false);

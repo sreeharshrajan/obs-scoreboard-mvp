@@ -27,6 +27,14 @@ class MemoryCache {
         });
     }
 
+    async getOrSet<T>(key: string, fetchFn: () => Promise<T>, ttlMs: number = 2000): Promise<T> {
+        const cached = this.get<T>(key);
+        if (cached !== null) return cached;
+        const fresh = await fetchFn();
+        this.set(key, fresh, ttlMs);
+        return fresh;
+    }
+
     invalidate(keyPrefix: string): void {
         for (const k of this.cache.keys()) {
             if (k.startsWith(keyPrefix)) {
@@ -45,8 +53,5 @@ const globalForCache = globalThis as unknown as {
     memoryCache?: MemoryCache;
 };
 
-export const memoryCache = globalForCache.memoryCache ?? new MemoryCache();
+export const memoryCache = globalForCache.memoryCache ?? (globalForCache.memoryCache = new MemoryCache());
 
-if (process.env.NODE_ENV !== 'production') {
-    globalForCache.memoryCache = memoryCache;
-}

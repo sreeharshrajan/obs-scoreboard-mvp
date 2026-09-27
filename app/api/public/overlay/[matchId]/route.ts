@@ -15,31 +15,46 @@ export async function GET(
         }
 
         const { searchParams } = new URL(req.url);
-        const tournamentIdParam = searchParams.get("tournamentId");
+        let tournamentId = searchParams.get("tournamentId");
 
-        // Check in-memory cache first (1.5s TTL to absorb high-frequency OBS polling)
-        const cacheKey = `overlay:${matchId}:${tournamentIdParam || 'any'}`;
-        const cached = memoryCache.get(cacheKey);
-        if (cached) {
-            return NextResponse.json(cached);
+        // Look up cached tournament route pointer if not in query param
+        if (!tournamentId) {
+            tournamentId = memoryCache.get<string>(`match-tournament:${matchId}`) || null;
         }
 
         let matchDoc: FirebaseFirestore.DocumentSnapshot | undefined;
+        let sponsors: any[] = [];
 
-        if (tournamentIdParam) {
-            const docRef = adminDb
+        if (tournamentId) {
+            // Fetch match and sponsors in parallel for maximum speed
+            const matchRef = adminDb
                 .collection("tournaments")
-                .doc(tournamentIdParam)
+                .doc(tournamentId)
                 .collection("matches")
                 .doc(matchId);
-            const docSnap = await docRef.get();
+
+            const sponsorsRef = adminDb
+                .collection("tournaments")
+                .doc(tournamentId)
+                .collection("sponsors");
+
+            const [docSnap, sponsorsSnap] = await Promise.all([
+                matchRef.get(),
+                sponsorsRef.get(),
+            ]);
+
             if (docSnap.exists) {
                 matchDoc = docSnap;
             }
+
+            sponsors = sponsorsSnap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter((s: any) => s.status !== false)
+                .sort((a: any, b: any) => (a.priority || 99) - (b.priority || 99));
         }
 
         if (!matchDoc) {
-            // Find match document by ID across tournaments in parallel without needing collectionGroup indexes
+            // Fallback: locate match across tournaments
             try {
                 const tournamentsSnap = await adminDb.collection("tournaments").get();
                 const matchSnaps = await Promise.all(
@@ -48,6 +63,22 @@ export async function GET(
                 const found = matchSnaps.find(snap => snap.exists);
                 if (found) {
                     matchDoc = found;
+                    const resolvedTId = found.data()?.tournamentId || found.ref.parent?.parent?.id || null;
+                    if (resolvedTId) {
+                        tournamentId = resolvedTId;
+                        memoryCache.set(`match-tournament:${matchId}`, resolvedTId, 3600000);
+
+                        const sponsorsSnap = await adminDb
+                            .collection("tournaments")
+                            .doc(resolvedTId)
+                            .collection("sponsors")
+                            .get();
+
+                        sponsors = sponsorsSnap.docs
+                            .map(d => ({ id: d.id, ...d.data() }))
+                            .filter((s: any) => s.status !== false)
+                            .sort((a: any, b: any) => (a.priority || 99) - (b.priority || 99));
+                    }
                 }
             } catch (err) {
                 console.error("Error finding match across tournaments:", err);
@@ -59,35 +90,30 @@ export async function GET(
         }
 
         const matchData = matchDoc.data()!;
-        const tournamentId = matchData.tournamentId || matchDoc.ref.parent?.parent?.id || null;
+        const finalTournamentId = tournamentId || matchData.tournamentId || matchDoc.ref.parent?.parent?.id || null;
 
-        let sponsors: any[] = [];
-        if (tournamentId) {
-            const sponsorsSnap = await adminDb
-                .collection("tournaments")
-                .doc(tournamentId)
-                .collection("sponsors")
-                .get();
-
-            sponsors = sponsorsSnap.docs
-                .map(d => ({ id: d.id, ...d.data() }))
-                .filter((s: any) => s.status !== false)
-                .sort((a: any, b: any) => (a.priority || 99) - (b.priority || 99));
+        if (finalTournamentId) {
+            memoryCache.set(`match-tournament:${matchId}`, finalTournamentId, 3600000);
         }
 
         const responsePayload = {
             match: { id: matchDoc.id, ...matchData },
             sponsors,
-            tournamentId
+            tournamentId: finalTournamentId
         };
 
-        // Cache for 1500ms
-        memoryCache.set(cacheKey, responsePayload, 1500);
-
-        return NextResponse.json(responsePayload);
+        // Live Realtime Response: NO browser/proxy caching for score overlay
+        return NextResponse.json(responsePayload, {
+            headers: {
+                "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            }
+        });
     } catch (error: any) {
         console.error("Error in public overlay API:", error);
         return NextResponse.json({ error: error.message || "Internal Error" }, { status: 500 });
     }
 }
+
 

@@ -523,6 +523,19 @@ export default function MatchConsole() {
         mutation.mutate(newState);
     }, [safeMatch, mutation]);
 
+    const handleResetTimer = useCallback(() => {
+        if (!safeMatch) return;
+        const now = Date.now();
+        setElapsedDisplay(0);
+        mutation.mutate({
+            timerElapsed: 0,
+            timerStartTime: safeMatch.isTimerRunning ? now : null,
+            breakTimerElapsed: 0,
+            breakTimerStartTime: safeMatch.status === 'break' ? now : null,
+        });
+        toast.success("Timer reset to 00:00");
+    }, [safeMatch, mutation]);
+
     const handleUpdateMatch = useCallback((updates: Partial<MatchState>) => {
         mutation.mutate(updates);
     }, [mutation]);
@@ -613,6 +626,7 @@ export default function MatchConsole() {
                 matchId={matchId}
                 onUpdateMatch={handleUpdateMatch}
                 onExportMatch={() => setIsExportModalOpen(true)}
+                onResetTimer={handleResetTimer}
             />
 
             {/* Main Scoreboard Interface */}
@@ -628,6 +642,7 @@ export default function MatchConsole() {
                         onScoreChange={(delta) => handleScore('player1', delta)}
                         onToggleServer={() => toggleServer('player1')}
                         matchType={safeMatch.matchType}
+                        matchStatus={safeMatch.status}
                         gamesWon={p1GamesWon}
                         totalGames={totalGames}
                         lastGameScore={lastGame?.player1Score}
@@ -644,6 +659,7 @@ export default function MatchConsole() {
                         onScoreChange={(delta) => handleScore('player2', delta)}
                         onToggleServer={() => toggleServer('player2')}
                         matchType={safeMatch.matchType}
+                        matchStatus={safeMatch.status}
                         gamesWon={p2GamesWon}
                         totalGames={totalGames}
                         lastGameScore={lastGame?.player2Score}

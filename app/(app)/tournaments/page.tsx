@@ -34,24 +34,23 @@ export default function TournamentListing() {
                 if (roles.isAdmin) {
                     q = query(collection(db, "tournaments"));
 
-                    // Fetch users to get display names
-                    try {
-                        const token = await user.getIdToken();
-                        const res = await fetch("/api/users", {
+                    // Fetch users in parallel/background so tournament listing is not delayed
+                    user.getIdToken().then(token => {
+                        fetch("/api/users", {
                             headers: { Authorization: `Bearer ${token}` },
+                        }).then(async res => {
+                            if (res.ok) {
+                                const usersData = await res.json();
+                                const map: Record<string, string> = {};
+                                usersData.forEach((u: any) => {
+                                    map[u.id] = u.displayName || "Unknown User";
+                                });
+                                setUsersMap(map);
+                            }
+                        }).catch(err => {
+                            console.error("Failed to fetch users for mapping", err);
                         });
-                        if (res.ok) {
-                            const usersData = await res.json();
-                            const map: Record<string, string> = {};
-                            usersData.forEach((u: any) => {
-                                map[u.id] = u.displayName || "Unknown User";
-                            });
-                            setUsersMap(map);
-                        }
-                    } catch (err) {
-                        console.error("Failed to fetch users for mapping", err);
-                    }
-
+                    });
                 } else {
                     q = query(
                         collection(db, "tournaments"),
